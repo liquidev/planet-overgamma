@@ -1,0 +1,1 @@
+I'm leaving all the Aseprite projects here in case you want to mod the game, or anything!

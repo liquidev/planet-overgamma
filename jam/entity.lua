@@ -84,26 +84,35 @@ function Entity:physics(dt)
     hitbox = Hitbox:new(
             chpos.x - self.hitboxsize[1] / 2, chpos.y - self.hitboxsize[2] / 2,
             self.hitboxsize[1], self.hitboxsize[2])
+    hitbox:draw()
 
     self.map:eachSolid(function (tile)
-        if self.vel.x > 0.001 and not self.map:getSolid(tile.x - 1, tile.y) then
-            left = Hitbox:new(
-                    tile.x * Map.tilesize[1], tile.y * Map.tilesize[2] + 1,
-                    Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
-            if hitbox:collides(left) then
-                self.vel:mul(-self.friction, 1)
-                chpos.x = left:left() - hitbox.width / 2
-                self:collideTile(tile)
+        distance = math.dist(
+                Vector:new(chpos.x, chpos.y),
+                Vector:new(tile.x * Map.tilesize[1] + Map.tilesize[1] / 2,
+                           tile.y * Map.tilesize[2] + Map.tilesize[2] / 2))
+        if distance < hitbox.width * 2 then
+            if self.vel.x > 0.001 and not self.map:getSolid(tile.x - 1, tile.y) then
+                left = Hitbox:new(
+                        tile.x * Map.tilesize[1], tile.y * Map.tilesize[2] + 1,
+                        Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                left:draw()
+                if hitbox:collides(left) then
+                    self.vel:mul(-self.friction, 1)
+                    chpos.x = left:left() - hitbox.width / 2
+                    self:collideTile(tile)
+                end
             end
-        end
-        if self.vel.x < -0.001 and not self.map:getSolid(tile.x + 1, tile.y) then
-            right = Hitbox:new(
-                    tile.x * Map.tilesize[1] + Map.tilesize[1] * 0.4, tile.y * Map.tilesize[2] + 1,
-                    Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
-            if hitbox:collides(right) then
-                self.vel:mul(-self.friction, 1)
-                chpos.x = right:right() + hitbox.width / 2
-                self:collideTile(tile)
+            if self.vel.x < -0.001 and not self.map:getSolid(tile.x + 1, tile.y) then
+                right = Hitbox:new(
+                        tile.x * Map.tilesize[1] + Map.tilesize[1] * 0.4, tile.y * Map.tilesize[2] + 1,
+                        Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                right:draw()
+                if hitbox:collides(right) then
+                    self.vel:mul(-self.friction, 1)
+                    chpos.x = right:right() + hitbox.width / 2
+                    self:collideTile(tile)
+                end
             end
         end
     end)
@@ -113,26 +122,35 @@ function Entity:physics(dt)
     hitbox = Hitbox:new(
             chpos.x - self.hitboxsize[1] / 2, chpos.y - self.hitboxsize[2] / 2,
             self.hitboxsize[1], self.hitboxsize[2])
+    hitbox:draw()
 
     self.map:eachSolid(function (tile)
-        if self.vel.y > 0.001 and not self.map:getSolid(tile.x, tile.y - 1) then
-            top = Hitbox:new(
-                    tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2],
-                    Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
-            if hitbox:collides(top) then
-                self.vel:mul(1, -self.friction)
-                chpos.y = top:top() - hitbox.height / 2
-                self:collideTile(tile)
+        distance = math.dist(
+                Vector:new(chpos.x, chpos.y),
+                Vector:new(tile.x * Map.tilesize[1] + Map.tilesize[1] / 2,
+                           tile.y * Map.tilesize[2] + Map.tilesize[2] / 2))
+        if distance < hitbox.width * 2 then
+            if self.vel.y > 0.001 and not self.map:getSolid(tile.x, tile.y - 1) then
+                top = Hitbox:new(
+                        tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2],
+                        Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                top:draw()
+                if hitbox:collides(top) then
+                    self.vel:mul(1, -self.friction)
+                    chpos.y = top:top() - hitbox.height / 2
+                    self:collideTile(tile)
+                end
             end
-        end
-        if self.vel.y < -0.001 and not self.map:getSolid(tile.x, tile.y + 1) then
-            bottom = Hitbox:new(
-                    tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2] + Map.tilesize[2] * 0.4,
-                    Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
-            if hitbox:collides(bottom) then
-                self.vel:mul(1, -self.friction)
-                chpos.y = bottom:bottom() + hitbox.height / 2
-                self:collideTile(tile)
+            if self.vel.y < -0.001 and not self.map:getSolid(tile.x, tile.y + 1) then
+                bottom = Hitbox:new(
+                        tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2] + Map.tilesize[2] * 0.4,
+                        Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                bottom:draw()
+                if hitbox:collides(bottom) then
+                    self.vel:mul(1, -self.friction)
+                    chpos.y = bottom:bottom() + hitbox.height / 2
+                    self:collideTile(tile)
+                end
             end
         end
     end)

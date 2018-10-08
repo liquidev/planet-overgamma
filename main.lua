@@ -93,7 +93,7 @@ function jam.states.game.update(dt)
         jam.activemap:eachEntity(function (entity)
             if entity.supertype == 'spawner' then entity:nextwave() end
             if entity.supertype == 'player' then
-                entity.spamality = entity.spamality + wave * 20
+                entity.spamality = entity.spamality + wave * 10
             end
         end)
     end

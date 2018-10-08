@@ -35,6 +35,13 @@ function SpamalityPlayer:update(dt)
 
     self.spamality = self.spamality - dt * (0.2 + self.spamlevel * 0.25)
     if self.spamality < 0 then self.spamlevel = 0 end
+
+    if self.spamlevel >= 10 then
+        if self.health < self.maxhealth then
+            self.health = self.health + self.spamlevel * 0.01
+            self.health = math.min(10, self.health)
+        end
+    end
 end
 
 function SpamalityPlayer:shoot()

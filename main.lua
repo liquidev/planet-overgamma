@@ -9,8 +9,6 @@ require 'jam/shooter'
 require 'player'
 require 'wave'
 
-jam.state = 'title'
-
 Map.tileset = ' 12340<->^|v./=\\"~\'(_)'
 Map.solids = '12340<->^|v'
 Map.entityset = {
@@ -20,6 +18,7 @@ Map.entityset = {
 }
 
 jam.states.title = {}
+jam.setstate('title')
 
 wavetext = nil
 gameovertext = nil
@@ -48,7 +47,7 @@ end
 function jam.states.title.update(dt)
     if love.mouse.isDown(1) then
         jam.assets.maps['map_1']:begin()
-        jam.state = 'game'
+        jam.setstate('game')
     end
 end
 
@@ -66,11 +65,6 @@ function jam.states.game.draw()
             wave = 1
             gametime = 0
             jam.assets.maps['map_1']:begin()
-            jam.activemap:eachEntity(function (entity)
-                if entity.supertype == 'player' then
-                    print(entity.spamality)
-                end
-            end)
         end
     else
         wavetext:set('WAVE '..wave)

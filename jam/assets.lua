@@ -65,7 +65,7 @@ function jam.assets.loadMaps()
     for _, v in pairs(maps) do
         print('   - map: '..v)
         name = v:match('(.+)%..+')
-        map = Map:new(v)
+        map = Map:new(nil, v)
         jam.assets.maps[name] = map
     end
 end

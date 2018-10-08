@@ -1,16 +1,16 @@
 require 'jam/utils'
 require 'jam/entity'
 
-Map = {
-    tilesize = { 8, 8 },
-    tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz',
-    solids = '0123456789',
-    entityset = {} -- the entityset must be defined by the engine user
-}
+Map = {}
 Map.__index = Map
 
-function Map:new(filename)
-    local o = {}
+Map.tilesize = { 8, 8 }
+Map.tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz'
+Map.solids = '0123456789'
+Map.entityset = {} -- the entityset must be defined by the engine user
+
+function Map:new(o, filename)
+    o = o or {}
     setmetatable(o, self)
     self = o
 
@@ -24,68 +24,70 @@ function Map:new(filename)
     }
 
     -- load the file
-    data, _ = love.filesystem.read('data/maps/'..filename)
+    if filename then
+        data, _ = love.filesystem.read('data/maps/'..filename)
 
-    if data then
-        -- options first
-        for o in data:gmatch('%b[]') do
-            assign = o:sub(2, -2)
-            assign:gsub('([bnxs])%s+(%a+)%s*=%s*(.*)', function (type, name, tval)
-                val = nil
-                if type == 'b' then
-                    val = (tval == 'true') and false or true
-                elseif type == 'n' then
-                    val = tonumber(tval, 10)
-                elseif type == 'x' then
-                    val = tonumber(tval, 16)
-                elseif type == 's' then
-                    val = tval
-                end
-                self.options[name] = val
-                data = data:gsub(o:gsub('([^%w])', '%%%1'), '')
-            end)
-        end
-
-        -- then the blocks and entities
-        y = 0
-        for ln in lines(data) do
-            x = 0
-            for c in ln:gmatch('.') do
-                id = string.find(Map.tileset, c, 1, true)
-                if id and id > 1 then
-                    solid = false
-                    if string.find(Map.solids, c, 1, true) then solid = true end
-                    table.insert(self.tiles, {
-                        id = id,
-                        x = x, y = y,
-                        sx = x * Map.tilesize[1], sy = y * Map.tilesize[2],
-                        solid = solid
-                    })
-                else
-                    E = Map.entityset[c]
-                    if E then
-                        table.insert(self.objects, {
-                            class = E[1],
-                            x = x * Map.tilesize[1] + Map.tilesize[1] / 2,
-                            y = y * Map.tilesize[2] + Map.tilesize[2] / 2
-                        })
-                        table.insert(self.tiles, {
-                            id = string.find(Map.tileset, E[2], 1, true),
-                            x = x,
-                            y = y
-                        })
+        if data then
+            -- options first
+            for o in data:gmatch('%b[]') do
+                assign = o:sub(2, -2)
+                assign:gsub('([bnxs])%s+(%a+)%s*=%s*(.*)', function (type, name, tval)
+                    val = nil
+                    if type == 'b' then
+                        val = (tval == 'true') and false or true
+                    elseif type == 'n' then
+                        val = tonumber(tval, 10)
+                    elseif type == 'x' then
+                        val = tonumber(tval, 16)
+                    elseif type == 's' then
+                        val = tval
                     end
-                end
-                x = x + 1
+                    self.options[name] = val
+                    data = data:gsub(o:gsub('([^%w])', '%%%1'), '')
+                end)
             end
-            y = y + 1
-        end
 
-        self.tilesetData = jam.assets.tilesets[self.options.tileset or 'main']
-        self.tilesetImg = self.tilesetData.image
-        self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, #self.tiles)
-        self:begin()
-        self:updateTiles()
+            -- then the blocks and entities
+            y = 0
+            for ln in lines(data) do
+                x = 0
+                for c in ln:gmatch('.') do
+                    id = string.find(Map.tileset, c, 1, true)
+                    if id and id > 1 then
+                        solid = false
+                        if string.find(Map.solids, c, 1, true) then solid = true end
+                        table.insert(self.tiles, {
+                            id = id,
+                            x = x, y = y,
+                            sx = x * Map.tilesize[1], sy = y * Map.tilesize[2],
+                            solid = solid
+                        })
+                    else
+                        E = Map.entityset[c]
+                        if E then
+                            table.insert(self.objects, {
+                                class = E[1],
+                                x = x * Map.tilesize[1] + Map.tilesize[1] / 2,
+                                y = y * Map.tilesize[2] + Map.tilesize[2] / 2
+                            })
+                            table.insert(self.tiles, {
+                                id = string.find(Map.tileset, E[2], 1, true),
+                                x = x,
+                                y = y
+                            })
+                        end
+                    end
+                    x = x + 1
+                end
+                y = y + 1
+            end
+
+            self.tilesetData = jam.assets.tilesets[self.options.tileset or 'main']
+            self.tilesetImg = self.tilesetData.image
+            self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, #self.tiles)
+            self:begin()
+            self:updateTiles()
+        end
     end
 
     return self

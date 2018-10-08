@@ -7,8 +7,6 @@ conf = require '../jamconf'
 jam = {
     scheduled = {},
 
-    edit = false,
-
     activemap = nil,
 
     mouse = Vector:new(),
@@ -17,6 +15,13 @@ jam = {
 
     shakedata = nil
 }
+
+function jam.setstate(which)
+    jam.state = which
+    if jam.states[which].begin then jam.states[which].begin() end
+end
+
+require 'jam/editor'
 
 function jam.load() print('ld') end
 function jam.draw() end
@@ -92,7 +97,7 @@ function love.load(args)
 
     if args[1] == 'edit' then
         print(' - initialize edit mode')
-        jam.edit = true
+        jam.setstate('__jam_editor__')
     end
 end
 

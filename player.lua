@@ -25,9 +25,9 @@ function SpamalityPlayer:draw()
     love.graphics.setScissor()
     self.texts.hp:set('LV '..self.spamlevel)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.draw(self.texts.hp, 80 + 3, 2)
-    love.graphics.setColor(1, 1, 1)
     love.graphics.draw(self.texts.hp, 80 + 2, 1)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(self.texts.hp, 80 + 1, 0)
 end
 
 function SpamalityPlayer:update(dt)
@@ -38,7 +38,7 @@ function SpamalityPlayer:update(dt)
 
     if self.spamlevel >= 10 then
         if self.health < self.maxhealth then
-            self.health = self.health + self.spamlevel * 0.01
+            self.health = self.health + self.spamlevel * 0.01 * dt
             self.health = math.min(10, self.health)
         end
     end

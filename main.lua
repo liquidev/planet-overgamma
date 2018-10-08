@@ -74,7 +74,7 @@ function jam.states.game.draw()
         end
     else
         wavetext:set('WAVE '..wave)
-        love.graphics.draw(wavetext, 128 / 2 - wavetext:getWidth() / 2, 1)
+        love.graphics.draw(wavetext, 128 / 2 - wavetext:getWidth() / 2, 0)
     end
 end
 

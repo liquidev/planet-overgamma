@@ -67,9 +67,9 @@ function ShooterPlayer:draw()
     love.graphics.setScissor()
     self.texts.hp:set(self.health..'/'..self.maxhealth)
     love.graphics.setColor(0, 0, 0)
-    love.graphics.draw(self.texts.hp, 3, 2)
-    love.graphics.setColor(1, 1, 1)
     love.graphics.draw(self.texts.hp, 2, 1)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(self.texts.hp, 1, 0)
 end
 
 function ShooterPlayer:update(dt)

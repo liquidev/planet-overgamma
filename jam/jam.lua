@@ -159,10 +159,23 @@ local function _map_callback(name, ...)
     end
 end
 
-function love.keypressed(...) _map_callback('keypressed', ...) end
-function love.keyreleased(...) _map_callback('keyreleased', ...) end
-function love.mousemoved(...) _map_callback('mousemoved', ...) end
-function love.mousepressed(...) _map_callback('mousepressed', ...) end
-function love.mousereleased(...) _map_callback('mousereleased', ...) end
+local function _state_callback(name, ...)
+    local arg = {...}
+    if jam.states[jam.state][name] then
+        jam.states[jam.state][name](unpack(arg))
+    end
+end
+
+local function _fire_callbacks(name, ...)
+    _map_callback(name, ...)
+    _state_callback(name, ...)
+end
+
+function love.keypressed(...) _fire_callbacks('keypressed', ...) end
+function love.keyreleased(...) _fire_callbacks('keyreleased', ...) end
+function love.mousemoved(...) _fire_callbacks('mousemoved', ...) end
+function love.mousepressed(...) _fire_callbacks('mousepressed', ...) end
+function love.mousereleased(...) _fire_callbacks('mousereleased', ...) end
+function love.wheelmoved(...) _fire_callbacks('wheelmoved', ...) end
 
 return jam

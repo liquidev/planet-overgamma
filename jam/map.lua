@@ -73,7 +73,8 @@ function Map:new(o, filename)
                             table.insert(self.tiles, {
                                 id = string.find(Map.tileset, E[2], 1, true),
                                 x = x,
-                                y = y
+                                y = y,
+                                solid = false
                             })
                         end
                     end
@@ -102,6 +103,30 @@ function Map:get(x, y)
         end
     end
     return found
+end
+
+function Map:set(id, x, y)
+    found = nil
+    for _, tile in pairs(self.instance.tiles) do
+        if tile.x == x and tile.y == y then
+            found = tile
+            break
+        end
+    end
+    c = Map.tileset:sub(id, id)
+    solid = false
+    if string.find(Map.solids, c, 1, true) then solid = true end
+    if found then
+        found.id = id
+        found.solid = solid
+    else
+        table.insert(self.instance.tiles, {
+            x = x,
+            y = y,
+            id = id,
+            solid = solid
+        })
+    end
 end
 
 function Map:getSolid(x, y)

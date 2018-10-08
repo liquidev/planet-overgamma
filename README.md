@@ -20,4 +20,5 @@ Here's a list of tools used to make this game:
  - Framework: Love2D
  - Sprite editor: Aseprite
  - SFX Generator: Bfxr
+
 In addition to that, the game was made entirely on Linux.

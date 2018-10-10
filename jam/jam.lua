@@ -154,7 +154,14 @@ local function _map_callback(name, ...)
     end
 end
 
-function love.keypressed(...) _map_callback('keypressed', ...) end
+function love.keypressed(...)
+    if love.keyboard.isScancodeDown('f1') then
+        love.graphics.captureScreenshot(os.date('%Y-%m-%d %H%M%S')..'.png')
+        print('lj: captured screenshot')
+    else
+        _map_callback('keypressed', ...)
+    end
+end
 function love.keyreleased(...) _map_callback('keyreleased', ...) end
 function love.mousemoved(...) _map_callback('mousemoved', ...) end
 function love.mousepressed(...) _map_callback('mousepressed', ...) end

@@ -1,3 +1,4 @@
+require 'jam/struct'
 require 'jam/utils'
 require 'jam/entity'
 
@@ -203,4 +204,46 @@ function Map:updateTiles()
             self.tilesetData.quads[tile.id],
             tile.x * self.tilesize[1], tile.y * self.tilesize[2])
     end
+end
+
+function Map:serialize()
+    ser = 'LJMAP'
+    local function pack(fmt, ...)
+        local arg = {...}
+        ser = ser..struct.pack(fmt, unpack(arg))
+    end
+
+    --- tiles
+    pack('I', #self.tiles) -- the number of tiles - 4 bytes
+    for _, tile in pairs(self.tiles) do
+        pack('HHHB', tile.x, tile.y, tile.id, bitstonumber({ -- x, y, tile, flags - 7 bytes
+            tile.solid
+        }))
+    end
+
+    --- entities
+    pack('I', #self.objects)
+    for _, entity in pairs(self.objects) do
+        pack('HHs', entity.x, entity.y, tostring(entity.class)) -- x, y, class name - 9+ bytes
+    end
+
+    --- options
+    pack('I', #self.options)
+    for key, val in pairs(self.objects) do
+        if type(val) == 'boolean' then
+            pack('Bsb', 0, key, val and 1 or 0)
+        elseif type(val) == 'number' then
+            pack('Bsd', 1, key, val)
+        elseif type(val) == 'string' then
+            pack('Bss', 2, key, val)
+        end
+    end
+
+    return ser
+end
+
+function Map:savefile(filename)
+    out = assert(io.open(filename, 'wb'))
+    out:write(self:serialize())
+    assert(out:close())
 end

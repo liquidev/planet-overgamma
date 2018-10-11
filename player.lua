@@ -99,7 +99,6 @@ function SpamalityEnemy:death()
     self.map:eachEntity(function (entity)
         if entity.supertype == 'player' then
             entity.spamality = entity.spamality + wave * 10
-            print(entity.spamality)
         end
     end)
 end

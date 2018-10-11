@@ -92,7 +92,6 @@ function love.load(args)
     jam.canvas = love.graphics.newCanvas(conf.width, conf.height)
 
     print(' - user load()')
-    print(jam.load)
     jam.load()
 
     if args[1] == 'edit' then
@@ -171,7 +170,14 @@ local function _fire_callbacks(name, ...)
     _state_callback(name, ...)
 end
 
-function love.keypressed(...) _fire_callbacks('keypressed', ...) end
+function love.keypressed(...)
+    if love.keyboard.isScancodeDown('f1') then
+        love.graphics.captureScreenshot(os.date('%Y-%m-%d %H%M%S')..'.png')
+        print('lj: captured screenshot')
+    else
+        _fire_callbacks('keypressed', ...)
+    end
+end
 function love.keyreleased(...) _fire_callbacks('keyreleased', ...) end
 function love.mousemoved(...) _fire_callbacks('mousemoved', ...) end
 function love.mousepressed(...) _fire_callbacks('mousepressed', ...) end

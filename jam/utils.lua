@@ -68,3 +68,17 @@ end
 function string.endswith(str, ending)
    return ending == "" or str:sub(-#ending) == ending
 end
+
+function string.tohex(str)
+    return (str:gsub('.', function (c)
+        return string.format('%02X', string.byte(c))
+    end))
+end
+
+function bitstonumber(table)
+    num = 0
+    for i, v in pairs(table) do
+        num = num + (v and 1 or 0) * 2 ^ (i - 1)
+    end
+    return num
+end

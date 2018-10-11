@@ -2,7 +2,7 @@
     Spamality!+lovejam alpha by iLiquid
     simple game engine for love2d
     licensed under the ISC license
-]]--
+]]
 
 require 'jam/jam'
 require 'jam/shooter'
@@ -28,6 +28,8 @@ function jam.load()
     jam.states.title.text:set('> CLICK TO BEGIN <')
     wavetext = love.graphics.newText(jam.assets.fonts['main'])
     gameovertext = love.graphics.newText(jam.assets.fonts['main'])
+
+    jam.assets.maps['map_1']:savefile('map_1.ljm')
 end
 
 function jam.states.title.draw()

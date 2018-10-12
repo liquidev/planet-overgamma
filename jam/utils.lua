@@ -40,6 +40,12 @@ function printtable(table)
     pt(table, 1)
 end
 
+function tablelen(table)
+    len = 0
+    for _0, _1 in pairs(table) do len = len + 1 end
+    return len
+end
+
 function deepcopy(orig)
     local orig_type = type(orig)
     local copy
@@ -65,8 +71,12 @@ function math.sig(num)
     if num < 0 then return -1 end
 end
 
+function string.startswith(str, start)
+   return str:sub(1, #start) == start
+end
+
 function string.endswith(str, ending)
-   return ending == "" or str:sub(-#ending) == ending
+   return ending == '' or str:sub(-#ending) == ending
 end
 
 function string.tohex(str)
@@ -81,4 +91,14 @@ function bitstonumber(table)
         num = num + (v and 1 or 0) * 2 ^ (i - 1)
     end
     return num
+end
+
+function numbertobits(num, bits)
+    bits = bits or math.max(1, select(2, math.frexp(num)))
+    local t = {}
+    for b = bits, 1, -1 do
+        t[b] = math.fmod(num, 2)
+        num = math.floor((num - t[b]) / 2)
+    end
+    return t
 end

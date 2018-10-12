@@ -112,9 +112,9 @@ function struct.pack(format, ...)
   return table.concat(stream)
 end
 
-function struct.unpack(format, stream)
+function struct.unpack(format, stream, startpos)
   local vars = {}
-  local iterator = 1
+  local iterator = startpos or 1
   local endianness = true
 
   for i = 1, format:len() do
@@ -190,6 +190,8 @@ function struct.unpack(format, stream)
       i = i + n:len()
     end
   end
+
+  table.insert(vars, 1, iterator)
 
   return unpack(vars)
 end

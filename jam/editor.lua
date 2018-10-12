@@ -3,7 +3,7 @@ require 'jam/map'
 jam.states.__jam_editor__ = {}
 
 do
-    map = Map:new()
+    map = nil
     mode = 'map-edit'
     sel = Vector:new()
     tileset = 'main'
@@ -11,6 +11,7 @@ do
 
     function jam.states.__jam_editor__.begin()
         love.window.setTitle('lovejam map editor')
+        map = Map:new({})
     end
 
     function jam.states.__jam_editor__.draw()

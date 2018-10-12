@@ -1,3 +1,5 @@
+require 'jam/stringbuffer'
+
 require 'jam/object'
 require 'jam/vector'
 require 'jam/hitbox'
@@ -23,7 +25,7 @@ end
 
 require 'jam/editor'
 
-function jam.load() print('ld') end
+function jam.load() end
 function jam.draw() end
 function jam.update(dt) end
 

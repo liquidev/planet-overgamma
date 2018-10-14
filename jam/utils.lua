@@ -1,10 +1,15 @@
+function default(val, def)
+    if val == nil then val = def end
+    return val
+end
+
 function lines(s)
     if s:sub(-1)~="\n" then s=s.."\n" end
     return s:gmatch("(.-)\n")
 end
 
 function printtable(table)
-    circular = {}
+    local circular = {}
     function pt(tab, indent)
         if indent < 10 then
             for k, v in pairs(tab) do
@@ -41,7 +46,7 @@ function printtable(table)
 end
 
 function tablelen(table)
-    len = 0
+    local len = 0
     for _0, _1 in pairs(table) do len = len + 1 end
     return len
 end
@@ -86,7 +91,7 @@ function string.tohex(str)
 end
 
 function bitstonumber(table)
-    num = 0
+    local num = 0
     for i, v in pairs(table) do
         num = num + (v and 1 or 0) * 2 ^ (i - 1)
     end
@@ -94,11 +99,34 @@ function bitstonumber(table)
 end
 
 function numbertobits(num, bits)
-    bits = bits or math.max(1, select(2, math.frexp(num)))
+    local bits = bits or math.max(1, select(2, math.frexp(num)))
     local t = {}
     for b = bits, 1, -1 do
         t[b] = math.fmod(num, 2)
         num = math.floor((num - t[b]) / 2)
     end
     return t
+end
+
+function table.has(table, value)
+    for _, v in pairs(table) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
+function table2D(width, height, init)
+    init = default(init, 0)
+
+    local tab = {}
+    for i = 1, height do
+        tab[i] = {}
+        for j = 1, width do
+            tab[i][j] = init
+        end
+    end
+
+    return tab
 end

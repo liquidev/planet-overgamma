@@ -7,6 +7,8 @@ require 'jam/hitbox'
 conf = require '../jamconf'
 
 jam = {
+    args = {},
+
     scheduled = {},
 
     activemap = nil,
@@ -17,6 +19,16 @@ jam = {
 
     shakedata = nil
 }
+
+function jam.arg(pattern)
+    for _, v in pairs(jam.args) do
+        local find = { v:match(pattern) }
+        if find[1] then
+            return unpack(find)
+        end
+    end
+    return nil
+end
 
 function jam.setstate(which)
     jam.state = which
@@ -30,6 +42,7 @@ function jam.draw() end
 function jam.update(dt) end
 
 require 'jam/assets'
+
 function jam.loadAssets()
     jam.assets.loadTilesets()
     jam.assets.loadSprites()
@@ -75,6 +88,9 @@ end
 
 function love.load(args)
     print('lovejam by iLiquid - loading')
+
+    jam.args = args
+
     print(' - settings')
     love.graphics.setDefaultFilter('nearest', 'nearest', 1)
 
@@ -96,31 +112,31 @@ function love.load(args)
     print(' - user load()')
     jam.load()
 
-    if args[1] == 'edit' then
+    if jam.arg('%-edit') then
         print(' - initialize edit mode')
+        local map = jam.arg('%-M(.+)')
+        if map then jam.states.__jam_editor__.map = map end
         jam.setstate('__jam_editor__')
     end
 end
 
 function love.update(dt)
-    width, height = love.graphics.getDimensions()
-    cwidth, cheight = jam.canvas:getDimensions()
-    canvasx = width / 2 - cwidth * jam.scale / 2
-    canvasy = height / 2 - cheight * jam.scale / 2
+    jam.width, jam.height = love.graphics.getDimensions()
+    jam.cwidth, jam.cheight = jam.canvas:getDimensions()
+    jam.canvasx = jam.width / 2 - jam.cwidth * jam.scale / 2
+    jam.canvasy = jam.height / 2 - jam.cheight * jam.scale / 2
 
-    jam.mouse.x = math.floor((love.mouse.getX() - canvasx) / jam.scale)
-    jam.mouse.y = math.floor((love.mouse.getY() - canvasy) / jam.scale)
+    jam.mouse.x = math.floor((love.mouse.getX() - jam.canvasx) / jam.scale)
+    jam.mouse.y = math.floor((love.mouse.getY() - jam.canvasy) / jam.scale)
 
     jam.update(dt)
     if jam.activemap then
         jam.activemap:run(dt)
     end
-
-
 end
 
 function love.draw()
-    jam.scale = math.min(math.floor(width / conf.width), math.floor(height / conf.height))
+    jam.scale = math.min(math.floor(jam.width / conf.width), math.floor(jam.height / conf.height))
     love.graphics.clear(0, 0, 0)
 
     -- off-screen canvas
@@ -143,7 +159,7 @@ function love.draw()
                     love.math.random(-jam.shakedata.magnitude, jam.shakedata.magnitude))
         end
     end
-    love.graphics.translate(canvasx, canvasy)
+    love.graphics.translate(jam.canvasx, jam.canvasy)
     love.graphics.scale(jam.scale)
     love.graphics.draw(jam.canvas)
     love.graphics.pop()

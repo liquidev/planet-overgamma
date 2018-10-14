@@ -13,8 +13,8 @@ Bullet.damage = 0.3
 function Bullet:init()
     self.hitboxsize = { 4, 4 }
 
-    angle = self.angle + love.math.randomNormal(self.spread)
-    self:force(Vector:new(math.sin(angle) * self.speed, math.cos(angle) * self.speed))
+    self.angle = self.angle + love.math.randomNormal(self.spread)
+    self:force(Vector:new(math.sin(self.angle) * self.speed, math.cos(self.angle) * self.speed))
 end
 
 function Bullet:draw()
@@ -51,9 +51,7 @@ function ShooterPlayer:init()
     self.health = self.maxhealth
     self.immuneTime = love.timer.getTime()
 
-    self.texts = {
-
-    }
+    self.texts = {}
 end
 
 function ShooterPlayer:draw()

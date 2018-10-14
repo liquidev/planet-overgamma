@@ -1,17 +1,36 @@
 require 'jam/map'
 
-jam.states.__jam_editor__ = {}
+jam.states.__jam_editor__ = {
+    map = nil
+}
 
 do
-    map = nil
-    mode = 'map-edit'
-    sel = Vector:new()
-    tileset = 'main'
-    tileid = 2
+    local map = nil
+    local mode = 'map-edit'
+    local sel = Vector:new()
+    local tileset = 'main'
+    local tileid = 2
+
+    local message = ''
+    local messageexpire = love.timer:getTime()
+    local messagetext = nil
+
+    function msg(txt, time)
+        time = time or 1.5
+        message = txt
+        messageexpire = love.timer:getTime() + time
+        print('lj-edit: '..txt)
+    end
 
     function jam.states.__jam_editor__.begin()
         love.window.setTitle('lovejam map editor')
-        map = Map:new({})
+        if jam.states.__jam_editor__.map and jam.assets.maps[jam.states.__jam_editor__.map] then
+            map = jam.assets.maps[jam.states.__jam_editor__.map]
+        else
+            map = Map:new({})
+        end
+        messagetext = love.graphics.newText(jam.assets.fonts['main'])
+        msg('editing: '..(jam.states.__jam_editor__.map or '(new map)'))
     end
 
     function jam.states.__jam_editor__.draw()
@@ -21,6 +40,14 @@ do
         love.graphics.setColor(1, 1, 1, 0.25)
         jam.assets.tilesets['main']:draw(tileid, sel.x * Map.tilesize[1], sel.y * Map.tilesize[1])
         love.graphics.setColor(1, 1, 1, 1)
+
+        messagetext:set(message)
+        if love.timer.getTime() < messageexpire then
+            love.graphics.setColor(0, 0, 0, 0.8)
+            love.graphics.rectangle('fill', 0, 0, messagetext:getDimensions())
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.draw(messagetext)
+        end
     end
 
     function jam.states.__jam_editor__.update(dt)
@@ -29,7 +56,10 @@ do
 
     local function _mapset()
         if love.mouse.isDown(1) then
-            map:set(tileid, sel.x, sel.y)
+            map:set(tileid, 1, sel.x + 1, sel.y + 1)
+            map:updateTiles()
+        elseif love.mouse.isDown(2) then
+            map:set(1, 1, sel.x + 1, sel.y + 1)
             map:updateTiles()
         end
     end
@@ -47,6 +77,15 @@ do
             if tileid > 1 then tileid = tileid - 1 end
         elseif y < 0 then
             if tileid < 256 then tileid = tileid + 1 end
+        end
+        msg('tile: '..tileid, 0.5)
+    end
+
+    function jam.states.__jam_editor__.keypressed(key)
+        if mode == 'map-edit' then
+            if key == 's' then
+                msg('saved')
+            end
         end
     end
 end

@@ -12,6 +12,7 @@ jam = {
     scheduled = {},
 
     activemap = nil,
+    updatemap = true,
 
     mouse = Vector:new(),
     states = {},
@@ -69,6 +70,15 @@ end
 
 function jam.spawn(entity)
     table.insert(jam.activemap.instance.entities, entity)
+end
+
+function jam.despawn(entity)
+    local i = table.find(jam.activemap.instance.entities, entity)
+    table.remove(jam.activemap.instance.entities, i)
+end
+
+function jam.noupdate()
+    jam.updatemap = false
 end
 
 function jam.shake(time, magnitude)
@@ -130,8 +140,10 @@ function love.update(dt)
     jam.mouse.y = math.floor((love.mouse.getY() - jam.canvasy) / jam.scale)
 
     jam.update(dt)
-    if jam.activemap then
+    if jam.activemap and jam.updatemap then
         jam.activemap:run(dt)
+    else
+        jam.updatemap = true
     end
 end
 
@@ -184,7 +196,7 @@ local function _state_callback(name, ...)
 end
 
 local function _fire_callbacks(name, ...)
-    _map_callback(name, ...)
+    if jam.updatemap then _map_callback(name, ...) end
     _state_callback(name, ...)
 end
 

@@ -1,6 +1,6 @@
 require 'jam/entity'
 
-Bullet = Entity:extend()
+Bullet = Entity:extend('bullet', 'Bullet')
 Bullet.__index = Bullet
 
 Bullet.sprite = 'bullet'
@@ -34,9 +34,8 @@ function Bullet:collideEntity(entity)
     end
 end
 
-ShooterPlayer = Entity:new(nil, 0, 0, nil)
+ShooterPlayer = Entity:extend('player', 'Player')
 ShooterPlayer.__index = ShooterPlayer
-ShooterPlayer.supertype = 'player'
 
 ShooterPlayer.sprite = 'player'
 
@@ -122,9 +121,8 @@ function ShooterPlayer:mousepressed()
     self:shoot()
 end
 
-ShooterEnemy = Entity:new(nil, 0, 0, nil)
+ShooterEnemy = Entity:extend('enemy', 'Enemy')
 ShooterEnemy.__index = ShooterEnemy
-ShooterEnemy.supertype = 'enemy'
 
 ShooterEnemy.maxhealth = 10
 ShooterEnemy.speed = 0.5

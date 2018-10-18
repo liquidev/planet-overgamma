@@ -46,7 +46,7 @@ function Map:set(id, layer, x, y)
 end
 
 function Map:getSolid(x, y)
-    return self.instance.solids[y][x]
+    return self.instance.solids[y + 1][x + 1]
 end
 
 function Map:setSolid(solid, x, y)
@@ -58,7 +58,7 @@ function Map:each(layer, f)
 
     for y = 1, self.height do
         for x = 1, self.width do
-            f(x - 1, y - 1, tiles[y][x])
+            f(x, y, tiles[y][x])
         end
     end
 end
@@ -74,7 +74,7 @@ end
 function Map:eachSolid(f)
     for y = 1, self.height do
         for x = 1, self.width do
-            f(x, y, self.solids[y][x])
+            if self.instance.solids[y][x] then f({ x = x - 1, y = y - 1 }) end
         end
     end
 end
@@ -87,8 +87,9 @@ end
 
 function Map:reset()
     self.instance = {
-        tiles = {},
-        entities = {}
+        layers = {},
+        entities = {},
+        solids = {}
     }
 end
 
@@ -101,10 +102,25 @@ function Map:begin()
     self.instance.solids = deepcopy(self.solids)
     self.instance.entities = {}
     for _, ent in pairs(self.entities) do
-        printtable(ent)
+        local inst = ent.class:new(nil, ent.x, ent.y, self)
+        table.insert(self.instance.entities, inst)
     end
 
     self:updateTiles()
+end
+
+function Map:store()
+    self.layers = deepcopy(self.instance.layers)
+    self.solids = deepcopy(self.instance.solids)
+    self.entities = {}
+    for _, inst in pairs(self.instance.entities) do
+        local _, class = table.find(Map.entityset, inst.__index)
+        local ent = {
+            class = class,
+            x = inst.pos.x, y = inst.pos.y
+        }
+        table.insert(self.entities, ent)
+    end
 end
 
 function Map:run(dt)
@@ -127,15 +143,10 @@ end
 
 function Map:updateTiles()
     self._spritebatch:clear()
-    -- for _, tile in pairs(self.instance.tiles) do
-    --     self._spritebatch:add(
-    --         self.tilesetData.quads[tile.id],
-    --         tile.x * Map.tilesize[1], tile.y * Map.tilesize[2])
-    -- end
     self:eachLayer(function (layer, x, y, tile)
         self._spritebatch:add(
                 self.tilesetData.quads[tile.id],
-                (x) * self.tilesize[1], (y) * self.tilesize[2])
+                (x - 1) * self.tilesize[1], (y - 1) * self.tilesize[2])
     end)
 end
 
@@ -143,20 +154,24 @@ end
     LJMAP format version 1
 
     'LJMAP' [v]                             v - version
-    [tiles     ]
-       [i]                                  i - id; f - flags
+    [w   ][h   ]                            w - width, h - height
+    [layers    ]
+       [i] ...                                                      -- layer 1
+       [i] ...                                                      -- layer 2
+       [i] ...                                                      -- layer 3
        ...
+       [i] ...                                                      -- layer n
     [entities  ]
        [x         ][y         ][classname )
        ...
     [options   ]
-       [0][name)[v]                         v - value           -- boolean
-       [1][name)[value                 ]                        -- number
-       [2][name)[value )                                        -- string
+       [0][name)[v]                         v - value               -- boolean
+       [1][name)[value                 ]                            -- number
+       [2][name)[value )                                            -- string
        ...
 ]]
 function Map:serialize()
-    buf = StringBuffer:new('LJMAP')
+    local buf = StringBuffer:new('LJMAP')
     local function pack(fmt, ...)
         local arg = {...}
         buf:append(struct.pack(fmt, unpack(arg)))
@@ -168,10 +183,29 @@ function Map:serialize()
     --- metadata
     pack('HH', self.width, self.height)
 
-    for i = 0, self.height do
-        for i = 0, self.width do
-
+    --- layers
+    pack('I', #self.layers)
+    for l = 1, #self.layers do
+        for y = 1, self.height do
+            for x = 1, self.width do
+                pack('B', self:get(l, x, y).id - 1)
+            end
         end
+    end
+
+    --- solids
+    for y = 1, self.height do
+        for x = 1, self.width do
+            pack('B', self:getSolid(x - 1, y - 1) and 1 or 0)
+        end
+    end
+
+    --- entities
+    self:store()
+    pack('I', #self.entities)
+    for _, ent in pairs(self.entities) do
+        local id = table.find(self.entityset, ent.class)
+        pack('ffH', ent.x, ent.y, id)
     end
 
     return buf:collect()
@@ -198,51 +232,43 @@ function Map.deserialize(data)
         data = data:sub(6)
 
         --- version information
-        ver = read('B')
+        local ver = read('B')
 
         --- size
         map.width, map.height = read('HH')
 
         if ver == Map.version then
-            -- --- tiles
-            -- ntiles = read('I')
-            -- for i = 0, ntiles - 1 do
-            --     x, y, id, flags = read('HHBB')
-            --     flags = numbertobits(flags)
-            --     solid = flags[1] == 0 and true or false
-            --     table.insert(map.tiles, {
-            --         x = x, y = y,
-            --         id = id,
-            --         solid = solid
-            --     })
-            -- end
-            --
-            -- --- entities
-            -- nent = read('I')
-            -- for i = 0, nent - 1 do
-            --     x, y, classname = read('ffs')
-            --     E = Map.entityset[classname]
-            --     table.insert(map.objects, {
-            --         class = E,
-            --         classname = classname,
-            --         x = x, y = y
-            --     })
-            -- end
-            --
-            -- --- options
-            -- nopt = read('I')
-            -- for i = 0, nopt - 1 do
-            --     t, key = read('Bs')
-            --     val = nil
-            --     if t == 0 then
-            --         val = read('B')
-            --     elseif t == 1 then
-            --         val = read('d')
-            --     elseif t == 2 then
-            --         val = read('s')
-            --     end
-            --     map.options[key] = val
-            -- end
+            --- layers
+            local nlr = read('I')
+            map.layers = {}
+            for l = 1, nlr do
+                map.layers[l] = {}
+                for y = 1, map.height do
+                    map.layers[l][y] = {}
+                    for x = 1, map.width do
+                        local id = read('B') + 1
+                        map.layers[l][y][x] = { id = id }
+                    end
+                end
+            end
+
+            --- solids
+            for y = 1, map.height do
+                for x = 1, map.width do
+                    map.solids[y][x] = tern(read('B') == 1, true, false)
+                end
+            end
+
+            --- entities
+            local nent = read('I')
+            for i = 1, nent do
+                local x, y, id = read('ffH')
+                local class = Map.entityset[id]
+                table.insert(map.entities, {
+                    class = class,
+                    x = x, y = y
+                })
+            end
 
             return map
         else
@@ -259,72 +285,5 @@ end
 -- Why not use it? It doesn't have a reverse counterpart, so you can't save maps with it, only load them!
 -- Also the format is unsupported. Use this function only for conversion purposes!
 function Map:legacy_deserialize(filename)
-    -- load the file
-    if filename then
-        data = love.filesystem.read('data/maps/'..filename)
-
-        if data then
-            -- options first
-            for o in data:gmatch('%b[]') do
-                assign = o:sub(2, -2)
-                assign:gsub('([bnxs])%s+(%a+)%s*=%s*(.*)', function (type, name, tval)
-                    val = nil
-                    if type == 'b' then
-                        val = (tval == 'true') and false or true
-                    elseif type == 'n' then
-                        val = tonumber(tval, 10)
-                    elseif type == 'x' then
-                        val = tonumber(tval, 16)
-                    elseif type == 's' then
-                        val = tval
-                    end
-                    self.options[name] = val
-                    data = data:gsub(o:gsub('([^%w])', '%%%1'), '')
-                end)
-            end
-
-            -- then the blocks and entities
-            y = 0
-            for ln in lines(data) do
-                x = 0
-                for c in ln:gmatch('.') do
-                    id = string.find(Map.tileset, c, 1, true)
-                    if id and id > 1 then
-                        solid = false
-                        if string.find(Map.solids, c, 1, true) then solid = true end
-                        table.insert(self.tiles, {
-                            id = id,
-                            x = x, y = y,
-                            sx = x * Map.tilesize[1], sy = y * Map.tilesize[2],
-                            solid = solid
-                        })
-                    else
-                        E = Map.entityset[c]
-                        if E then
-                            table.insert(self.objects, {
-                                class = E[1],
-                                classname = c,
-                                x = x * Map.tilesize[1] + Map.tilesize[1] / 2,
-                                y = y * Map.tilesize[2] + Map.tilesize[2] / 2
-                            })
-                            table.insert(self.tiles, {
-                                id = string.find(Map.tileset, E[2], 1, true),
-                                x = x,
-                                y = y,
-                                solid = false
-                            })
-                        end
-                    end
-                    x = x + 1
-                end
-                y = y + 1
-            end
-
-            self.tilesetData = jam.assets.tilesets[self.options.tileset or 'main']
-            self.tilesetImg = self.tilesetData.image
-            self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, #self.tiles)
-            self:begin()
-            self:updateTiles()
-        end
-    end
+    error('lj: text lovejam maps are not supported. recreate your maps with the editor!')
 end

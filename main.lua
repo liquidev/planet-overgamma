@@ -12,9 +12,9 @@ require 'wave'
 Map.tileset = ' 12340<->^|v./=\\"~\'(_)'
 Map.solids = '12340<->^|v'
 Map.entityset = {
-    P = SpamalityPlayer,
-    E = SpamalityEnemy,
-    O = SpamalitySpawner
+    SpamalityPlayer,
+    SpamalityEnemy,
+    SpamalitySpawner
 }
 
 jam.states.title = {}
@@ -24,8 +24,8 @@ wavetext = nil
 gameovertext = nil
 
 function jam.load()
-    jam.states.title.text = love.graphics.newText(jam.assets.fonts['main'])
-    jam.states.title.text:set('> CLICK TO BEGIN <')
+    love.graphics.setFont(jam.assets.fonts['main'])
+
     wavetext = love.graphics.newText(jam.assets.fonts['main'])
     gameovertext = love.graphics.newText(jam.assets.fonts['main'])
 end
@@ -38,9 +38,9 @@ function jam.states.title.draw()
     jam.assets.sprites['logo']:draw(1, 128 / 2 - 123 / 2, 48)
     if love.timer.getTime() % 1 < 0.5 then
         love.graphics.setColor(0, 0, 0)
-        love.graphics.draw(jam.states.title.text, 128 / 2 - jam.states.title.text:getWidth() / 2 + 1, 72 + 2)
+        love.graphics.printf('> CLICK TO BEGIN <', 0, 73, 128, 'center')
         love.graphics.setColor(1, 1, 1)
-        love.graphics.draw(jam.states.title.text, 128 / 2 - jam.states.title.text:getWidth() / 2, 72 + 1)
+        love.graphics.printf('> CLICK TO BEGIN <', 0, 72, 128, 'center')
     end
 end
 

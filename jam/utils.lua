@@ -35,6 +35,8 @@ function printtable(table)
                     print(string.rep('  ', indent)..k..': '..tostring(v))
                 elseif type(v) == 'userdata' then
                     print(string.rep('  ', indent)..k..': [userdata]')
+                elseif type(v) == 'function' then
+                    print(string.rep('  ', indent)..k..': f() ...')
                 end
             end
         else
@@ -117,6 +119,15 @@ function table.has(table, value)
     return false
 end
 
+function table.find(table, value)
+    for i, v in pairs(table) do
+        if v == value then
+            return i, v
+        end
+    end
+    return nil
+end
+
 function table2D(width, height, init)
     init = default(init, 0)
 
@@ -129,4 +140,9 @@ function table2D(width, height, init)
     end
 
     return tab
+end
+
+function tern(condition, t, f)
+    if condition then return t
+    else return f end
 end

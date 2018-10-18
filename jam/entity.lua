@@ -1,6 +1,7 @@
 Entity = {}
 Entity.__index = Entity
 Entity.supertype = 'entity'
+Entity.name = 'Entity'
 
 Entity.sprite = 'placeholder'
 
@@ -39,10 +40,13 @@ function Entity:new(o, x, y, map)
     return self
 end
 
-function Entity:extend()
+function Entity:extend(supertype, name)
     o = {}
     setmetatable(o, self)
     self = o
+
+    self.supertype = supertype
+    self.name = name
 
     return Entity._create(self, 0, 0, nil)
 end
@@ -81,9 +85,10 @@ function Entity:physics(dt)
 
     -- TODO: clean up this mess
 
-    hitbox = Hitbox:new(
+    local hitbox = Hitbox:new(
             chpos.x - self.hitboxsize[1] / 2, chpos.y - self.hitboxsize[2] / 2,
             self.hitboxsize[1], self.hitboxsize[2])
+    hitbox:draw()
 
     self.map:eachSolid(function (tile)
         distance = math.dist(
@@ -95,6 +100,7 @@ function Entity:physics(dt)
                 left = Hitbox:new(
                         tile.x * Map.tilesize[1], tile.y * Map.tilesize[2] + 1,
                         Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                left:draw()
                 if hitbox:collides(left) then
                     self.vel:mul(-self.friction, 1)
                     chpos.x = left:left() - hitbox.width / 2
@@ -105,6 +111,7 @@ function Entity:physics(dt)
                 right = Hitbox:new(
                         tile.x * Map.tilesize[1] + Map.tilesize[1] * 0.4, tile.y * Map.tilesize[2] + 1,
                         Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                right:draw()
                 if hitbox:collides(right) then
                     self.vel:mul(-self.friction, 1)
                     chpos.x = right:right() + hitbox.width / 2
@@ -119,6 +126,7 @@ function Entity:physics(dt)
     hitbox = Hitbox:new(
             chpos.x - self.hitboxsize[1] / 2, chpos.y - self.hitboxsize[2] / 2,
             self.hitboxsize[1], self.hitboxsize[2])
+    hitbox:draw()
 
     self.map:eachSolid(function (tile)
         distance = math.dist(
@@ -130,6 +138,7 @@ function Entity:physics(dt)
                 top = Hitbox:new(
                         tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2],
                         Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                top:draw()
                 if hitbox:collides(top) then
                     self.vel:mul(1, -self.friction)
                     chpos.y = top:top() - hitbox.height / 2
@@ -140,6 +149,7 @@ function Entity:physics(dt)
                 bottom = Hitbox:new(
                         tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2] + Map.tilesize[2] * 0.4,
                         Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                bottom:draw()
                 if hitbox:collides(bottom) then
                     self.vel:mul(1, -self.friction)
                     chpos.y = bottom:bottom() + hitbox.height / 2

@@ -213,5 +213,9 @@ function love.mousemoved(...) _fire_callbacks('mousemoved', ...) end
 function love.mousepressed(...) _fire_callbacks('mousepressed', ...) end
 function love.mousereleased(...) _fire_callbacks('mousereleased', ...) end
 function love.wheelmoved(...) _fire_callbacks('wheelmoved', ...) end
+function love.keyreleased(...) _map_callback('keyreleased', ...) end
+function love.mousemoved(...) _map_callback('mousemoved', ...) end
+function love.mousepressed(...) _map_callback('mousepressed', ...) end
+function love.mousereleased(...) _map_callback('mousereleased', ...) end
 
 return jam

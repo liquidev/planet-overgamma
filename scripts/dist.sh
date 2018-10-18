@@ -1,8 +1,9 @@
 #!/bin/bash
 
 echo preparing for distribution
-rm -rf dist
-mkdir dist
+rm -rf dist_*
+mkdir dist_win
+mkdir dist_linux
 echo love archive
 mkdir temp
 cp -r * temp
@@ -12,12 +13,12 @@ rm -rf love
 rm -rf scripts
 rm -rf dist
 ls
-zip -9 -r ../dist/spamality.love .
+zip -9 -r ../dist_win/spamality.love .
 cd ..
 rm -rf temp
 echo windows executable
-cat love/love.exe dist/spamality.love > dist/spamality.exe
+cat love/love.exe dist_win/spamality.love > dist_win/spamality.exe
 cp love/* dist
-rm dist/love.exe
-rm dist/lovec.exe
+rm dist_win/love.exe
+rm dist_win/lovec.exe
 echo done

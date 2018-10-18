@@ -1,128 +1,82 @@
+require 'jam/struct'
 require 'jam/utils'
 require 'jam/entity'
 
-Map = {
-    tilesize = { 8, 8 },
-    tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz',
-    solids = '0123456789',
-    entityset = {} -- the entityset must be defined by the engine user
-}
+Map = {}
 Map.__index = Map
 
-function Map:new(filename)
-    local o = {}
+Map.version = 1
+
+Map.tilesize = { 8, 8 }
+Map.tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz'
+Map.solids = '0123456789'
+Map.entityset = {} -- the entityset must be defined by the engine user
+
+function Map:new(o, preload)
+    o = o or {}
     setmetatable(o, self)
     self = o
 
-    self.tiles = {}
+    if preload == nil then preload = true end
+
+    self.width = 16
+    self.height = 16
+
+    self.layers = { table2D(self.width, self.height, { id = 1 }) }
+    self.solids = table2D(self.width, self.height, false)
+    self.entities = {}
     self.options = {}
-    self.objects = {}
 
-    self.instance = {
-        tiles = {},
-        entities = {}
-    }
-
-    -- load the file
-    data, _ = love.filesystem.read('data/maps/'..filename)
-
-    if data then
-        -- options first
-        for o in data:gmatch('%b[]') do
-            assign = o:sub(2, -2)
-            assign:gsub('([bnxs])%s+(%a+)%s*=%s*(.*)', function (type, name, tval)
-                val = nil
-                if type == 'b' then
-                    val = (tval == 'true') and false or true
-                elseif type == 'n' then
-                    val = tonumber(tval, 10)
-                elseif type == 'x' then
-                    val = tonumber(tval, 16)
-                elseif type == 's' then
-                    val = tval
-                end
-                self.options[name] = val
-                data = data:gsub(o:gsub('([^%w])', '%%%1'), '')
-            end)
-        end
-
-        -- then the blocks and entities
-        y = 0
-        for ln in lines(data) do
-            x = 0
-            for c in ln:gmatch('.') do
-                id = string.find(Map.tileset, c, 1, true)
-                if id and id > 1 then
-                    solid = false
-                    if string.find(Map.solids, c, 1, true) then solid = true end
-                    table.insert(self.tiles, {
-                        id = id,
-                        x = x, y = y,
-                        sx = x * Map.tilesize[1], sy = y * Map.tilesize[2],
-                        solid = solid
-                    })
-                else
-                    E = Map.entityset[c]
-                    if E then
-                        table.insert(self.objects, {
-                            class = E[1],
-                            x = x * Map.tilesize[1] + Map.tilesize[1] / 2,
-                            y = y * Map.tilesize[2] + Map.tilesize[2] / 2
-                        })
-                        table.insert(self.tiles, {
-                            id = string.find(Map.tileset, E[2], 1, true),
-                            x = x,
-                            y = y
-                        })
-                    end
-                end
-                x = x + 1
-            end
-            y = y + 1
-        end
-
+    if preload then
         self.tilesetData = jam.assets.tilesets[self.options.tileset or 'main']
         self.tilesetImg = self.tilesetData.image
-        self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, #self.tiles)
+        self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, 1024)
         self:begin()
-        self:updateTiles()
     end
 
     return self
 end
 
-function Map:get(x, y)
-    found = nil
-    for _, tile in pairs(self.instance.tiles) do
-        if tile.x == x and tile.y == y then
-            found = tile
-            break
-        end
-    end
-    return found
+function Map:get(layer, x, y)
+    return self.instance.layers[layer][y][x]
+end
+
+function Map:set(id, layer, x, y)
+    self.instance.layers[layer][y][x].id = id
 end
 
 function Map:getSolid(x, y)
-    found = nil
-    for _, tile in pairs(self.instance.tiles) do
-        if tile.solid and tile.x == x and tile.y == y then
-            found = tile
-            break
-        end
-    end
-    return found
+    return self.instance.solids[y + 1][x + 1]
 end
 
-function Map:each(f)
-    for _, tile in pairs(self.instance.tiles) do
-        f(tile)
+function Map:setSolid(solid, x, y)
+    self.instance.solids[y][x] = solid
+end
+
+function Map:each(layer, f)
+    local tiles = self.instance.layers[layer]
+
+    for y = 1, self.height do
+        for x = 1, self.width do
+            f(x, y, tiles[y][x])
+        end
+    end
+end
+
+function Map:eachLayer(f)
+    for i = 1, #self.layers do
+        self:each(i, function (...)
+            f(i, unpack({...}))
+        end)
     end
 end
 
 function Map:eachSolid(f)
-    self:each(function (tile)
-        if tile.solid then f(tile) end
-    end)
+    for y = 1, self.height do
+        for x = 1, self.width do
+            if self.instance.solids[y][x] then f({ x = x - 1, y = y - 1 }) end
+        end
+    end
 end
 
 function Map:eachEntity(f)
@@ -133,21 +87,39 @@ end
 
 function Map:reset()
     self.instance = {
-        tiles = {},
-        entities = {}
+        layers = {},
+        entities = {},
+        solids = {}
     }
 end
 
 function Map:begin()
     self:reset()
 
-    for _, tile in pairs(self.tiles) do
-        table.insert(self.instance.tiles, deepcopy(tile))
+    self.instance = {}
+
+    self.instance.layers = deepcopy(self.layers)
+    self.instance.solids = deepcopy(self.solids)
+    self.instance.entities = {}
+    for _, ent in pairs(self.entities) do
+        local inst = ent.class:new(nil, ent.x, ent.y, self)
+        table.insert(self.instance.entities, inst)
     end
 
-    for _, obj in pairs(self.objects) do
-        i = obj.class:new(nil, obj.x, obj.y, self)
-        table.insert(self.instance.entities, i)
+    self:updateTiles()
+end
+
+function Map:store()
+    self.layers = deepcopy(self.instance.layers)
+    self.solids = deepcopy(self.instance.solids)
+    self.entities = {}
+    for _, inst in pairs(self.instance.entities) do
+        local _, class = table.find(Map.entityset, inst.__index)
+        local ent = {
+            class = class,
+            x = inst.pos.x, y = inst.pos.y
+        }
+        table.insert(self.entities, ent)
     end
 end
 
@@ -171,9 +143,147 @@ end
 
 function Map:updateTiles()
     self._spritebatch:clear()
-    for _, tile in pairs(self.instance.tiles) do
+    self:eachLayer(function (layer, x, y, tile)
         self._spritebatch:add(
-            self.tilesetData.quads[tile.id],
-            tile.x * self.tilesize[1], tile.y * self.tilesize[2])
+                self.tilesetData.quads[tile.id],
+                (x - 1) * self.tilesize[1], (y - 1) * self.tilesize[2])
+    end)
+end
+
+--[[
+    LJMAP format version 1
+
+    'LJMAP' [v]                             v - version
+    [w   ][h   ]                            w - width, h - height
+    [layers    ]
+       [i] ...                                                      -- layer 1
+       [i] ...                                                      -- layer 2
+       [i] ...                                                      -- layer 3
+       ...
+       [i] ...                                                      -- layer n
+    [entities  ]
+       [x         ][y         ][classname )
+       ...
+    [options   ]
+       [0][name)[v]                         v - value               -- boolean
+       [1][name)[value                 ]                            -- number
+       [2][name)[value )                                            -- string
+       ...
+]]
+function Map:serialize()
+    local buf = StringBuffer:new('LJMAP')
+    local function pack(fmt, ...)
+        local arg = {...}
+        buf:append(struct.pack(fmt, unpack(arg)))
     end
+
+    --- version information
+    pack('B', Map.version)
+
+    --- metadata
+    pack('HH', self.width, self.height)
+
+    --- layers
+    pack('I', #self.layers)
+    for l = 1, #self.layers do
+        for y = 1, self.height do
+            for x = 1, self.width do
+                pack('B', self:get(l, x, y).id - 1)
+            end
+        end
+    end
+
+    --- solids
+    for y = 1, self.height do
+        for x = 1, self.width do
+            pack('B', self:getSolid(x - 1, y - 1) and 1 or 0)
+        end
+    end
+
+    --- entities
+    self:store()
+    pack('I', #self.entities)
+    for _, ent in pairs(self.entities) do
+        local id = table.find(self.entityset, ent.class)
+        pack('ffH', ent.x, ent.y, id)
+    end
+
+    return buf:collect()
+end
+
+function Map:savefile(filename)
+    out = assert(io.open(filename, 'wb'))
+    out:write(self:serialize())
+    assert(out:close())
+end
+
+function Map.deserialize(data)
+    local map = Map:new({}, nil)
+    local pos = 1
+
+    local function read(fmt)
+        vars = { struct.unpack(fmt, data, pos) }
+        pos = vars[1]
+        table.remove(vars, 1)
+        return unpack(vars)
+    end
+
+    if data:startswith('LJMAP') then
+        data = data:sub(6)
+
+        --- version information
+        local ver = read('B')
+
+        --- size
+        map.width, map.height = read('HH')
+
+        if ver == Map.version then
+            --- layers
+            local nlr = read('I')
+            map.layers = {}
+            for l = 1, nlr do
+                map.layers[l] = {}
+                for y = 1, map.height do
+                    map.layers[l][y] = {}
+                    for x = 1, map.width do
+                        local id = read('B') + 1
+                        map.layers[l][y][x] = { id = id }
+                    end
+                end
+            end
+
+            --- solids
+            for y = 1, map.height do
+                for x = 1, map.width do
+                    map.solids[y][x] = tern(read('B') == 1, true, false)
+                end
+            end
+
+            --- entities
+            local nent = read('I')
+            for i = 1, nent do
+                local x, y, id = read('ffH')
+                local class = Map.entityset[id]
+                table.insert(map.entities, {
+                    class = class,
+                    x = x, y = y
+                })
+            end
+
+            return map
+        else
+            error('lj: tried to deserialize unsupported map version, try using legacy_deserialize for this map instead')
+        end
+    else
+        error('lj: tried to deserialize invalid ljm data')
+    end
+end
+
+
+
+-- This is the previous version's deserialization method, DO NOT use it in production code!
+-- Why not use it? It doesn't have a reverse counterpart, so you can't save maps with it, only load them!
+-- Also the format is unsupported. Use this function only for conversion purposes!
+function Map:legacy_deserialize(filename)
+    error('lj: text lovejam maps are not supported. recreate your maps with the editor!')
 end

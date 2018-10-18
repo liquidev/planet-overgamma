@@ -95,11 +95,9 @@ SpamalityEnemy = ShooterEnemy:extend()
 SpamalityEnemy.__index = SpamalityEnemy
 
 function SpamalityEnemy:death()
-    print('death')
     self.map:eachEntity(function (entity)
         if entity.supertype == 'player' then
             entity.spamality = entity.spamality + wave * 10
-            print(entity.spamality)
         end
     end)
 end

@@ -1,32 +1,31 @@
 --[[
-    Spamality!+lovejam alpha by iLiquid
-    simple game engine for love2d
+    Spamality!+lovejam alpha (c) iLiquid 2018
+    arcade shooter where you spam to win
     licensed under the ISC license
-]]--
+]]
 
 require 'jam/jam'
 require 'jam/shooter'
 require 'player'
 require 'wave'
 
-jam.state = 'title'
-
 Map.tileset = ' 12340<->^|v./=\\"~\'(_)'
 Map.solids = '12340<->^|v'
 Map.entityset = {
-    P = { SpamalityPlayer, '.' },
-    E = { SpamalityEnemy, '.' },
-    O = { SpamalitySpawner, '.' }
+    SpamalityPlayer,
+    SpamalityEnemy,
+    SpamalitySpawner
 }
 
 jam.states.title = {}
+jam.setstate('title')
 
 wavetext = nil
 gameovertext = nil
 
 function jam.load()
-    jam.states.title.text = love.graphics.newText(jam.assets.fonts['main'])
-    jam.states.title.text:set('> CLICK TO BEGIN <')
+    love.graphics.setFont(jam.assets.fonts['main'])
+
     wavetext = love.graphics.newText(jam.assets.fonts['main'])
     gameovertext = love.graphics.newText(jam.assets.fonts['main'])
 end
@@ -39,16 +38,16 @@ function jam.states.title.draw()
     jam.assets.sprites['logo']:draw(1, 128 / 2 - 123 / 2, 48)
     if love.timer.getTime() % 1 < 0.5 then
         love.graphics.setColor(0, 0, 0)
-        love.graphics.draw(jam.states.title.text, 128 / 2 - jam.states.title.text:getWidth() / 2 + 1, 72 + 2)
+        love.graphics.printf('> CLICK TO BEGIN <', 0, 73, 128, 'center')
         love.graphics.setColor(1, 1, 1)
-        love.graphics.draw(jam.states.title.text, 128 / 2 - jam.states.title.text:getWidth() / 2, 72 + 1)
+        love.graphics.printf('> CLICK TO BEGIN <', 0, 72, 128, 'center')
     end
 end
 
 function jam.states.title.update(dt)
     if love.mouse.isDown(1) then
         jam.assets.maps['map_1']:begin()
-        jam.state = 'game'
+        jam.setstate('game')
     end
 end
 
@@ -66,11 +65,6 @@ function jam.states.game.draw()
             wave = 1
             gametime = 0
             jam.assets.maps['map_1']:begin()
-            jam.activemap:eachEntity(function (entity)
-                if entity.supertype == 'player' then
-                    print(entity.spamality)
-                end
-            end)
         end
     else
         wavetext:set('WAVE '..wave)

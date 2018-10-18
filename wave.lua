@@ -3,6 +3,7 @@ wave = 1
 SpamalitySpawner = Entity:extend()
 SpamalitySpawner.__index = SpamalitySpawner
 SpamalitySpawner.supertype = 'spawner'
+SpamalitySpawner.name = 'Spawner'
 
 SpamalitySpawner.sprite = 'spawner'
 

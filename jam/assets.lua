@@ -64,8 +64,22 @@ function jam.assets.loadMaps()
     maps = love.filesystem.getDirectoryItems('data/maps')
     for _, v in pairs(maps) do
         print('   - map: '..v)
-        name = v:match('(.+)%..+')
-        map = Map:new(v)
-        jam.assets.maps[name] = map
+        name, ext = v:match('(.+)%.(.+)')
+        add = true
+        if ext == 'ljm' then
+            data = love.filesystem.read('data/maps/'..v)
+            map = Map.deserialize(data)
+        elseif ext == 'tljm' then
+            print('warn: tljm maps are deprecated. '..v..' will be ignored')
+            add = false
+        end
+        if add then jam.assets.maps[name] = map end
+    end
+    jam.assets.beginMaps()
+end
+
+function jam.assets.beginMaps()
+    for _, map in pairs(jam.assets.maps) do
+        map:begin()
     end
 end

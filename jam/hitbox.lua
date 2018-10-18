@@ -33,8 +33,13 @@ function Hitbox:collides(other)
     return self:collidesx(other) and self:collidesy(other)
 end
 
+function Hitbox:has(vector)
+    return vector.x > self:left() and vector.x < self:right()
+       and vector.y > self:top() and vector.y < self:bottom() 
+end
+
 function Hitbox:draw()
-    jam.scheduledraw(self)
+    if jam.arg('%-h') then jam.scheduledraw(self) end
 end
 
 function Hitbox:_scheddraw()

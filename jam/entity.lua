@@ -1,6 +1,7 @@
 Entity = {}
 Entity.__index = Entity
 Entity.supertype = 'entity'
+Entity.name = 'Entity'
 
 Entity.sprite = 'placeholder'
 
@@ -39,10 +40,13 @@ function Entity:new(o, x, y, map)
     return self
 end
 
-function Entity:extend()
+function Entity:extend(supertype, name)
     o = {}
     setmetatable(o, self)
     self = o
+
+    self.supertype = supertype
+    self.name = name
 
     return Entity._create(self, 0, 0, nil)
 end
@@ -81,7 +85,7 @@ function Entity:physics(dt)
 
     -- TODO: clean up this mess
 
-    hitbox = Hitbox:new(
+    local hitbox = Hitbox:new(
             chpos.x - self.hitboxsize[1] / 2, chpos.y - self.hitboxsize[2] / 2,
             self.hitboxsize[1], self.hitboxsize[2])
 

@@ -38,7 +38,7 @@ function jam.states.title.draw()
     jam.assets.sprites['logo']:draw(1, 128 / 2 - 123 / 2, 48)
     if love.timer.getTime() % 1 < 0.5 then
         love.graphics.setColor(0, 0, 0)
-        love.graphics.printf('> CLICK TO BEGIN <', 0, 73, 128, 'center')
+        love.graphics.printf('> CLICK TO BEGIN <', 0, 73, 130, 'center')
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf('> CLICK TO BEGIN <', 0, 72, 128, 'center')
     end

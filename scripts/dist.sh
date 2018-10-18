@@ -18,7 +18,7 @@ cd ..
 rm -rf temp
 echo windows executable
 cat love/love.exe dist_win/spamality.love > dist_win/spamality.exe
-cp love/* dist
+cp love/* dist_win
 rm dist_win/love.exe
 rm dist_win/lovec.exe
 echo done

@@ -12,20 +12,22 @@ Map.tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz'
 Map.solids = '0123456789'
 Map.entityset = {} -- the entityset must be defined by the engine user
 
-function Map:new(o, preload)
+function Map:new(o, width, height, preload)
     o = o or {}
     setmetatable(o, self)
     self = o
 
     if preload == nil then preload = true end
 
-    self.width = 16
-    self.height = 16
+    self.width = width or 16
+    self.height = height or 16
 
     self.layers = { table2D(self.width, self.height, { id = 1 }) }
     self.solids = table2D(self.width, self.height, false)
     self.entities = {}
     self.options = {}
+
+    self.scroll = Vector:new()
 
     if preload then
         self.tilesetData = jam.assets.tilesets[self.options.tileset or 'main']
@@ -38,19 +40,38 @@ function Map:new(o, preload)
 end
 
 function Map:get(layer, x, y)
-    return self.instance.layers[layer][y][x]
+    if x > 0 and x <= self.width
+    and y > 0 and y <= self.height then
+        return self.instance.layers[layer][y][x]
+    else
+        return { id = 1 }
+    end
 end
 
 function Map:set(id, layer, x, y)
-    self.instance.layers[layer][y][x].id = id
+    if x > 0 and x <= self.width
+    and y > 0 and y <= self.height then
+        if not self.instance.layers[layer] then
+            self.instance.layers[layer] = table2D(self.width, self.height, { id = 1 })
+        end
+        self.instance.layers[layer][y][x].id = id
+    end
 end
 
 function Map:getSolid(x, y)
-    return self.instance.solids[y + 1][x + 1]
+    if x >= 0 and x < self.width - 1
+    and y >= 0 and y < self.height - 1 then
+        return self.instance.solids[y + 1][x + 1]
+    else
+        return false
+    end
 end
 
 function Map:setSolid(solid, x, y)
-    self.instance.solids[y][x] = solid
+    if x > 0 and x <= self.width
+    and y > 0 and y <= self.height then
+        self.instance.solids[y][x] = solid
+    end
 end
 
 function Map:each(layer, f)
@@ -135,10 +156,15 @@ end
 
 function Map:draw()
     jam.activemap = self
+    love.graphics.push()
+
+    love.graphics.translate(-self.scroll.x, -self.scroll.y)
     love.graphics.draw(self._spritebatch)
     for _, e in pairs(self.instance.entities) do
         e:draw()
     end
+
+    love.graphics.pop()
 end
 
 function Map:updateTiles()
@@ -150,21 +176,76 @@ function Map:updateTiles()
     end)
 end
 
+function Map:autotile(layer, tilesets, bits)
+    bits = (bits or 'rldu'):reverse()
+    local uv, dv, lv, rv =
+        2 ^ (bits:find('u') - 1),
+        2 ^ (bits:find('d') - 1),
+        2 ^ (bits:find('l') - 1),
+        2 ^ (bits:find('r') - 1)
+
+    for _, index in pairs(tilesets) do
+        self:each(layer, function (x, y, tile)
+            if tile.id >= index and tile.id < index + 16 then
+                local u, d, l, r =
+                    self:get(layer, x, y - 1).id,
+                    self:get(layer, x, y + 1).id,
+                    self:get(layer, x - 1, y).id,
+                    self:get(layer, x + 1, y).id
+                local id = index
+                if u >= index and u < index + 16 then id = id + uv end
+                if d >= index and d < index + 16 then id = id + dv end
+                if l >= index and l < index + 16 then id = id + lv end
+                if r >= index and r < index + 16 then id = id + rv end
+                self:set(id, layer, x, y)
+            end
+        end)
+    end
+    self:updateTiles()
+end
+
+function Map:autosolid(layer, tiles, reset)
+    if reset == nil then reset = false end
+
+    if reset then
+        for y = 1, self.height do
+            for x = 1, self.width do
+                self.instance.solids[y][x] = false
+            end
+        end
+    end
+
+    self:each(1, function (x, y, tile)
+        self.instance.solids[y][x] = self.instance.solids[y][x] or table.has(tiles, tile.id)
+    end)
+
+    local osolids = deepcopy(self.instance.solids)
+    for y = 2, self.height - 1 do
+        for x = 2, self.width - 1 do
+            if osolids[y][x - 1] and osolids[y][x + 1]
+            and osolids[y - 1][x] and osolids[y + 1][x] then
+                self.instance.solids[y][x] = false
+            end
+        end
+    end
+end
+
 --[[
     LJMAP format version 1
+    FIXME: this section needs updating to describe the new format
 
     'LJMAP' [v]                             v - version
     [w   ][h   ]                            w - width, h - height
-    [layers    ]
+    [#layers   ]
        [i] ...                                                      -- layer 1
        [i] ...                                                      -- layer 2
        [i] ...                                                      -- layer 3
        ...
        [i] ...                                                      -- layer n
-    [entities  ]
+    [#entities ]
        [x         ][y         ][classname )
        ...
-    [options   ]
+    [#options  ]
        [0][name)[v]                         v - value               -- boolean
        [1][name)[value                 ]                            -- number
        [2][name)[value )                                            -- string
@@ -218,7 +299,6 @@ function Map:savefile(filename)
 end
 
 function Map.deserialize(data)
-    local map = Map:new({}, nil)
     local pos = 1
 
     local function read(fmt)
@@ -235,7 +315,8 @@ function Map.deserialize(data)
         local ver = read('B')
 
         --- size
-        map.width, map.height = read('HH')
+        local mapwidth, mapheight = read('HH')
+        local map = Map:new({}, mapwidth, mapheight)
 
         if ver == Map.version then
             --- layers

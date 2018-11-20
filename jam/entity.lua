@@ -99,6 +99,7 @@ function Entity:physics(dt)
                 left = Hitbox:new(
                         tile.x * Map.tilesize[1], tile.y * Map.tilesize[2] + 1,
                         Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                left:draw()
                 if hitbox:collides(left) then
                     self.vel:mul(-self.friction, 1)
                     chpos.x = left:left() - hitbox.width / 2
@@ -109,6 +110,7 @@ function Entity:physics(dt)
                 right = Hitbox:new(
                         tile.x * Map.tilesize[1] + Map.tilesize[1] * 0.4, tile.y * Map.tilesize[2] + 1,
                         Map.tilesize[1] * 0.6, Map.tilesize[2] - 3)
+                right:draw()
                 if hitbox:collides(right) then
                     self.vel:mul(-self.friction, 1)
                     chpos.x = right:right() + hitbox.width / 2
@@ -134,6 +136,7 @@ function Entity:physics(dt)
                 top = Hitbox:new(
                         tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2],
                         Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                top:draw()
                 if hitbox:collides(top) then
                     self.vel:mul(1, -self.friction)
                     chpos.y = top:top() - hitbox.height / 2
@@ -144,6 +147,7 @@ function Entity:physics(dt)
                 bottom = Hitbox:new(
                         tile.x * Map.tilesize[1] + 1, tile.y * Map.tilesize[2] + Map.tilesize[2] * 0.4,
                         Map.tilesize[1] - 3, Map.tilesize[2] * 0.6)
+                bottom:draw()
                 if hitbox:collides(bottom) then
                     self.vel:mul(1, -self.friction)
                     chpos.y = bottom:bottom() + hitbox.height / 2

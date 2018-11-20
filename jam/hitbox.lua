@@ -35,7 +35,7 @@ end
 
 function Hitbox:has(vector)
     return vector.x > self:left() and vector.x < self:right()
-       and vector.y > self:top() and vector.y < self:bottom() 
+       and vector.y > self:top() and vector.y < self:bottom()
 end
 
 function Hitbox:draw()
@@ -43,8 +43,8 @@ function Hitbox:draw()
 end
 
 function Hitbox:_scheddraw()
-    love.graphics.setColor(1, 0, 0)
+    love.graphics.setColor(Color.rgb(255, 0, 0))
     love.graphics.rectangle('line',
-            self.x + 0.5, self.y + 0.5, self.width, self.height)
-    love.graphics.setColor(1, 1, 1)
+            self.x + 0.5 - jam.activemap.scroll.x, self.y + 0.5 - jam.activemap.scroll.y, self.width, self.height)
+    love.graphics.setColor(Color.rgb(255, 255, 255))
 end

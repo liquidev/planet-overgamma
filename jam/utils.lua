@@ -78,6 +78,19 @@ function math.sig(num)
     if num < 0 then return -1 end
 end
 
+function math.round(n, precision)
+    local mult = 10 ^ (precision or 0)
+    return math.floor(n * mult + 0.5) / mult
+end
+
+function math.lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+function math.clamp(v, min, max)
+    return math.min(math.max(v, min), max)
+end
+
 function string.startswith(str, start)
    return str:sub(1, #start) == start
 end
@@ -128,6 +141,23 @@ function table.find(table, value)
     return nil
 end
 
+function table.shift(tab, amt)
+    for i = 1, amt do
+        table.insert(tab, 1, table.remove(tab, #tab))
+    end
+end
+
+function table.join(...)
+    local tables = {...}
+    local result = {}
+    for _, tab in pairs(tables) do
+        for _, v in pairs(tab) do
+            table.insert(result, v)
+        end
+    end
+    return result
+end
+
 function table2D(width, height, init)
     init = default(init, 0)
 
@@ -140,6 +170,14 @@ function table2D(width, height, init)
     end
 
     return tab
+end
+
+function range(start, stop)
+    local r = {}
+    for i = start, stop do
+        table.insert(r, i)
+    end
+    return unpack(r)
 end
 
 function tern(condition, t, f)

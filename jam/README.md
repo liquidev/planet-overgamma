@@ -12,7 +12,7 @@ but is now treated as a separate project.
  - Built in entity collision detection
  - Base classes for certain genres of games:
    - Shooter
-   - (more coming soon)
+   - Platformer
 
 ## Installation
 
@@ -24,10 +24,10 @@ Open Bash and type in the following command:
 $ git submodule add https://github.com/liquid600pgm/lovejam
 ```
 
-Then in your `main.lua` add this:
+Then in your `main.lua` add this to the beginning:
 
 ```lua
-require 'jam/jam'
+require 'jam'
 ```
 
 ### Contributing to existing lovejam projects

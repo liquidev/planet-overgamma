@@ -1,7 +1,7 @@
 return {
-    width = 128,
-    height = 128,
+    width = 96,
+    height = 96,
     defaultScale = 6,
-    name = 'Spamality!',
+    name = 'Hybradiation',
     debug = true
 }

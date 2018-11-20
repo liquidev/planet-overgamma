@@ -63,15 +63,15 @@ function ShooterPlayer:draw()
     jam.assets.sprites['bar-health']:draw(2, 0, 0)
     love.graphics.setScissor()
     self.texts.hp:set(math.floor(self.health)..'/'..math.floor(self.maxhealth))
-    love.graphics.setColor(0, 0, 0)
+    love.graphics.setColor(Color.rgb(0, 0, 0))
     love.graphics.draw(self.texts.hp, 2, 1)
-    love.graphics.setColor(1, 1, 1)
+    love.graphics.setColor(Color.rgb(255, 255, 255))
     love.graphics.draw(self.texts.hp, 1, 0)
 end
 
 function ShooterPlayer:update(dt)
-    step = dt / 1.666666
-    frame = step * 100
+    local step = dt / 1.666666
+    local frame = step * 100
 
     local key = love.keyboard.isScancodeDown
 
@@ -109,7 +109,7 @@ function ShooterPlayer:damage(hp)
 end
 
 function ShooterPlayer:shoot()
-    bullet = self.bullettype:new({
+    local bullet = self.bullettype:new({
         angle = -math.atan2(jam.mouse.y - self.pos.y, jam.mouse.x - self.pos.x) + math.pi / 2
     }, self.pos.x, self.pos.y, self.map)
     jam.assets.sounds['shoot']:stop()
@@ -208,3 +208,9 @@ function ShooterEnemy:collideEntity(entity)
         entity:damage(2)
     end
 end
+
+return {
+    Bullet,
+    ShooterPlayer,
+    ShooterEnemy
+}

@@ -1,7 +1,7 @@
 --[[
     Planet Overgamma+lovejam alpha (c) iLiquid 2018
-    arcade shooter where you spam to win
-    licensed under the ISC license
+    a platformer/survival hybrid -- read more at https://github.com/liquid600pgm/planet-overgamma
+    licensed under the MIT license
 ]]
 
 require 'jam'

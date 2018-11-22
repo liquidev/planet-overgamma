@@ -11,20 +11,61 @@ function gfx.addEffect(where, fx)
     return fx
 end
 
+function gfx.removeEffect(where, fx)
+    table.remove(gfx.shader.effects[where], (table.find(fx)))
+    return fx
+end
+
 function gfx.resetEffects()
     gfx.shader.effects = {
         pre = {}, -- applied to framebuffer before scaling
         post = {} -- applied to framebuffer after scaling
     }
+
+    gfx.shader.wipe = {
+        enabled = false, fx = {},
+        playuntil = 0, reverse = false,
+        callback = nil
+    }
 end
 
 gfx.resetEffects()
+
+function gfx.wipe(shader, duration, reverse, options, callback)
+    if invert == nil then invert = false end
+
+    gfx.shader.wipe.enabled = true
+    gfx.shader.wipe.starttime = love.timer.getTime()
+    gfx.shader.wipe.duration = duration
+    gfx.shader.wipe.reverse = reverse
+    gfx.shader.wipe.callback = callback
+    local fx = { shader, progress = tern(reverse, 1.0, 0.0) }
+    for k, v in pairs(options) do
+        fx[k] = v
+    end
+    gfx.shader.wipe.fx = gfx.addEffect('pre', fx)
+
+    return fx
+end
 
 function gfx._load(args)
     print(' - canvas+buffers')
     gfx.canvas = love.graphics.newCanvas(conf.width, conf.height)
     gfx.shader.buffer1 = love.graphics.newCanvas(conf.width, conf.height)
     gfx.shader.buffer2 = love.graphics.newCanvas(conf.width, conf.height)
+end
+
+function gfx._update()
+    if gfx.shader.wipe.enabled then
+        local time = love.timer.getTime() - gfx.shader.wipe.starttime
+        local progress = time / gfx.shader.wipe.duration
+        gfx.shader.wipe.fx.progress = progress
+        if progress > 1 then
+            if gfx.shader.wipe.callback then gfx.shader.wipe.callback() end
+            gfx.removeEffect('pre', gfx.shader.wipe.fx)
+            gfx.shader.wipe.enabled = false
+        end
+    end
 end
 
 function gfx._draw()
@@ -40,19 +81,6 @@ function gfx._draw()
         jam.scheduled[i] = nil
     end
 
-    -- shader framebuffer
-    -- love.graphics.setCanvas(gfx.shader.buffer())
-    -- love.graphics.draw(gfx.canvas)
-    -- for _, fx in pairs(gfx.shader.effects.pre) do
-    --     local shader = jam.asset('shader', fx[1])
-    --     for key, val in pairs(fx) do
-    --         if key ~= 1 then
-    --             shader:send(key, val)
-    --         end
-    --     end
-    --     love.graphics.setShader(shader)
-    --     love.graphics.draw(gfx.shader.buffer)
-    -- end
     love.graphics.setCanvas(gfx.shader.buffer1)
     love.graphics.clear()
     love.graphics.draw(gfx.canvas)

@@ -20,7 +20,9 @@ function jam.load(args)
 end
 
 function jam.states.game.begin()
-
+    print('begin')
+    jam.gfx.wipe('radial_wipe', 0.5, false, { smoothness = 0.05, invert = true }, function ()
+    end)
 end
 
 function jam.states.game.draw()

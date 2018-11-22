@@ -130,6 +130,8 @@ function love.load(args)
     print(' - assets')
     jam.loadAssets()
 
+    jam.setstate('game')
+
     print(' - user load()')
     jam.load()
 
@@ -154,6 +156,7 @@ function love.update(dt)
         jam.mapmouse:set(jam.mouse.x, jam.mouse.y)
     end
 
+    jam.gfx._update()
     jam.update(dt)
     if jam.activemap and jam.updatemap then
         jam.activemap:run(dt)

@@ -39,6 +39,10 @@ function Map:new(o, width, height, preload)
     return self
 end
 
+function Map:newlayer(layer)
+    self.instance.layers[layer] = table2D(self.width, self.height, { id = 1 })
+end
+
 function Map:get(layer, x, y)
     if x > 0 and x <= self.width
     and y > 0 and y <= self.height then
@@ -52,9 +56,17 @@ function Map:set(id, layer, x, y)
     if x > 0 and x <= self.width
     and y > 0 and y <= self.height then
         if not self.instance.layers[layer] then
-            self.instance.layers[layer] = table2D(self.width, self.height, { id = 1 })
+            self:newlayer(layer)
         end
         self.instance.layers[layer][y][x].id = id
+    end
+end
+
+function Map:setArea(id, layer, x, y, w, h)
+    for i = y, y + (h - 1) do
+        for j = x, x + (w - 1) do
+            self:set(id, layer, j, i)
+        end
     end
 end
 
@@ -85,7 +97,7 @@ function Map:each(layer, f)
 end
 
 function Map:eachLayer(f)
-    for i = 1, #self.layers do
+    for i = 1, #self.instance.layers do
         self:each(i, function (...)
             f(i, unpack({...}))
         end)
@@ -98,6 +110,15 @@ function Map:eachSolid(f)
             if self.instance.solids[y][x] then f({ x = x - 1, y = y - 1 }) end
         end
     end
+end
+
+function Map:spawn(entity)
+    table.insert(self.instance.entities, entity)
+end
+
+function Map:despawn(entity)
+    local i = table.find(self.instance.entities, entity)
+    table.remove(self.instance.entities, i)
 end
 
 function Map:eachEntity(f)

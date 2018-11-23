@@ -4,8 +4,12 @@ Player.__index = Player
 Player.gravity = Vector:new(0, 50)
 Player.maxspeed = { 0.7, 2 }
 
+Player.inventory = {}
+
 function Player:init()
     PlatformerPlayer.init(self, dt)
+
+    self.map.player = self
 
     self.laser = {}
     self.laser.mode = 'none'
@@ -15,9 +19,8 @@ function Player:init()
     self.screen = Vector:new(math.floor(self.pos.x / 96), math.floor(self.pos.y / 96))
     self.map.scroll:set(self.screen.x * 96, self.pos.y - 96 / 2)
 
-    self.inventory = {}
     for t, _ in pairs(Item.types) do
-        self.inventory[t] = {
+        Player.inventory[t] = {
             amount = 0,
             disptime = 0
         }
@@ -45,7 +48,7 @@ function Player:draw()
         love.graphics.push()
         love.graphics.translate(self.map.scroll.x, self.map.scroll.y)
         love.graphics.translate(8, 8)
-        for t, i in pairs(self.inventory) do
+        for t, i in pairs(Player.inventory) do
             if love.timer.getTime() < i.disptime then
                 local spr = jam.asset('sprite', 'items')
                 spr:draw(t + 1, 0, y + 1)
@@ -61,7 +64,12 @@ function Player:draw()
 end
 
 function Player:update(dt)
+    -- don't allow the player to move when out of bounds
+    self.controllable = self.pos.y > 0 and self.pos.y < self.map.height * 8
+
+    --
     PlatformerPlayer.update(self, dt)
+    --
 
     -- keep the player on top
     if table.find(self.map.instance.entities, self) < #self.map.instance.entities then
@@ -82,7 +90,7 @@ function Player:update(dt)
         self.maxspeed[1] = 0.7
     end
 
-    self.pos:limit(4, self.map.width * 8 - 4, -200, self.map.width * 8)
+    self.pos:limit(4, self.map.width * 8 - 4, -200, self.map.height * 8 + 200)
 
     --- animations
 
@@ -118,7 +126,7 @@ function Player:update(dt)
         if self.laser.mode == 'place' then self.laser.mode = 'none' end
     end
 
-    if self.laser.mode ~= 'none' then self.laser.power = self.laser.power + 0.4
+    if self.laser.mode ~= 'none' then self.laser.power = self.laser.power + 4 * frame
     else self.laser.power = 0 end
     self.laser.power = math.min(self.laser.power, 4)
 
@@ -147,11 +155,41 @@ function Player:update(dt)
             end
 
             self.map:set(1, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
-            self.map:autotile(1, {2, 19})
-            self.map:autosolid(1, table.join(
-                {range(2, 17)},
-                {range(19, 34)}
-            ), true)
+            maps.autoprocess(self.map)
+        end
+    end
+
+    --- mines
+
+    if self.pos.y > self.map.height * 8 and self.pos.y < (self.map.height + 1) * 8 and self.vel.y > 0 then
+        if not self.map.mine then
+            jam.gfx.wipe('radial_wipe', 0.5, true, { smoothness = 0.1, invert = true }, function ()
+                blankwait(0.1, 'game', function ()
+                    mines.enter(math.floor(self.pos.x / 8))
+                end)
+            end)
+        else
+            jam.gfx.wipe('radial_wipe', 0.5, true, { smoothness = 0.1, invert = true }, function ()
+                blankwait(0.1, 'game', function ()
+                    currentmap = jam.asset('map', 'planet')
+                    currentmap.player.map = currentmap
+                    currentmap.player.pos:set(mines.x * 8 + 4, -40)
+                    currentmap.player.pos.y = -40
+                end)
+            end)
+        end
+    end
+    if self.map.mine then
+        if self.pos.y < -6 and self.vel.y < 0 then
+            jam.gfx.wipe('radial_wipe', 0.5, true, { smoothness = 0.1, invert = true }, function ()
+                blankwait(0.1, 'game', function ()
+                    currentmap = jam.asset('map', 'planet')
+                    currentmap.player.map = currentmap
+                    currentmap.player.pos:set(mines.x * 8 + 4, (currentmap.height + 2) * 8)
+                    currentmap.player.vel:set(0, -50)
+                    currentmap.player.cutscenetime = 0.2
+                end)
+            end)
         end
     end
 
@@ -163,13 +201,13 @@ function Player:update(dt)
             self.map.scroll.x,
             self.screen.x * 96 + (jam.mouse.x - 48) * 0.2,
             1.0 * frame), 0, (self.map.width - 12) * 8),
-        math.clamp(math.lerp(self.map.scroll.y, self.pos.y - 96 / 2, 1.5 * frame), -200, (self.map.height - 12) * 8))
+        math.clamp(math.lerp(self.map.scroll.y, self.pos.y - 96 / 2, 1.5 * frame), 0, (self.map.height - 12) * 8))
 end
 
 function Player:collideEntity(ent)
     if ent.supertype == 'item' then
-        self.inventory[ent.id].amount = self.inventory[ent.id].amount + 1
-        self.inventory[ent.id].disptime = love.timer.getTime() + 2.0
+        Player.inventory[ent.id].amount = Player.inventory[ent.id].amount + 1
+        Player.inventory[ent.id].disptime = love.timer.getTime() + 2.0
         jam.despawn(ent)
     end
 end

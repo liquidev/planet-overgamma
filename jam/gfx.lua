@@ -12,7 +12,7 @@ function gfx.addEffect(where, fx)
 end
 
 function gfx.removeEffect(where, fx)
-    table.remove(gfx.shader.effects[where], (table.find(fx)))
+    table.remove(gfx.shader.effects[where], table.find(gfx.shader.effects[where], fx))
     return fx
 end
 
@@ -43,6 +43,7 @@ function gfx.wipe(shader, duration, reverse, options, callback)
     for k, v in pairs(options) do
         fx[k] = v
     end
+    gfx.removeEffect('pre', gfx.shader.wipe.fx)
     gfx.shader.wipe.fx = gfx.addEffect('pre', fx)
 
     return fx
@@ -59,7 +60,8 @@ function gfx._update()
     if gfx.shader.wipe.enabled then
         local time = love.timer.getTime() - gfx.shader.wipe.starttime
         local progress = time / gfx.shader.wipe.duration
-        gfx.shader.wipe.fx.progress = progress
+        if not gfx.shader.wipe.reverse then gfx.shader.wipe.fx.progress = progress
+        else gfx.shader.wipe.fx.progress = 1.0 - progress end
         if progress > 1 then
             if gfx.shader.wipe.callback then gfx.shader.wipe.callback() end
             gfx.removeEffect('pre', gfx.shader.wipe.fx)

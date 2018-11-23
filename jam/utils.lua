@@ -165,7 +165,9 @@ function table2D(width, height, init)
     for i = 1, height do
         tab[i] = {}
         for j = 1, width do
-            tab[i][j] = init
+            local v = init
+            if type(v) == 'table' then v = deepcopy(init) end
+            tab[i][j] = v
         end
     end
 
@@ -183,4 +185,8 @@ end
 function tern(condition, t, f)
     if condition then return t
     else return f end
+end
+
+function chance(n)
+    return (love.math.random() <= n)
 end

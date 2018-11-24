@@ -4,8 +4,6 @@ Player.__index = Player
 Player.gravity = Vector:new(0, 50)
 Player.maxspeed = { 0.7, 2 }
 
-Player.inventory = {}
-
 function Player:init()
     PlatformerPlayer.init(self, dt)
 
@@ -16,11 +14,16 @@ function Player:init()
     self.laser.aim = Vector:new()
     self.laser.power = 0
 
+    -- laser: placement
+    self.laser.block = 1
+    self.laser.hudtime = 0
+
     self.screen = Vector:new(math.floor(self.pos.x / 96), math.floor(self.pos.y / 96))
     self.map.scroll:set(self.screen.x * 96, self.pos.y - 96 / 2)
 
+    self.inventory = {}
     for t, _ in pairs(Item.types) do
-        Player.inventory[t] = {
+        self.inventory[t] = {
             amount = 0,
             disptime = 0
         }
@@ -43,12 +46,12 @@ function Player:draw()
     end
     love.graphics.setLineWidth(1)
 
-    do
+    -- inventory hud
+    jam.gfx.drawhud(function ()
         local y = 0
         love.graphics.push()
-        love.graphics.translate(self.map.scroll.x, self.map.scroll.y)
         love.graphics.translate(8, 8)
-        for t, i in pairs(Player.inventory) do
+        for t, i in pairs(self.inventory) do
             if love.timer.getTime() < i.disptime then
                 local spr = jam.asset('sprite', 'items')
                 spr:draw(t + 1, 0, y + 1)
@@ -60,7 +63,23 @@ function Player:draw()
             end
         end
         love.graphics.pop()
-    end
+    end)
+
+    -- placement hud
+    jam.gfx.drawhud(function ()
+        if love.timer.getTime() < self.laser.hudtime then
+            local top = blocks.placeable[self.laser.block - 1]
+            local mid = blocks.placeable[self.laser.block]
+            local btm = blocks.placeable[self.laser.block + 1]
+            if mid then
+                jam.asset('tileset', 'main'):draw(mid.place, 88, 44)
+                love.graphics.setShader(jam.asset('shader', 'alpha_gradient'))
+                if top then jam.asset('tileset', 'main'):draw(top.place, 88, 36) end
+                if btm then jam.asset('tileset', 'main'):draw(btm.place, 88, 52) end
+                love.graphics.setShader()
+            end
+        end
+    end)
 end
 
 function Player:update(dt)
@@ -134,6 +153,22 @@ function Player:update(dt)
         math.floor(jam.mapmouse.x / 8),
         math.floor(jam.mapmouse.y / 8))
 
+    self.laser.block = math.clamp(self.laser.block, 1, math.max(#blocks.placeable, 1))
+
+    table.clear(blocks.placeable)
+    for _, b in pairs(blocks.all) do
+        local canplace = true
+        for _, i in pairs(b.ingredients) do
+            if self.inventory[i.id].amount < i.amt then
+                canplace = false
+                break
+            end
+        end
+        if canplace then
+            table.insert(blocks.placeable, b)
+        else break end
+    end
+
     if self.laser.power >= 4 then
         -- laser: destroy
         if self.laser.mode == 'destroy' then
@@ -152,7 +187,6 @@ function Player:update(dt)
                             end
                             break
                         end
-
                     end
                 end
             end
@@ -160,6 +194,21 @@ function Player:update(dt)
             self.map:set(1, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
             self.map:set(1, 2, self.laser.aim.x + 1, self.laser.aim.y + 1)
             maps.autoprocess(self.map)
+        end
+
+        -- laser: place
+        if self.laser.mode == 'place' then
+            local block = blocks.placeable[self.laser.block]
+            if block then
+                for _, i in pairs(block.ingredients) do
+                    self.inventory[i.id].amount = self.inventory[i.id].amount - i.amt
+                    self.inventory[i.id].disptime = love.timer.getTime() + 2.0
+                end
+                if type(block.place) == 'number' then
+                    self.map:set(block.place, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+                    maps.autoprocess(self.map)
+                end
+            end
         end
     end
 
@@ -185,7 +234,17 @@ function Player:update(dt)
         end
     end
     if self.map.mine then
-        mines.light(self.pos.x, self.pos.y, 0.3, 1.0, 1.0, 1.0, 1.0)
+        if self.laser.power > 0 then
+            if self.laser.mode == 'destroy' then
+                mines.light(
+                    self.laser.aim.x * 8 + 4, self.laser.aim.y * 8 + 4, self.laser.power * 0.1, Color.rgb(255, 0, 68))
+            elseif self.laser.mode == 'place' then
+                mines.light(
+                    self.laser.aim.x * 8 + 4, self.laser.aim.y * 8 + 4, self.laser.power * 0.1, Color.rgb(44, 232, 245))
+            end
+        end
+
+        mines.light(self.pos.x, self.pos.y, 0.3, Color.rgb(255, 255, 255))
         mines.update_lighting()
 
         if self.pos.y < -6 and self.vel.y < 0 then
@@ -215,8 +274,17 @@ end
 
 function Player:collideEntity(ent)
     if ent.supertype == 'item' then
-        Player.inventory[ent.id].amount = Player.inventory[ent.id].amount + 1
-        Player.inventory[ent.id].disptime = love.timer.getTime() + 2.0
+        self.inventory[ent.id].amount = self.inventory[ent.id].amount + 1
+        self.inventory[ent.id].disptime = love.timer.getTime() + 2.0
         jam.despawn(ent)
+    end
+end
+
+function Player:wheelmoved(x, y)
+    self.laser.hudtime = love.timer.getTime() + 4
+    if y > 0 then
+        if self.laser.block > 1 then self.laser.block = self.laser.block - 1 end
+    elseif y < 0 then
+        if self.laser.block < #blocks.placeable then self.laser.block = self.laser.block + 1 end
     end
 end

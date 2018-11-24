@@ -1,5 +1,5 @@
 mines = {
-    lights_amt = 8
+    lights_amt = 256
 }
 
 function mines.enter(x)

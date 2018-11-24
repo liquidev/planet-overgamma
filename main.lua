@@ -10,6 +10,7 @@ require 'jam/platformer'
 require 'maps'
 require 'items'
 require 'mines'
+require 'blocks'
 
 require 'player'
 

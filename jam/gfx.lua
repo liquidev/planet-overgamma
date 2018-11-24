@@ -50,6 +50,12 @@ function gfx.wipe(shader, duration, reverse, options, callback)
     return fx
 end
 
+gfx.hud = {}
+
+function gfx.drawhud(f)
+    table.insert(gfx.hud, f)
+end
+
 function gfx._load(args)
     print(' - canvas+buffers')
     gfx.canvas = love.graphics.newCanvas(conf.width, conf.height)
@@ -110,6 +116,11 @@ function gfx._draw()
         love.graphics.draw(gfx.shader.buffer2)
     end
     love.graphics.setShader()
+
+    for i, f in pairs(gfx.hud) do
+        f()
+        table.remove(gfx.hud, i)
+    end
 
     -- scaled
     love.graphics.setCanvas()

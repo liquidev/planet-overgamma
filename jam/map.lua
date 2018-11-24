@@ -166,6 +166,10 @@ function Map:store()
 end
 
 function Map:run(dt)
+    if self.tick then
+
+    end
+
     for i, e in pairs(self.instance.entities) do
         e:update(dt)
         if e.remove then

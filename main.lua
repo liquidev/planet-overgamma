@@ -25,7 +25,10 @@ function jam.load(args)
 end
 
 function jam.states.game.begin()
-    if currentmap == nil then currentmap = jam.asset('map', 'planet') end
+    if currentmap == nil then
+        currentmap = jam.asset('map', 'planet')
+    end
+    maps.autoprocess(currentmap)
     jam.gfx.wipe('radial_wipe', 0.5, false, { smoothness = 0.1, invert = true })
 end
 

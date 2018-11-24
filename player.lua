@@ -138,11 +138,13 @@ function Player:update(dt)
         -- laser: destroy
         if self.laser.mode == 'destroy' then
             local destroyed = self.map:get(1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+            local ore = { id = -42 }
+            if self.map.mine then ore = self.map:get(2, self.laser.aim.x + 1, self.laser.aim.y + 1) end
 
             for id, cond in pairs(Item.types) do
                 for _, loot in pairs(cond) do
                     for i, v in pairs(loot[1]) do
-                        if v == destroyed.id then
+                        if v == destroyed.id or v == ore.id then
                             for i = 1, love.math.random(loot.amount[1], loot.amount[2]) do
                                 jam.spawn(Item:new({
                                     id = id
@@ -150,11 +152,13 @@ function Player:update(dt)
                             end
                             break
                         end
+
                     end
                 end
             end
 
             self.map:set(1, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+            self.map:set(1, 2, self.laser.aim.x + 1, self.laser.aim.y + 1)
             maps.autoprocess(self.map)
         end
     end
@@ -175,11 +179,15 @@ function Player:update(dt)
                     currentmap.player.map = currentmap
                     currentmap.player.pos:set(mines.x * 8 + 4, -40)
                     currentmap.player.pos.y = -40
+                    mines.exit()
                 end)
             end)
         end
     end
     if self.map.mine then
+        mines.light(self.pos.x, self.pos.y, 0.3, 1.0, 1.0, 1.0, 1.0)
+        mines.update_lighting()
+
         if self.pos.y < -6 and self.vel.y < 0 then
             jam.gfx.wipe('radial_wipe', 0.5, true, { smoothness = 0.1, invert = true }, function ()
                 blankwait(0.1, 'game', function ()
@@ -188,6 +196,7 @@ function Player:update(dt)
                     currentmap.player.pos:set(mines.x * 8 + 4, (currentmap.height + 2) * 8)
                     currentmap.player.vel:set(0, -50)
                     currentmap.player.cutscenetime = 0.2
+                    mines.exit()
                 end)
             end)
         end

@@ -158,6 +158,19 @@ function table.join(...)
     return result
 end
 
+function table.fill(n, value)
+    local tab = {}
+    for i = 1, n do
+        if type(value) == 'table' then table.insert(tab, deepcopy(value))
+        else table.insert(tab, value) end
+    end
+    return tab
+end
+
+function table.clear(table)
+    for k, v in pairs(table) do table[k] = nil end
+end
+
 function table2D(width, height, init)
     init = default(init, 0)
 

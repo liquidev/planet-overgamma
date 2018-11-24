@@ -12,7 +12,8 @@ function gfx.addEffect(where, fx)
 end
 
 function gfx.removeEffect(where, fx)
-    table.remove(gfx.shader.effects[where], table.find(gfx.shader.effects[where], fx))
+    local i = table.find(gfx.shader.effects[where], fx)
+    if i then table.remove(gfx.shader.effects[where], i) end
     return fx
 end
 
@@ -90,7 +91,17 @@ function gfx._draw()
     for _, fx in pairs(gfx.shader.effects.pre) do
         local shader = jam.asset('shader', fx[1])
         for key, val in pairs(fx) do
-            if key ~= 1 then shader:send(key, val) end
+            if key ~= 1 then
+                if type(val) == 'table' then
+                    if val[1] == 'vec' then
+                        shader:send(key, {unpack(val, 2)})
+                    else
+                        shader:send(key, unpack(val))
+                    end
+                else
+                    shader:send(key, val)
+                end
+            end
         end
         gfx.shader.buffer1, gfx.shader.buffer2 = gfx.shader.buffer2, gfx.shader.buffer1
         love.graphics.setCanvas(gfx.shader.buffer1)

@@ -30,15 +30,26 @@ end
 
 function mines.light(x, y, intensity, r, g, b, a)
     local mine = mines[mines.x]
-    table.insert(mines.lights, {
-        position = { x - mine.scroll.x, y - mine.scroll.y, intensity },
-        color = { r, g, b, a }
-    })
+    if mine then
+        table.insert(mines.lights, {
+            position = { x - mine.scroll.x, y - mine.scroll.y, intensity },
+            color = { r, g, b, a }
+        })
+    end
 end
 
 function mines.update_lighting()
     table.clear(mines.lighting.light_positions)
     table.clear(mines.lighting.light_colors)
+
+    for i, l in pairs(mines.lights) do
+        local dist = math.dist(Vector:point(48, 48), Vector:point(l.position[1], l.position[2]))
+        if dist > math.sin(math.pi / 4) * 96 then
+            local d = 1.0 - math.clamp((dist - 70) / (l.position[3] * 96) / 0.5, 0.0, 1.0)
+            l.position[3] = l.position[3] * d
+            if d <= 0 then table.remove(mines.lights, i) end
+        end
+    end
 
     for _, l in pairs(mines.lights) do
         table.insert(mines.lighting.light_positions, l.position)
@@ -50,6 +61,7 @@ function mines.update_lighting()
         table.insert(mines.lighting.light_colors, { 0.0, 0.0, 0.0, 0.0 })
     end
 
+    print(#mines.lights)
     table.clear(mines.lights)
 end
 
@@ -68,15 +80,16 @@ function mines.generate(x)
     map:newlayer(2)
     map:each(2, function (x, y, tile)
         if map:get(1, x, y).id ~= 1 then
-            if y > 0 and chance(0.05) then tile.id = 65 end
+            if y > 0 and chance(0.05) then tile.id = 65 end -- coal
             if y > 12 then
-                if chance(0.03) then tile.id = 66 end
-                if chance(0.03) then tile.id = 67 end
+                if chance(0.03) then tile.id = 66 end -- tin
+                if chance(0.03) then tile.id = 67 end -- copper
                 if y > 24 then
-                    if chance(0.025) then tile.id = 68 end
+                    if chance(0.025) then tile.id = 68 end -- iron
                     if y > 36 then
-                        if chance(0.01) then tile.id = 69 end
-                        if chance(0.01) then tile.id = 70 end
+                        if chance(0.02) then tile.id = 72 end -- nickel
+                        if chance(0.01) then tile.id = 69 end -- silver
+                        if chance(0.01) then tile.id = 70 end -- gold
                     end
                 end
             end

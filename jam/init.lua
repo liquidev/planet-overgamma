@@ -158,11 +158,18 @@ function love.update(dt)
 
     jam.gfx._update()
     jam.update(dt)
-    if jam.activemap and jam.updatemap then
-        jam.activemap:run(dt)
-    else
-        jam.updatemap = true
+    if jam.updatemap then
+        for _, map in pairs(jam.maps) do
+            map:tick(dt)
+        end
+        if jam.activemap then
+            jam.activemap:run(dt)
+        else
+            jam.updatemap = true
+        end
     end
+
+
 
     jam.pmouse = jam.mouse:copy()
     jam.pmapmouse = jam.mapmouse:copy()
@@ -203,6 +210,9 @@ function love.keypressed(...)
     if love.keyboard.isScancodeDown('f1') then
         love.graphics.captureScreenshot(os.date('%Y-%m-%d %H%M%S')..'.png')
         print('lj: captured screenshot')
+    elseif love.keyboard.isScancodeDown('f11') then
+        love.window.setFullscreen(not love.window.getFullscreen(), 'desktop')
+        print('lj: toggled fullscreen')
     else
         _fire_callbacks('keypressed', ...)
     end

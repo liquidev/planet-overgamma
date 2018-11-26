@@ -17,6 +17,7 @@ function Player:init()
     -- laser: placement
     self.laser.block = 1
     self.laser.hudtime = 0
+    self.laser.scrolloff = 0
 
     self.screen = Vector:new(math.floor(self.pos.x / 96), math.floor(self.pos.y / 96))
     self.map.scroll:set(self.screen.x * 96, self.pos.y - 96 / 2)
@@ -68,15 +69,56 @@ function Player:draw()
     -- placement hud
     jam.gfx.drawhud(function ()
         if love.timer.getTime() < self.laser.hudtime then
-            local top = blocks.placeable[self.laser.block - 1]
-            local mid = blocks.placeable[self.laser.block]
-            local btm = blocks.placeable[self.laser.block + 1]
-            if mid then
-                jam.asset('tileset', 'main'):draw(mid.place, 88, 44)
-                love.graphics.setShader(jam.asset('shader', 'alpha_gradient'))
-                if top then jam.asset('tileset', 'main'):draw(top.place, 88, 36) end
-                if btm then jam.asset('tileset', 'main'):draw(btm.place, 88, 52) end
-                love.graphics.setShader()
+            local b = blocks.placeable[self.laser.block]
+
+            do
+                if b then
+                    local y = 0
+                    local h = #b.ingredients * 8
+
+                    love.graphics.setColor(Color.rgb(0, 0, 0))
+                    love.graphics.printf(b.name, -11, 41 - h / 2, 96, 'right')
+                    love.graphics.setColor(Color.rgb(255, 255, 255))
+                    love.graphics.printf(b.name, -10, 40 - h / 2, 96, 'right')
+
+                    for _, i in pairs(b.ingredients) do
+                        self.inventory[i.id].disptime = love.timer.getTime() + (love.timer.getDelta() + 0.01)
+
+                        local dy = 48 - h / 2 + y
+                        local spr = jam.asset('sprite', 'items')
+                        spr:draw(i.id + 1, 80, dy + 1)
+                        love.graphics.setColor(Color.rgb(0, 0, 0))
+                        love.graphics.printf(tostring(i.amt), -17, dy + 1, 96, 'right')
+                        love.graphics.setColor(Color.rgb(255, 255, 255))
+                        love.graphics.printf(tostring(i.amt), -18, dy, 96, 'right')
+                        y = y + 8
+                    end
+                end
+            end
+
+            local draw = function (block, x, y)
+                if type(block.place) == 'number' then jam.asset('tileset', 'main'):draw(block.place, x, y)
+                elseif type(block.place) == 'table' then
+                    local e = block.place.entity
+                    local spr = jam.asset('sprite', e.sprite)
+                    spr:draw(math.floor(1 + e.sprframe % #spr.quads), x, y)
+                end
+            end
+
+            local shown = 9
+            local fy = 48 - shown / 2 * 8
+            for i = 1, shown do
+                local n = self.laser.block - math.floor(shown / 2) + (i - 1)
+                local b = blocks.placeable[n]
+                if b then
+                    if n ~= self.laser.block then
+                        love.graphics.setShader(jam.asset('shader', 'dock'))
+                        draw(b, 88, fy + (i - 1) * 8)
+                        love.graphics.setShader()
+                    else
+                        draw(b, 88, fy + (i - 1) * 8)
+                    end
+                end
             end
         end
     end)
@@ -135,7 +177,7 @@ function Player:update(dt)
     elseif love.mouse.isDown(2) then self.laser.mode = 'place'
     else self.laser.mode = 'none' end
     if math.dist(
-            Vector:point(self.pos.x, self.pos.y),
+            self.pos,
             Vector:point(self.laser.aim.x * 8 + 4, self.laser.aim.y * 8 + 4)) >= 32 then
         self.laser.mode = 'none'
     end
@@ -153,6 +195,7 @@ function Player:update(dt)
         math.floor(jam.mapmouse.x / 8),
         math.floor(jam.mapmouse.y / 8))
 
+    -- placeable block list
     self.laser.block = math.clamp(self.laser.block, 1, math.max(#blocks.placeable, 1))
 
     table.clear(blocks.placeable)
@@ -207,6 +250,16 @@ function Player:update(dt)
                 if type(block.place) == 'number' then
                     self.map:set(block.place, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
                     maps.autoprocess(self.map)
+                elseif type(block.place) == 'table' then
+                    self.map:set(block.place.block, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+                    self.map:spawn(
+                        block.place.entity:new({
+                                block = block
+                            },
+                            self.laser.aim.x * 8 + 4,
+                            self.laser.aim.y * 8 + 4,
+                            self.map))
+                    maps.autoprocess(self.map)
                 end
             end
         end
@@ -245,7 +298,6 @@ function Player:update(dt)
         end
 
         mines.light(self.pos.x, self.pos.y, 0.3, Color.rgb(255, 255, 255))
-        mines.update_lighting()
 
         if self.pos.y < -6 and self.vel.y < 0 then
             jam.gfx.wipe('radial_wipe', 0.5, true, { smoothness = 0.1, invert = true }, function ()
@@ -270,21 +322,39 @@ function Player:update(dt)
             self.screen.x * 96 + (jam.mouse.x - 48) * 0.2,
             1.0 * frame), 0, (self.map.width - 12) * 8),
         math.clamp(math.lerp(self.map.scroll.y, self.pos.y - 96 / 2, 1.5 * frame), 0, (self.map.height - 12) * 8))
+
+    --
+    self.laser.scrolloff = self.laser.scrolloff - dt
 end
 
 function Player:collideEntity(ent)
     if ent.supertype == 'item' then
         self.inventory[ent.id].amount = self.inventory[ent.id].amount + 1
-        self.inventory[ent.id].disptime = love.timer.getTime() + 2.0
+        self.inventory[ent.id].disptime = love.timer.getTime() + 2
         jam.despawn(ent)
     end
 end
 
 function Player:wheelmoved(x, y)
-    self.laser.hudtime = love.timer.getTime() + 4
-    if y > 0 then
-        if self.laser.block > 1 then self.laser.block = self.laser.block - 1 end
-    elseif y < 0 then
-        if self.laser.block < #blocks.placeable then self.laser.block = self.laser.block + 1 end
+    if self.laser.scrolloff <= 0 then
+        self.laser.hudtime = love.timer.getTime() + 4
+        if y > 0 then
+            if self.laser.block > 1 then self.laser.block = self.laser.block - 1 end
+        elseif y < 0 then
+            if self.laser.block < #blocks.placeable then self.laser.block = self.laser.block + 1 end
+        end
     end
+end
+
+function Player:invconsume(...)
+    local ingredients = {...}
+    for _, i in pairs(ingredients) do
+        if self.inventory[i.id].amount >= i.amt then
+            self.inventory[i.id].amount = self.inventory[i.id].amount - i.amt
+            self.inventory[i.id].disptime = love.timer.getTime() + 2
+        else
+            return false
+        end
+    end
+    return true
 end

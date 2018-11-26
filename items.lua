@@ -6,22 +6,29 @@ Item.maxspeed = {}
 
 Item.types = {
     -- basic blocks
-    [0] = {
+    [0] = { -- fibers
         {{range(2, 17)}, amount = {1, 2}},
         {{18}, amount = {1, 1}}
     },
-    [1] = {
+    [1] = { -- stone
         {{range(19, 35)}, amount = {1, 3}}
     },
 
     -- ores
-    [2] = {{{65}, amount = {1, 4}}},
-    [3] = {{{66}, amount = {1, 3}}},
-    [4] = {{{67}, amount = {1, 3}}},
-    [5] = {{{68}, amount = {1, 3}}},
-    [6] = {{{69}, amount = {1, 2}}},
-    [7] = {{{70}, amount = {1, 2}}},
-    [8] = {{{71}, amount = {0, 2}}}
+    [2] = {{{65}, amount = {1, 4}}}, -- coal
+    [3] = {{{66}, amount = {1, 3}}}, -- tin
+    [4] = {{{67}, amount = {1, 3}}}, -- copper
+    [5] = {{{68}, amount = {1, 3}}}, -- iron
+    [6] = {{{69}, amount = {1, 2}}}, -- silver
+    [7] = {{{70}, amount = {1, 2}}}, -- gold
+    [8] = {{{71}, amount = {0, 2}}}, -- greenium
+    [9] = {{{72}, amount = {1, 3}}}, -- nickel
+
+    -- alloys
+    [10] = {}, -- invar
+    [11] = {}, -- constantan
+    [12] = {}, -- bronze
+    [13] = {}, -- electrum
 }
 
 Item.gravity = Vector:new(0, 3)

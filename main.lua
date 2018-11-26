@@ -5,8 +5,9 @@
 ]]
 
 require 'jam'
-require 'jam/platformer'
+require 'jam.platformer'
 
+require 'inventory'
 require 'maps'
 require 'items'
 require 'mines'
@@ -38,7 +39,9 @@ function jam.states.game.draw()
 end
 
 function jam.states.game.update(dt)
-
+    if currentmap.mine then
+        mines.update_lighting()
+    end
 end
 
 jam.states.wait = {

@@ -24,6 +24,8 @@ vec4 effect(vec4 tint, Image texture, vec2 tex_coords, vec2 scr_coords) {
 
     lightness += ambient;
 
+    lightness = clamp(lightness, 0.0, 1.0);
+
     vec4 col = Texel(texture, tex_coords) * lightness;
     return col * tint;
 }

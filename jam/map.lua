@@ -2,15 +2,15 @@ require 'jam/struct'
 require 'jam/utils'
 require 'jam/entity'
 
+jam.maps = {}
+
 Map = {}
 Map.__index = Map
 
 Map.version = 1
 
 Map.tilesize = { 8, 8 }
-Map.tileset = ' 0123456789abcdefghijklmnopqrstuvwxyz'
-Map.solids = '0123456789'
-Map.entityset = {} -- the entityset must be defined by the engine user
+Map.entityset = {} -- the entity set must be defined by the engine user
 
 function Map:new(o, width, height, preload)
     o = o or {}
@@ -35,6 +35,8 @@ function Map:new(o, width, height, preload)
         self._spritebatch = love.graphics.newSpriteBatch(self.tilesetImg, 1024)
         self:begin()
     end
+
+    table.insert(jam.maps, self)
 
     return self
 end
@@ -165,17 +167,20 @@ function Map:store()
     end
 end
 
-function Map:run(dt)
-    if self.tick then
-
-    end
-
+-- tick runs even if the map isn't the active map
+function Map:tick(dt)
     for i, e in pairs(self.instance.entities) do
-        e:update(dt)
+        e:tick(dt)
         if e.remove then
             if e.death then e:death() end
             table.remove(self.instance.entities, i)
         end
+    end
+end
+
+function Map:run(dt)
+    for i, e in pairs(self.instance.entities) do
+        e:update(dt)
     end
 end
 

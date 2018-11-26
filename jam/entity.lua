@@ -4,6 +4,7 @@ Entity.supertype = 'entity'
 Entity.name = 'Entity'
 
 Entity.sprite = 'placeholder'
+Entity.sprframe = 0
 
 function Entity:_create(x, y, map)
     self._exists = false
@@ -16,7 +17,6 @@ function Entity:_create(x, y, map)
     self.acc = Vector:new()
     self.friction = 0
 
-    self.sprframe = 0
     self.hitboxsize = { 8, 8 }
 
     self.scale = Vector:new(1, 1)
@@ -51,10 +51,19 @@ function Entity:extend(supertype, name)
     return Entity._create(self, 0, 0, nil)
 end
 
+function Entity:oftype(supertype)
+    for t in self.supertype:gmatch('[a-z_]+') do
+        if t == supertype then return true end
+    end
+    return false
+end
+
+function Entity:is(type) end -- must be implemented by entity
+
 function Entity:init() end
 
 function Entity:drawSprite()
-    atl = jam.assets.sprites[self.sprite]
+    atl = jam.asset('sprite', self.sprite)
     love.graphics.draw(
             atl.image, atl.quads[math.floor(1 + self.sprframe % #atl.quads)],
             self.pos.x, self.pos.y,
@@ -67,9 +76,12 @@ function Entity:draw()
     self:drawSprite()
 end
 
+function Entity:tick(dt)
+    self.age = self.age + 1
+end
+
 function Entity:update(dt)
     if self.map then self:physics(dt) end
-    self.age = self.age + 1
 end
 
 function Entity:collideTile(tile) end

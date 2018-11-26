@@ -123,6 +123,12 @@ function numbertobits(num, bits)
     return t
 end
 
+function table.len(table)
+    local len = 0
+    for _, _ in pairs(table) do len = len + 1 end
+    return len
+end
+
 function table.has(table, value)
     for _, v in pairs(table) do
         if v == value then

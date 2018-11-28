@@ -47,12 +47,6 @@ function printtable(table)
     pt(table, 1)
 end
 
-function tablelen(table)
-    local len = 0
-    for _0, _1 in pairs(table) do len = len + 1 end
-    return len
-end
-
 function deepcopy(orig)
     local orig_type = type(orig)
     local copy
@@ -175,6 +169,16 @@ end
 
 function table.clear(table)
     for k, v in pairs(table) do table[k] = nil end
+end
+
+function table.merge(tab, other, overwrite)
+    for k, v in pairs(other) do
+        if overwrite then tab[k] = v
+        else
+            tab[k] = tab[k] or v
+        end
+    end
+    return tab
 end
 
 function table2D(width, height, init)

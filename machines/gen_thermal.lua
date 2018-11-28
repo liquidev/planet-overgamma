@@ -2,7 +2,7 @@ local ThermalGen = Machine:extend('machine.thermalgenerator', 'Thermal Generator
 ThermalGen.__index = ThermalGen
 
 ThermalGen.sprframe = 7
-ThermalGen.categories = { 'c-heat', 'p-power' }
+ThermalGen.categories = { '-heat', '+power' }
 
 function ThermalGen:init()
     Machine.init(self)

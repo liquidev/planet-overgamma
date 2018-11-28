@@ -52,7 +52,7 @@ function Entity:extend(supertype, name)
 end
 
 function Entity:oftype(supertype)
-    for t in self.supertype:gmatch('[a-z_]+') do
+    for t in self.supertype:gmatch('([a-z_]+)') do
         if t == supertype then return true end
     end
     return false
@@ -62,18 +62,18 @@ function Entity:is(type) end -- must be implemented by entity
 
 function Entity:init() end
 
-function Entity:drawSprite()
+function Entity:drawSprite(x, y)
     atl = jam.asset('sprite', self.sprite)
     love.graphics.draw(
             atl.image, atl.quads[math.floor(1 + self.sprframe % #atl.quads)],
-            self.pos.x, self.pos.y,
+            x, y,
             self.rotation,
             self.scale.x, self.scale.y,
             atl.spritesize[1] / 2, atl.spritesize[2] / 2)
 end
 
 function Entity:draw()
-    self:drawSprite()
+    self:drawSprite(self.pos.x, self.pos.y)
 end
 
 function Entity:tick(dt)

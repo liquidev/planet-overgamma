@@ -1,6 +1,5 @@
 require 'jam/stringbuffer'
 
-require 'jam/object'
 require 'jam/vector'
 require 'jam/hitbox'
 
@@ -180,7 +179,6 @@ function love.draw()
 end
 
 function love.resize(w, h)
-    print(w, h)
 end
 
 local function _map_callback(name, ...)

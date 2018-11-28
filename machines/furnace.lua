@@ -2,7 +2,7 @@ local Furnace = Machine:extend('machine.furnace', 'Furnace')
 Furnace.__index = Furnace
 
 Furnace.sprframe = 1
-Furnace.categories = { 'p-heat' }
+Furnace.categories = { '-item', '+heat' }
 
 function Furnace:init()
     Machine.init(self)
@@ -26,7 +26,7 @@ function Furnace:tick(dt)
     self.heat = self.heat - self.heat / 75 * dt
     self.heat = math.clamp(self.heat, 0, 1000)
 
-    self:eachAdjacent('c-heat', function (m)
+    self:eachAdjacent('-heat', function (m)
         local frag = self.heat / 48
         if self.heat > frag and m.heat + frag < 1000 then
             self.heat = self.heat - frag
@@ -37,8 +37,8 @@ function Furnace:tick(dt)
     self.bars.heat.progress = self.heat / 1000
 end
 
-function Furnace:interact()
-    if self.heat <= 800 and self.map.player:invconsume({ id = 2, amt = 1 }) then
+function Furnace:iaccept(inv)
+    if self.heat <= 800 and inv:consume({ id = 2, amt = 1 }) then
         self.heat = self.heat + 200
     end
 end

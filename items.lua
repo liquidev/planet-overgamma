@@ -38,9 +38,19 @@ function Item:init()
     self.hitboxsize = { 4, 4 }
     self.sprframe = self.id
 
+    self.amount = self.amount or 1
+
     local angle = math.pi / 2 + love.math.random() * math.pi
 
     self.vel:set(math.sin(angle), math.cos(angle))
+end
+
+function Item:draw()
+    if self.amount >= 2 then
+        self:drawSprite(self.pos.x + 2, self.pos.y - 2)
+    end
+
+    Entity.draw(self)
 end
 
 function Item:update(dt)
@@ -53,6 +63,8 @@ function Item:update(dt)
     if self.pos.y > self.map.height * 8 then
         self.remove = true
     end
+
+    if self.amount <= 0 then self.remove = true end
 end
 
 return Item

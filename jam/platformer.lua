@@ -54,6 +54,7 @@ end
 
 function PlatformerPlayer:keypressed(_, scancode)
     if scancode == 'space' and (self.vel.y == 0 or self.airtime > 0 and self.airtime < 0.0075) then
+        jam.asset('sound', 'jump'):play()
         self.jumpsustend = love.timer.getTime() + self.jumpsustain
     end
 end

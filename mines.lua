@@ -61,7 +61,6 @@ function mines.update_lighting()
         table.insert(mines.lighting.light_colors, { 0.0, 0.0, 0.0, 0.0 })
     end
 
-    print(#mines.lights)
     table.clear(mines.lights)
 end
 

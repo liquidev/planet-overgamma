@@ -22,13 +22,12 @@ function Player:init()
     self.screen = Vector:new(math.floor(self.pos.x / 96), math.floor(self.pos.y / 96))
     self.map.scroll:set(self.screen.x * 96, self.pos.y - 96 / 2)
 
-    self.inventory = {}
-    for t, _ in pairs(Item.types) do
-        self.inventory[t] = {
-            amount = 0,
-            disptime = 0
-        }
-    end
+    self.inventory = Inventory:new({
+        owner = self,
+        onchange = function (item)
+            item.disptime = love.timer.getTime() + 2
+        end
+    }, 65535, { amount = 32768, disptime = 0 })
 end
 
 function Player:draw()
@@ -52,7 +51,7 @@ function Player:draw()
         local y = 0
         love.graphics.push()
         love.graphics.translate(8, 8)
-        for t, i in pairs(self.inventory) do
+        for t, i in pairs(self.inventory.items) do
             if love.timer.getTime() < i.disptime then
                 local spr = jam.asset('sprite', 'items')
                 spr:draw(t + 1, 0, y + 1)
@@ -82,7 +81,7 @@ function Player:draw()
                     love.graphics.printf(b.name, -10, 40 - h / 2, 96, 'right')
 
                     for _, i in pairs(b.ingredients) do
-                        self.inventory[i.id].disptime = love.timer.getTime() + (love.timer.getDelta() + 0.01)
+                        self.inventory.items[i.id].disptime = love.timer.getTime() + (love.timer.getDelta() + 0.01)
 
                         local dy = 48 - h / 2 + y
                         local spr = jam.asset('sprite', 'items')
@@ -182,9 +181,13 @@ function Player:update(dt)
         self.laser.mode = 'none'
     end
     if self.map:get(1, self.laser.aim.x + 1, self.laser.aim.y + 1).id == 1 then
-        if self.laser.mode == 'destroy' then self.laser.mode = 'none' end
+        if self.laser.mode == 'destroy' then
+            self.laser.mode = 'none'
+        end
     else
-        if self.laser.mode == 'place' then self.laser.mode = 'none' end
+        if self.laser.mode == 'place' then
+            self.laser.mode = 'none'
+        end
     end
 
     if self.laser.mode ~= 'none' then self.laser.power = self.laser.power + 4 * frame
@@ -200,13 +203,7 @@ function Player:update(dt)
 
     table.clear(blocks.placeable)
     for _, b in pairs(blocks.all) do
-        local canplace = true
-        for _, i in pairs(b.ingredients) do
-            if self.inventory[i.id].amount < i.amt then
-                canplace = false
-                break
-            end
-        end
+        local canplace = self.inventory:has(unpack(b.ingredients))
         if canplace then
             table.insert(blocks.placeable, b)
         else break end
@@ -237,29 +234,32 @@ function Player:update(dt)
             self.map:set(1, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
             self.map:set(1, 2, self.laser.aim.x + 1, self.laser.aim.y + 1)
             maps.autoprocess(self.map)
+
+            jam.asset('sound', 'laser-destroy'):stop()
+            jam.asset('sound', 'laser-destroy'):play()
         end
 
         -- laser: place
         if self.laser.mode == 'place' then
             local block = blocks.placeable[self.laser.block]
             if block then
-                for _, i in pairs(block.ingredients) do
-                    self.inventory[i.id].amount = self.inventory[i.id].amount - i.amt
-                    self.inventory[i.id].disptime = love.timer.getTime() + 2.0
-                end
-                if type(block.place) == 'number' then
-                    self.map:set(block.place, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
-                    maps.autoprocess(self.map)
-                elseif type(block.place) == 'table' then
-                    self.map:set(block.place.block, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
-                    self.map:spawn(
-                        block.place.entity:new({
-                                block = block
-                            },
-                            self.laser.aim.x * 8 + 4,
-                            self.laser.aim.y * 8 + 4,
-                            self.map))
-                    maps.autoprocess(self.map)
+                if (self.inventory:consume(unpack(block.ingredients))) then
+                    if type(block.place) == 'number' then
+                        self.map:set(block.place, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+                        maps.autoprocess(self.map)
+                    elseif type(block.place) == 'table' then
+                        self.map:set(block.place.block, 1, self.laser.aim.x + 1, self.laser.aim.y + 1)
+                        self.map:spawn(
+                            block.place.entity:new({
+                                    block = block
+                                },
+                                self.laser.aim.x * 8 + 4,
+                                self.laser.aim.y * 8 + 4,
+                                self.map))
+                        maps.autoprocess(self.map)
+                    end
+                    jam.asset('sound', 'laser-place'):stop()
+                    jam.asset('sound', 'laser-place'):play()
                 end
             end
         end
@@ -329,9 +329,9 @@ end
 
 function Player:collideEntity(ent)
     if ent.supertype == 'item' then
-        self.inventory[ent.id].amount = self.inventory[ent.id].amount + 1
-        self.inventory[ent.id].disptime = love.timer.getTime() + 2
-        jam.despawn(ent)
+        if self.inventory:put({ id = ent.id, amt = ent.amount }) then jam.despawn(ent) end
+        jam.asset('sound', 'pickup'):stop()
+        jam.asset('sound', 'pickup'):play()
     end
 end
 
@@ -343,18 +343,7 @@ function Player:wheelmoved(x, y)
         elseif y < 0 then
             if self.laser.block < #blocks.placeable then self.laser.block = self.laser.block + 1 end
         end
+        jam.asset('sound', 'pick'):stop()
+        jam.asset('sound', 'pick'):play()
     end
-end
-
-function Player:invconsume(...)
-    local ingredients = {...}
-    for _, i in pairs(ingredients) do
-        if self.inventory[i.id].amount >= i.amt then
-            self.inventory[i.id].amount = self.inventory[i.id].amount - i.amt
-            self.inventory[i.id].disptime = love.timer.getTime() + 2
-        else
-            return false
-        end
-    end
-    return true
 end

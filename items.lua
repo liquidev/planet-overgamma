@@ -64,6 +64,15 @@ function Item:update(dt)
         self.remove = true
     end
 
+    if self.age > 1 then
+        self.map:eachEntity(function (e)
+            if e ~= self and e.supertype == 'item' and math.dist(self.pos, e.pos) <= 8 and e.id == self.id then
+                self.amount = self.amount + e.amount
+                self.map:despawn(e)
+            end
+        end)
+    end
+
     if self.amount <= 0 then self.remove = true end
 end
 

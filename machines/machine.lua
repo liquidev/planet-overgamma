@@ -139,6 +139,18 @@ function Machine:iaccept(inventory)
     end
 end
 
+function Machine:iout(id, amt)
+    if #self.connections == 0 then
+        jam.spawn(Item:new({ id = 10, amount = 3 }, self.pos.x, self.pos.y, self.map))
+    else
+        local inv = Inventory:new()
+        inv.items[id].amount = amt
+        self:eachConnected(function (m)
+            m:iaccept(inv)
+        end)
+    end
+end
+
 function Machine:onitems(inventory) end
 
 function Machine:edit(value) end

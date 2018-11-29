@@ -55,6 +55,10 @@ function Inventory:spacefor(...)
     return unpack(result)
 end
 
+function Inventory:free(id)
+    return self.limit - self.items[id].amount
+end
+
 function Inventory:consume(...)
     local stacks = {...}
     local result = {}

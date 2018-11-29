@@ -77,7 +77,7 @@ function Entity:draw()
 end
 
 function Entity:tick(dt)
-    self.age = self.age + 1
+    self.age = self.age + dt
 end
 
 function Entity:update(dt)

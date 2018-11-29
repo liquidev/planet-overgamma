@@ -50,15 +50,12 @@ end
 
 function Cache:iaccept(inv)
     if inv.owner and inv.owner.__index == Player then
-        if self.inventory.items[self.item].amount < 128 then
-            self.inventory:put({ id = self.item, amt = inv:consumeall({ id = self.item, amt = 128 }) })
-        end
+        local amount = self.inventory:free(self.item)
+        self.inventory:put({ id = self.item, amt = inv:consumeall({ id = self.item, amt = amount }) })
     else
         for t, i in pairs(self.inventory.items) do
-            if self.inventory:spacefor({ id = t, amt = i.amount }) then
-                local amount = inv:consumeall({ id = t, amt = 128 })
-                self.inventory:put({ id = t, amt = amount })
-            end
+            local amount = inv:consumeall({ id = t, amt = self.inventory:free(t) })
+            self.inventory:put({ id = t, amt = amount })
         end
     end
 end

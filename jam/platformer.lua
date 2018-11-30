@@ -20,6 +20,7 @@ function PlatformerPlayer:init()
     self.facing = 3
     self.walktime = 0
     self.cutscenetime = 0
+    self.immobiletime = 0
 
     self.jumpsustend = 0
 end
@@ -31,25 +32,28 @@ function PlatformerPlayer:update(dt)
     local key = love.keyboard.isScancodeDown
 
     self.cutscenetime = self.cutscenetime - dt
+    self.immobiletime = self.immobiletime - dt
 
-    if self.controllable and self.cutscenetime <= 0 then
-        if key('a') then self:force(Vector:new(-self.accel * step, 0)) end
-        if key('d') then self:force(Vector:new(self.accel * step, 0)) end
-        if key('space') then
-            if love.timer.getTime() < self.jumpsustend then
-                local sustainstrength = (self.jumpsustend - love.timer.getTime()) / self.jumpsustain
-                self.vel.y = -self.jumpstrength * sustainstrength * step
+    if self.immobiletime <= 0 then
+        if self.controllable and self.cutscenetime <= 0 then
+            if key('a') then self:force(Vector:new(-self.accel * step, 0)) end
+            if key('d') then self:force(Vector:new(self.accel * step, 0)) end
+            if key('space') then
+                if love.timer.getTime() < self.jumpsustend then
+                    local sustainstrength = (self.jumpsustend - love.timer.getTime()) / self.jumpsustain
+                    self.vel.y = -self.jumpstrength * sustainstrength * step
+                end
             end
         end
+
+        self.vel
+            :limit(-self.maxspeed[1], self.maxspeed[1], -self.maxspeed[2], self.maxspeed[2])
+            :mul(self.decel, 1)
+
+        self:force(self.gravity:copy():mul(step))
+
+        self:physics(dt)
     end
-
-    self.vel
-        :limit(-self.maxspeed[1], self.maxspeed[1], -self.maxspeed[2], self.maxspeed[2])
-        :mul(self.decel, 1)
-
-    self:force(self.gravity:copy():mul(step))
-
-    self:physics(dt)
 end
 
 function PlatformerPlayer:keypressed(_, scancode)

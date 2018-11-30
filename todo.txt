@@ -1,0 +1,5 @@
+Machines
+  - Pulverizer
+
+Items
+  - Silicon (replaces greenium in Solar Panels)

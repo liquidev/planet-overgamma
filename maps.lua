@@ -3,7 +3,8 @@ maps = {}
 function maps.autotile(map)
     map:autotile(1, {
         2,
-        19
+        19,
+        35
     })
 
 end
@@ -11,7 +12,8 @@ end
 function maps.autosolid(map)
     map:autosolid(1, table.join(
         {range(2, 17)},
-        {range(19, 34)}
+        {range(19, 34)},
+        {range(35, 50)}
     ), true)
 end
 

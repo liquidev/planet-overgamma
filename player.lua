@@ -76,7 +76,7 @@ function Player:draw()
                     local h = #b.ingredients * 8
 
                     love.graphics.setColor(Color.rgb(0, 0, 0))
-                    love.graphics.printf(b.name, -11, 41 - h / 2, 96, 'right')
+                    love.graphics.printf(b.name, -9, 41 - h / 2, 96, 'right')
                     love.graphics.setColor(Color.rgb(255, 255, 255))
                     love.graphics.printf(b.name, -10, 40 - h / 2, 96, 'right')
 
@@ -148,6 +148,14 @@ function Player:update(dt)
         self.maxspeed[1] = 2
     else
         self.maxspeed[1] = 0.7
+    end
+
+    if love.keyboard.isScancodeDown('w') then
+        if self.map:get(1, self:mappos()).id == 51 then
+            if self.vel.y > -1 then
+                self:force(Vector:new(0, frame * -2))
+            end
+        end
     end
 
     self.pos:limit(4, self.map.width * 8 - 4, -200, self.map.height * 8 + 200)
@@ -310,6 +318,8 @@ function Player:update(dt)
                     mines.exit()
                 end)
             end)
+            self.immobiletime = 0.1
+            self.vel.y = 0
         end
     end
 

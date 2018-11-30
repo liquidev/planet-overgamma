@@ -9,9 +9,10 @@ uniform bool invert;
 
 vec4 effect(vec4 tint, Image texture, vec2 tex_coords, vec2 scr_coords) {
     vec4 col = Texel(texture, tex_coords);
+    float prog = progress * progress;
 
     float lightness = smoothstep(
-        progress, progress + smoothness,
+        prog, prog + smoothness,
         clamp(distance(tex_coords, vec2(0.5, 0.5)), 0.0, 1.0));
     if (invert) lightness = 1.0 - lightness;
 

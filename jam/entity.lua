@@ -84,6 +84,20 @@ function Entity:update(dt)
     if self.map then self:physics(dt) end
 end
 
+function Entity:hitbox()
+    return Hitbox:new(
+        self.pos.x - self.hitboxsize[1] / 2, self.pos.y - self.hitboxsize[2] / 2,
+        self.hitboxsize[1], self.hitboxsize[2])
+end
+
+function Entity:mappos(xoff, yoff)
+    xoff = xoff or 0
+    yoff = yoff or 0
+    return
+        math.floor(self.pos.x / Map.tilesize[1]) + 1 + xoff,
+        math.floor(self.pos.y / Map.tilesize[2]) + 1 + yoff
+end
+
 function Entity:collideTile(tile) end
 
 function Entity:collideEntity(entity) end

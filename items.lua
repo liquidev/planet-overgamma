@@ -8,10 +8,14 @@ Item.types = {
     -- basic blocks
     [0] = { -- fibers
         {{range(2, 17)}, amount = {1, 2}},
-        {{18}, amount = {1, 1}}
+        {{18}, amount = {1, 1}},
+        {{51}, amount = {2, 2}}
     },
     [1] = { -- stone
-        {{range(19, 35)}, amount = {1, 3}}
+        {{range(19, 34)}, amount = {1, 3}}
+    },
+    [15] = { -- sand
+        {{range(35, 50)}, amount = {2, 2}}
     },
 
     -- ores
@@ -23,6 +27,7 @@ Item.types = {
     [7] = {{{70}, amount = {1, 2}}}, -- gold
     [8] = {{{71}, amount = {0, 2}}}, -- greenium
     [9] = {{{72}, amount = {1, 3}}}, -- nickel
+    [14] = {},                       -- silicon
 
     -- alloys
     [10] = {}, -- invar

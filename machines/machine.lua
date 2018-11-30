@@ -6,6 +6,9 @@ Machine.categories = {}
 
 Machine.hassettings = false
 
+Machine.heatcapacity = 1000
+Machine.powercapacity = 2500
+
 function Machine:init()
     self.adjacent = {}
     self.bars = {}
@@ -13,19 +16,32 @@ function Machine:init()
     self.connecting = false
     self.connections = {}
 
-    if table.has(self.categories, '*inv') then
-        self.inventory = Inventory:new(unpack(deepcopy(self.invsettings)))
+    if self:is('*inv') then
+        local settings = deepcopy(self.invsettings)
+        settings[1].owner = self
+        self.inventory = Inventory:new(unpack(settings))
     end
+
+    if self:is('+heat') or self:is('-heat') then
+        self.heat = 0
+        self.bars.heat = { color = {Color.rgb(223, 113, 38)}, progress = 0.0 }
+    end
+
+    if self:is('+power') or self:is('-power') then
+        self.power = 0
+        self.bars.power = { color = {Color.rgb(251, 242, 54)}, progress = 0.0 }
+    end
+end
+
+function Machine:position()
+    return Vector:point(math.floor(self.pos.x / 8), math.floor(self.pos.y / 8))
 end
 
 function Machine:draw()
     Entity.draw(self)
 
     jam.gfx.drawhud(function ()
-        local box = Hitbox:new(
-            self.pos.x - self.hitboxsize[1] / 2,
-            self.pos.y - self.hitboxsize[2] / 2,
-            self.hitboxsize[1], self.hitboxsize[2])
+        local box = self:hitbox()
         if box:has(jam.mapmouse) then
             local h = table.len(self.bars) * 2 + 1
             local y = 0
@@ -42,7 +58,10 @@ function Machine:draw()
                     self.pos.x - 4 - self.map.scroll.x, dy + 1 - self.map.scroll.y, math.ceil(8 * b.progress), 1)
                 y = y + 2
             end
-            love.graphics.setColor(Color.rgb(95, 205, 228))
+        end
+        if love.keyboard.isScancodeDown('tab') or box:has(jam.mapmouse) then
+            if self:is('*out') then love.graphics.setColor(Color.rgb(95, 205, 228))
+            elseif self:is('*dep') then love.graphics.setColor(Color.rgb(217, 97, 99)) end
             for _, c in pairs(self.connections) do
                 love.graphics.line(
                     self.pos.x - self.map.scroll.x,
@@ -53,7 +72,8 @@ function Machine:draw()
             love.graphics.setColor(Color.rgb(255, 255, 255))
         end
         if self.connecting then
-            love.graphics.setColor(Color.rgb(95, 205, 228))
+            if self:is('*out') then love.graphics.setColor(Color.rgb(95, 205, 228))
+            elseif self:is('*dep') then love.graphics.setColor(Color.rgb(217, 97, 99)) end
             love.graphics.line(self.pos.x - self.map.scroll.x, self.pos.y - self.map.scroll.y, jam.mouse.x, jam.mouse.y)
             love.graphics.setColor(Color.rgb(255, 255, 255))
         end
@@ -62,11 +82,7 @@ end
 
 function Machine:update(dt)
     if self.hassettings then
-        local box = Hitbox:new(
-            self.pos.x - self.hitboxsize[1] / 2,
-            self.pos.y - self.hitboxsize[2] / 2,
-            self.hitboxsize[1], self.hitboxsize[2])
-        if box:has(jam.mapmouse) then
+        if self:hitbox():has(jam.mapmouse) then
             self.map.player.laser.scrolloff = dt + 0.1
         end
     end
@@ -108,6 +124,15 @@ function Machine:tick(dt)
             table.remove(self.connections, i)
         end
     end
+
+    if self:is('+heat') or self:is('-heat') then
+        self.bars.heat.progress = self.heat / self.heatcapacity
+        self.heat = math.clamp(self.heat, 0, self.heatcapacity)
+    end
+    if self:is('+power') or self:is('-power') then
+        self.bars.power.progress = self.power / self.powercapacity
+        self.power = math.clamp(self.power, 0, self.powercapacity)
+    end
 end
 
 function Machine:is(category)
@@ -141,12 +166,36 @@ end
 
 function Machine:iout(id, amt)
     if #self.connections == 0 then
-        jam.spawn(Item:new({ id = 10, amount = 3 }, self.pos.x, self.pos.y, self.map))
+        jam.spawn(Item:new({ id = id, amount = amt }, self.pos.x, self.pos.y, self.map))
     else
         local inv = Inventory:new()
         inv.items[id].amount = amt
         self:eachConnected(function (m)
             m:iaccept(inv)
+        end)
+    end
+end
+
+function Machine:pout(amt)
+    if self:is('+power') then
+        self:eachAdjacent('-power', function (m)
+            amt = math.min(self.power, amt)
+            if m.power + amt < m.powercapacity then
+                m.power = m.power + amt
+                self.power = self.power - amt
+            end
+        end)
+    end
+end
+
+function Machine:hout(amt)
+    if self:is('+heat') then
+        self:eachAdjacent('-heat', function (m)
+            amt = math.min(self.heat, amt)
+            if m.heat + amt < m.heatcapacity then
+                m.heat = m.heat + amt
+                self.heat = self.heat - amt
+            end
         end)
     end
 end
@@ -162,14 +211,9 @@ function Machine:mousepressed()
         self.map:eachEntity(function (m)
             if m ~= self and math.dist(m.map.player.pos, m.pos) then
                 if m:oftype('machine') then
-                    local mbox = Hitbox:new(
-                        m.pos.x - m.hitboxsize[1] / 2,
-                        m.pos.y - m.hitboxsize[2] / 2,
-                        m.hitboxsize[1], m.hitboxsize[2])
-                    if mbox:has(jam.mapmouse) then
+                    if m:hitbox():has(jam.mapmouse) then
                         if math.dist(self.pos, m.pos) <= 8 then
                             table.insert(self.connections, {
-                                type = 'out',
                                 machine = m
                             })
                             self.connecting = false
@@ -183,16 +227,12 @@ function Machine:mousepressed()
     end
 
     if math.dist(self.map.player.pos, self.pos) < 24 then
-        local box = Hitbox:new(
-            self.pos.x - self.hitboxsize[1] / 2,
-            self.pos.y - self.hitboxsize[2] / 2,
-            self.hitboxsize[1], self.hitboxsize[2])
-        if box:has(jam.mapmouse) then
+        if self:hitbox():has(jam.mapmouse) then
             if love.mouse.isDown(2) then
                 self:interact()
                 self:iaccept(self.map.player.inventory)
             end
-            if self:is('*out') and love.mouse.isDown(3) then
+            if (self:is('*out') or self:is('*dep')) and love.mouse.isDown(3) then
                 if not self.connecting and #self.connections == 0 then
                     self.connecting = true
                     return
@@ -207,10 +247,6 @@ end
 
 function Machine:wheelmoved(_, y)
     if self.hassettings then
-        local box = Hitbox:new(
-            self.pos.x - self.hitboxsize[1] / 2,
-            self.pos.y - self.hitboxsize[2] / 2,
-            self.hitboxsize[1], self.hitboxsize[2])
-        if box:has(jam.mapmouse) then self:edit(y) end
+        if self:hitbox():has(jam.mapmouse) then self:edit(y) end
     end
 end

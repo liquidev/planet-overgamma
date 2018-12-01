@@ -13,11 +13,11 @@ rm -rf love
 rm -rf scripts
 rm -rf dist
 ls
-zip -9 -r ../dist_win/spamality.love .
+zip -9 -r ../dist_win/planet-overgamma.love .
 cd ..
 rm -rf temp
 echo windows executable
-cat love/love.exe dist_win/spamality.love > dist_win/spamality.exe
+cat love/love.exe dist_win/planet-overgamma.love > dist_win/planet-overgamma.exe
 cp love/* dist_win
 rm dist_win/love.exe
 rm dist_win/lovec.exe

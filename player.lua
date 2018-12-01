@@ -217,6 +217,10 @@ function Player:update(dt)
         end
     end
 
+    -- laser charge sound, too annoying so disabled by default
+    -- if self.laser.power > 0 then jam.asset('sound', 'laser-charge'):play()
+    -- else jam.asset('sound', 'laser-charge'):stop() end
+
     if self.laser.power >= 4 then
         -- laser: destroy
         if self.laser.mode == 'destroy' then
@@ -244,6 +248,7 @@ function Player:update(dt)
             maps.autoprocess(self.map)
 
             jam.asset('sound', 'laser-destroy'):stop()
+            jam.asset('sound', 'laser-destroy'):setPitch(1.0 + math.random() / 25)
             jam.asset('sound', 'laser-destroy'):play()
         end
 
@@ -267,6 +272,7 @@ function Player:update(dt)
                         maps.autoprocess(self.map)
                     end
                     jam.asset('sound', 'laser-place'):stop()
+                    jam.asset('sound', 'laser-place'):setPitch(1.0 + math.random() / 25)
                     jam.asset('sound', 'laser-place'):play()
                 end
             end

@@ -85,6 +85,14 @@ function jam.states.game.update(dt)
     if currentmap.mine then
         mines.update_lighting()
     end
+    currentmap:eachLayer(function (layer, x, y, tile)
+        if tile.id == 18 then
+            if currentmap:get(layer, x, y + 1).id == 1 then
+                tile.id = 1
+                maps.autoprocess(currentmap)
+            end
+        end
+    end)
 end
 
 jam.states.wait = {

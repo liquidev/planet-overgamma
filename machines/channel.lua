@@ -1,7 +1,7 @@
 local Channel = Machine:extend('machine.channel', 'Channel')
 Channel.__index = Channel
 
-Channel.sprframe = 20
+Channel.sprframe = 21
 Channel.categories = { '*inv', '*out', '+item', '-item' }
 Channel.hassettings = true
 

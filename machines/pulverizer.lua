@@ -10,6 +10,11 @@ Pulverizer.recipes = {
         power = 200,
         ingredients = { {id = 1, amt = 1} },
         product = { id = 15, amt = {1, 2} }
+    },
+    {
+        power = 400,
+        ingredients = { {id = 15, amt = 1} },
+        product = { id = 14, amt = {0, 3} }
     }
 }
 

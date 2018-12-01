@@ -1,7 +1,7 @@
 local Miner = Machine:extend('machine.miner', 'Miner')
 Miner.__index = Miner
 
-Miner.sprframe = 19
+Miner.sprframe = 20
 Miner.categories = { '*out', '+item', '-power' }
 Miner.hassettings = true
 

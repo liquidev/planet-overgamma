@@ -27,10 +27,10 @@ function Inventory:has(...)
     for _, s in pairs(stacks) do
         if self.items[s.id].amount >= s.amt then
             table.insert(result, true)
-        break else
+        else
             table.insert(result, false)
             result_all = false
-        end
+        break end
     end
     table.insert(result, 1, result_all)
 

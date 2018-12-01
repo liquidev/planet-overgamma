@@ -163,12 +163,10 @@ function love.update(dt)
         end
         if jam.activemap then
             jam.activemap:run(dt)
-        else
-            jam.updatemap = true
         end
+    else
+        jam.updatemap = true
     end
-
-
 
     jam.pmouse = jam.mouse:copy()
     jam.pmapmouse = jam.mapmouse:copy()

@@ -27,7 +27,7 @@ function Player:init()
         onchange = function (item)
             item.disptime = love.timer.getTime() + 2
         end
-    }, 65535, { amount = 32768, disptime = 0 })
+    }, 65535, { amount = 0, disptime = 0 })
 end
 
 function Player:draw()
@@ -211,10 +211,10 @@ function Player:update(dt)
 
     table.clear(blocks.placeable)
     for _, b in pairs(blocks.all) do
-        local canplace = self.inventory:has(unpack(b.ingredients))
+        local canplace = (self.inventory:has(unpack(b.ingredients)))
         if canplace then
             table.insert(blocks.placeable, b)
-        else break end
+        end
     end
 
     if self.laser.power >= 4 then

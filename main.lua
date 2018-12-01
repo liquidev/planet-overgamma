@@ -24,7 +24,7 @@ currentmap = nil
 
 function jam.load(args)
     love.graphics.setFont(jam.asset('font', 'main'))
-    jam.setstate('game')
+    jam.setstate('title')
 end
 
 jam.states.title = {}

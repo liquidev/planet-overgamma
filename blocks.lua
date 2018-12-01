@@ -60,7 +60,12 @@ blocks = {
             place = { block = 256, entity = machines.Pulverizer },
             ingredients = { {id = 5, amt = 3}, {id = 4, amt = 2}, {id = 12, amt = 5} }
         },
-        -- energy storage
+        {
+            name = 'Miner',
+            place = { block = 256, entity = machines.Miner },
+            ingredients = { {id = 5, amt = 7}, {id = 11, amt = 5}, {id = 12, amt = 5}, {id = 8, amt = 1} }
+        },
+        -- storage
         {
             name = 'Cache',
             place = { block = 256, entity = machines.Cache },
@@ -70,6 +75,11 @@ blocks = {
             name = 'Cache Drop.',
             place = { block = 256, entity = machines.CacheDropper },
             ingredients = { {id = 5, amt = 1}, {id = 10, amt = 1} }
+        },
+        {
+            name = 'Channel',
+            place = { block = 256, entity = machines.Channel },
+            ingredients = { {id = 5, amt = 5}, {id = 8, amt = 2}, {id = 13, amt = 5} }
         },
         {
             name = 'Power Cell',

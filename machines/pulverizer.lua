@@ -35,6 +35,7 @@ function Pulverizer:onitems(inv)
             if self.power >= r.power and (inv:consume(unpack(r.ingredients))) then
                 local n = love.math.random(r.product.amt[1], r.product.amt[2])
                 self:iout(r.product.id, n)
+                self.power = self.power - r.power
             end
         end
     end

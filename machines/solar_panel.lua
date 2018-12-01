@@ -8,12 +8,15 @@ function SolarPanel:tick(dt)
     Machine.tick(self, dt)
 
     local skyaccess = true
-    local block = self:position()
-    for y = block.y - 1, 0, -1 do
-        local tile = self.map:get(1, block.x + 1, y + 1)
-        if tile.id ~= 1 then
-            skyaccess = false
-            break
+    if self.map.mine then skyaccess = false
+    else
+        local block = self:position()
+        for y = block.y - 1, 0, -1 do
+            local tile = self.map:get(1, block.x + 1, y + 1)
+            if tile.id ~= 1 then
+                skyaccess = false
+                break
+            end
         end
     end
 

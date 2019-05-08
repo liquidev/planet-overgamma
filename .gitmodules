@@ -1,0 +1,3 @@
+[submodule "rapid"]
+	path = rapid
+	url = https://github.com/liquid600pgm/rapid.git

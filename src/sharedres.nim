@@ -11,6 +11,10 @@ import rapid/gfx/texpack
 import rapid/res/fonts
 import rapid/res/images
 import rapid/res/textures
+import rapid/world/tilemap
+
+import tile
+import world as wld
 
 type
   TerrainData* = ref object
@@ -24,6 +28,7 @@ const
 var
   terrain*: RTexture
   terrainData*: TerrainData
+  world*: RTmWorld[Tile]
 
 proc loadTerrain*(tex: var RTexture): TerrainData =
   new(result)

@@ -11,8 +11,9 @@ import sharedres
 proc main() =
   var
     win = initRWindow()
-      .size(1024, 768)
-      .title("Planet Overgamma – alpha")
+      .size(1024, 576)
+      .title("Planet Overgamma " &
+        "(compiled " & CompileDate & " " & CompileTime & " UTC)")
       .open()
     gfx = win.openGfx()
 

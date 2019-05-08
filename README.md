@@ -4,7 +4,7 @@ primitive plant-like lifeforms to mutate and grow all over the planet.
 
 A platformer/survival hybrid for GitHub Game Off 2018.
 
-This is the source code of the original, game jam version of the game, now called [Planet Overgamma Classic](https://lqdev.itch.io/planet-overgamma-classic). For the new source code, see the `rapid` branch.https://github.com/liquid600pgm/planet-overgamma/tree/rapidhttps://github.com/liquid600pgm/planet-overgamma/tree/rapid
+This is the source code of the original, game jam version of the game, now called [Planet Overgamma Classic](https://lqdev.itch.io/planet-overgamma-classic). For the new source code, see the `rapid` branch.
 
 ## Controls
  - W, D, A - Movement, Climbing

@@ -1,27 +1,27 @@
 #--
 # Planet Overgamma
 # a game about planets, machines, and robots.
-# copyright (C) iLiquid, 2018-2019
+# copyright (C) 2018-19 iLiquid
 #--
 
 import rapid/gfx/surface
+import rapid/world/tilemap
 
-import sharedres
+import res/resources
+import res/loader
+import world/world
+import world/worldsave
 
 proc main() =
-  var
-    win = initRWindow()
-      .size(1024, 576)
-      .title("Planet Overgamma " &
-        "(compiled " & CompileDate & " " & CompileTime & " UTC)")
-      .open()
-    gfx = win.openGfx()
-
+  loadCmdline()
+  initWindow()
   load()
 
   gfx.loop:
     draw ctx, step:
-      discard
+      transform(ctx):
+        ctx.scale(3, 3)
+        currentSave.overworld.draw(ctx, step)
     update step:
       discard
 

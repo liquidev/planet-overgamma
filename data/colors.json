@@ -1,0 +1,24 @@
+{
+  "base": {
+    "transparent": "#0000",
+    "white": "#fff",
+    "black": "#000",
+    "red": "#e43b44",
+    "darkRed": "#9e2835"
+  },
+
+  "ui": {
+    "window": {
+      "background": "_black",
+      "border": "_white",
+
+      "buttons": {
+        "close": {
+          "normal": { "stroke": "_white",   "fill": "_transparent" },
+          "hover":  { "stroke": "_darkRed", "fill": "_red" },
+          "click":  { "stroke": "_darkRed", "fill": "_darkRed" }
+        }
+      }
+    }
+  }
+}

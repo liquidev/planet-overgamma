@@ -10,6 +10,7 @@ import rapid/world/tilemap
 import res/resources
 import res/loader
 import world/world
+import world/worldconfig
 import world/worldsave
 
 proc main() =
@@ -19,10 +20,9 @@ proc main() =
 
   gfx.loop:
     draw ctx, step:
-      transform(ctx):
-        ctx.scale(3, 3)
-        currentSave.overworld.draw(ctx, step)
+      ctx.clear(rgb(0, 0, 0))
+      currentSave.overworld.draw(ctx, step)
     update step:
-      discard
+      currentSave.overworld.update(step)
 
 when isMainModule: main()

@@ -18,7 +18,7 @@ type
 
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,
-          wrapH: wrapRepeat, wrapV: wrapRepeat)
+         wrapH: wrapRepeat, wrapV: wrapRepeat)
   Data* = "data"
 
 var

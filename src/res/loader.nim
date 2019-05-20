@@ -7,6 +7,7 @@
 import rapid/gfx/surface
 
 import ../world/worldsave
+import ../colors
 
 include
   loader/loadcmd,
@@ -15,6 +16,7 @@ include
 
 proc load*() =
   info("Loading", "shared resources")
+  loadColors()
   terrainData = loadTerrain(terrain)
   loadFonts()
   info("Loading", "finished shared resources")

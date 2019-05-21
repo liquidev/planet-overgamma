@@ -7,6 +7,7 @@
 import rapid/gfx/surface
 import rapid/world/sprite
 
+import ../res/resources
 import ../colors
 import playercontrol
 import playerdef
@@ -16,6 +17,8 @@ export playerdef
 method draw*(player: var Player, ctx: var RGfxContext, step: float) =
   ctx.begin()
   ctx.color = col.base.white
+  ctx.texture = radio
+  let sprite =
   ctx.rect(player.pos.x, player.pos.y, 8, 8)
   ctx.draw()
 

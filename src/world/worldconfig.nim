@@ -5,7 +5,7 @@
 #--
 
 const
-  WorldWidth* = 64
-  WorldHeight* = 32
+  WorldWidth* = 256
+  WorldHeight* = 256
 
-  WorldScale* = 3
+  WorldScale* = 4

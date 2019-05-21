@@ -28,7 +28,7 @@ proc load*() =
 
 proc initWindow*() =
   win = initRWindow()
-    .size(1024, 576)
+    .size(1280, 720)
     .title("Planet Overgamma " &
       "(compiled " & CompileDate & " " & CompileTime & " UTC)")
     .open()

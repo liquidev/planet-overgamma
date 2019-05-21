@@ -7,6 +7,7 @@
 import tables
 
 import rapid/gfx/surface
+import rapid/gfx/texatlas
 import rapid/gfx/texpack
 import rapid/res/fonts
 import rapid/res/images
@@ -15,6 +16,9 @@ import rapid/res/textures
 type
   TerrainData* = ref object
     blocks*, fluids*, decor*: TableRef[(string, int), RTextureRect]
+  Spritesheet* = object
+    tex*: RTexture
+    atl*: RAtlas
 
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,
@@ -29,5 +33,7 @@ var
 
   terrain*: RTexture
   terrainData*: TerrainData
+
+  radio*: Spritesheet
 
   firaSans14*: RFont

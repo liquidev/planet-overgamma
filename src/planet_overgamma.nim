@@ -4,6 +4,9 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
+import math
+import random
+
 import rapid/gfx/surface
 import rapid/world/tilemap
 

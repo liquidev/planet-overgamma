@@ -8,6 +8,7 @@ import rapid/gfx/surface
 import rapid/world/sprite
 
 import ../res/resources
+import ../util/direction
 import playerdef
 
 const
@@ -27,8 +28,12 @@ proc initControls*(player: Player) =
 
 proc control(player: var Player, step: float) =
   # controls
-  if win.key(KLeft) == kaDown: player.force(vec2(-Accel, 0.0))
-  if win.key(KRight) == kaDown: player.force(vec2(Accel, 0.0))
+  if win.key(KLeft) == kaDown:
+    player.force(vec2(-Accel, 0.0))
+    player.facing = hdirLeft
+  if win.key(KRight) == kaDown:
+    player.force(vec2(Accel, 0.0))
+    player.facing = hdirRight
 
   # movement
   if win.key(KJump) == kaDown:
@@ -38,7 +43,13 @@ proc control(player: var Player, step: float) =
   else:
     player.jumpTime = 0.0
 
+  if win.key(KLeft) == kaDown or win.key(KRight) == kaDown:
+    player.walkTime += step
+  if player.walkTime > 40:
+    player.walkTime = 0
+
 proc physics*(player: var Player, step: float) =
   player.control(step)
+
   player.force(Gravity)
   player.vel.x *= Decel

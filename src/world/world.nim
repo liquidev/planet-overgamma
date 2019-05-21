@@ -30,12 +30,13 @@ proc drawWorld*(ctx: var RGfxContext, wld: RTmWorld[Tile], step: float) =
 
     # viewport
     let
-      (plrx, plry) = wld.tilePos(plr.pos.x, plr.pos.y)
-      (ww, wh) = wld.tilePos(gfx.width.float, gfx.height.float)
-      vptop = plry - int(wh / 2)
-      vpleft = plrx - int(ww / 2)
-      vpbottom = plry + int(wh / 2)
-      vpright = plrx + int(ww / 2)
+      (plrx, plry) = wld.tilePos(plr.pos.x + 4, plr.pos.y + 4)
+      (ww, wh) = wld.tilePos(gfx.width.float / WorldScale,
+                             gfx.height.float / WorldScale)
+      vptop = plry - int(wh / 2) - 1
+      vpleft = plrx - int(ww / 2) - 1
+      vpbottom = plry + int(wh / 2) + 1
+      vpright = plrx + int(ww / 2) + 1
 
     ctx.texture = terrain
     ctx.begin()

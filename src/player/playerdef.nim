@@ -7,13 +7,18 @@
 import rapid/world/sprite
 import glm
 
+import ../util/direction
+
 type
   Player* = ref object of RSprite
-    # metadata
+    # Metadata
     name*: string
-    # movement
+    # Movement
     maxSpeed*: Vec2[float]
     jumpTime*: float
+    # Animations
+    walkTime*: float
+    facing*: HDirection
 
 const
   DefaultPlayerName* = "Radio"

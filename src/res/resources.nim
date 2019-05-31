@@ -37,3 +37,5 @@ var
   radio*: Spritesheet
 
   firaSans14*: RFont
+
+include effects

@@ -20,4 +20,4 @@ const MaxCallStackDepth = 100
 task run_debug, "Compile and run Planet Overgamma in debug mode":
   selfExec("c -r -d:nimCallDepthLimit=" & $MaxCallStackDepth &
            " src/planet_overgamma " &
-           "--debug.autostart")
+           "--debug.autostart --debug.overlay")

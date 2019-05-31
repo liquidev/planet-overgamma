@@ -15,11 +15,11 @@ import ../resources
 proc loadSprites*() =
   info("Loading", "sprites")
   const Sprites = Data/"sprites"
-  template load(name) =
-    verbose("Sprite:", astToStr(name))
+  template load(name; w = 8, h = 8) =
+    verbose("Sprite:", astToStr(name), " (", w, "×", h, ")")
     let
       tex = loadRTexture(Sprites/(astToStr(name) & ".png"), Tc)
-      atl = newRAtlas(tex, 8, 8, 0)
+      atl = newRAtlas(tex, w, h, 0)
     name = Spritesheet(tex: tex, atl: atl)
   load(radio)
   verbose("Sprites", "finished")

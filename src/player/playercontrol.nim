@@ -12,7 +12,7 @@ import ../util/direction
 import playerdef
 
 const
-  Gravity = vec2(0.0, 0.2)
+  Gravity = vec2(0.0, 0.10)
   Accel = 0.25
   Decel = 0.8
   JumpStrength = 2.0
@@ -22,7 +22,7 @@ const
   KJump = keySpace
 
 proc initControls*(player: Player) =
-  win.onKeyPress do (win: RWindow, key: Key, scancode: int, mods: RKeyMods):
+  win.onKeyPress do (win: RWindow, key: Key, scancode: int, mods: RModKeys):
     if key == KJump and player.vel.y == 0.0:
       player.jumpTime = 10.0
 
@@ -43,9 +43,11 @@ proc control(player: var Player, step: float) =
   else:
     player.jumpTime = 0.0
 
-  if win.key(KLeft) == kaDown or win.key(KRight) == kaDown:
-    player.walkTime += step
-  if player.walkTime > 40:
+  if player.vel.x > 0.05 or player.vel.x < -0.05:
+    player.walkTime += step * abs(player.vel.x)
+  else:
+    player.walkTime = 0
+  if player.walkTime > 20:
     player.walkTime = 0
 
 proc physics*(player: var Player, step: float) =

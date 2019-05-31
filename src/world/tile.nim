@@ -8,6 +8,7 @@ type
   TileKind* = enum
     tkVoid
     tkBlock
+    tkDecor
     tkFluid
   Tile* = ref object
     solid*: bool
@@ -15,6 +16,9 @@ type
     of tkVoid: discard
     of tkBlock:
       blockName*: string
+    of tkDecor:
+      decorName*: string
+      decorVar*: int
     of tkFluid:
       fluidName*: string
 
@@ -26,6 +30,9 @@ proc voidTile*(): Tile =
 
 proc blockTile*(name: string, solid: bool): Tile =
   result = Tile(solid: solid, kind: tkBlock, blockName: name)
+
+proc decorTile*(name: string, variation: int): Tile =
+  result = Tile(kind: tkDecor, decorName: name, decorVar: variation)
 
 proc fluidTile*(name: string): Tile =
   result = Tile(kind: tkFluid, fluidName: name)

@@ -11,14 +11,18 @@ import ../colors
 
 include
   loader/loadcmd,
+  loader/loadeffects,
   loader/loadfonts,
+  loader/loadsprites,
   loader/loadterrain
 
 proc load*() =
   info("Loading", "shared resources")
   loadColors()
   terrainData = loadTerrain(terrain)
+  loadSprites()
   loadFonts()
+  compileEffects()
   info("Loading", "finished shared resources")
   if args.hasKey("debug.autostart"):
     warn("Warn.Save:", "beginning the game through --debug.autostart")

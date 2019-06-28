@@ -4,10 +4,10 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import rapid/gfx/surface
+import rapid/gfx
 import rapid/world/sprite
 
-import ../res/resources
+import ../res
 import ../util/direction
 import playerdef
 
@@ -26,7 +26,7 @@ proc initControls*(player: Player) =
     if key == KJump and player.vel.y == 0.0:
       player.jumpTime = 10.0
 
-proc control(player: var Player, step: float) =
+proc control(player: Player, step: float) =
   # controls
   if win.key(KLeft) == kaDown:
     player.force(vec2(-Accel, 0.0))
@@ -50,7 +50,7 @@ proc control(player: var Player, step: float) =
   if player.walkTime > 20:
     player.walkTime = 0
 
-proc physics*(player: var Player, step: float) =
+proc physics*(player: Player, step: float) =
   player.control(step)
 
   player.force(Gravity)

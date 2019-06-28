@@ -9,7 +9,7 @@ import os
 import rapid/res/fonts
 
 import ../../debug
-import ../resources
+import ../../res
 
 proc loadFonts*() =
   info("Loading", "fonts")
@@ -17,5 +17,5 @@ proc loadFonts*() =
     Fonts = Data/"fonts"
     FiraSans = Fonts/"Fira_Sans"
   verbose("Font:", "Fira Sans")
-  firaSans14 = newRFont(FiraSans/"FiraSans-Regular.ttf", Tc, 14)
+  firaSans14 = newRFont(FiraSans/"FiraSans-Regular.ttf", 14, 14, Tc)
   verbose("Fonts", "finished")

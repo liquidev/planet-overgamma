@@ -9,7 +9,7 @@ import parseopt
 import tables
 
 import ../../debug
-import ../resources
+import ../../res
 
 proc loadCmdline*() =
   info("Parsing", "command line arguments")

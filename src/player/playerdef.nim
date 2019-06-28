@@ -19,6 +19,13 @@ type
     # Animations
     walkTime*: float
     facing*: HDirection
+    # Laser
+    laserCharge*, laserMaxCharge*, laserChargeSpeed*: float
+    laserMode*: LaserMode
+  LaserMode* = enum
+    laserOff
+    laserDestroy
+    laserPlace
 
 const
   DefaultPlayerName* = "Radio"

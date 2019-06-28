@@ -9,7 +9,7 @@
 
   "ui": {
     "window": {
-      "background": "_black",
+      "background": "#7f000000",
       "border": "_white",
 
       "buttons": {

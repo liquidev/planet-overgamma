@@ -6,7 +6,7 @@
 
 import tables
 
-import rapid/gfx/surface
+import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/gfx/texpack
 import rapid/res/fonts
@@ -29,13 +29,13 @@ var
   args*: TableRef[string, string]
 
   win*: RWindow
-  gfx*: RGfx
+  sur*: RGfx
 
   terrain*: RTexture
   terrainData*: TerrainData
 
   radio*: Spritesheet
 
-  firaSans14*: RFont
+  firaSans14*, firaSans14b*: RFont
 
-include effects
+include res/effects

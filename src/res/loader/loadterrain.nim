@@ -13,7 +13,7 @@ import rapid/res/images
 import rapid/res/textures
 
 import ../../debug
-import ../resources
+import ../../res
 
 proc loadTerrain*(tex: var RTexture): TerrainData =
   let startTime = epochTime()

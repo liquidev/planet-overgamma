@@ -9,9 +9,9 @@ import os
 import streams
 import strutils
 
-import rapid/gfx/surface
+import rapid/gfx
 
-import res/resources
+import res
 import debug
 
 var col*: JsonNode

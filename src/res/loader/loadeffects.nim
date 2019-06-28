@@ -4,12 +4,16 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import rapid/gfx/surface
+import rapid/gfx
+import rapid/gfx/fxsurface
 
 import ../../debug
-import ../resources
+import ../../res
 
-proc compileEffects*() =
+proc loadEffects*() =
+  info("Creating", "effect surface")
+  fx = newRFxSurface(sur.canvas)
   info("Compiling", "effects")
-  fxQuantize = gfx.newREffect(FxQuantizeSrc)
+  fxQuantize = fx.newREffect(FxQuantizeSrc)
+  fxBoxBlur = fx.newREffect(FxBoxBlurSrc)
   verbose("Effects", "finished")

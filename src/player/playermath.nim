@@ -4,14 +4,14 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import glm
+import rapid/gfx
 
-import ../res/resources
+import ../res
 import ../world/worldconfig
 import playerdef
 
-proc wldToScr*(plr: Player, pos: Vec2[float]): Vec2[float] =
-  result = pos - plr.pos
-
 proc scrToWld*(plr: Player, pos: Vec2[float]): Vec2[float] =
-  result = (pos - vec2(gfx.width / 2, gfx.height / 2)) / WorldScale + plr.pos + 4
+  ## Converts screen coordinates into world coordinates.
+  ## Used primarily for mouse input.
+  result =
+    (pos - vec2(sur.width / 2, sur.height / 2)) / WorldScale + plr.pos + 4

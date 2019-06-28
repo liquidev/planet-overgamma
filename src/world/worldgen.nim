@@ -37,7 +37,7 @@ proc generateOverworld*(wld: var World, seed: int64) =
     for x in 0..<wld.width:
       let
         angle = x / wld.width * (6 * Pi)
-        y = 16 + (
+        y = 32 + (
           perlin(vec3(xo + cos(angle), yo + sin(angle), 0.0)) +
           perlin(vec3(xo + cos(angle), yo + sin(angle),
             perlin(vec2(xo + cos(angle), yo + sin(angle)))))

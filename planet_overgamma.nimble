@@ -10,14 +10,18 @@ bin           = @["planet_overgamma"]
 
 # Dependencies
 
-requires "nim >= 0.19.9"
+requires "nim >= 0.20.0"
 requires "rapid"
 
 import strutils
+import os
 
 const MaxCallStackDepth = 100
 
 task run_debug, "Compile and run Planet Overgamma in debug mode":
-  selfExec("c -r -d:nimCallDepthLimit=" & $MaxCallStackDepth &
-           " src/planet_overgamma " &
+  selfExec("c -r src/planet_overgamma " &
            "--debug.autostart --debug.overlay")
+
+task snapshot, "Create a snapshot of the last compiled version":
+  cpFile("src/planet_overgamma",
+         "snapshots"/("planet_overgamma " & CompileDate & " " & CompileTime))

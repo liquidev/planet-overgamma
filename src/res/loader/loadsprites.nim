@@ -10,7 +10,7 @@ import rapid/gfx/texatlas
 import rapid/res/textures
 
 import ../../debug
-import ../resources
+import ../../res
 
 proc loadSprites*() =
   info("Loading", "sprites")

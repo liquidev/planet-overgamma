@@ -4,11 +4,11 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import rapid/gfx/surface
+import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/world/sprite
 
-import ../res/resources
+import ../res
 import ../util/direction
 import ../world/worldconfig
 import ../colors
@@ -19,7 +19,10 @@ import playermath
 export playerdef
 export playermath
 
-method draw*(player: var Player, ctx: var RGfxContext, step: float) =
+# proc drawLasers(player: var Player, ctx: var RGfxContext, step: float) =
+
+
+method draw*(player: Player, ctx: RGfxContext, step: float) =
   ctx.begin()
   ctx.color = col.base.white
   ctx.texture = radio.tex
@@ -36,15 +39,10 @@ method draw*(player: var Player, ctx: var RGfxContext, step: float) =
       ctx.scale(-1, 1)
     ctx.rect(-4, -4, 8, 8, r)
   ctx.draw()
-  ctx.begin()
-  ctx.color = col.player.laser.destroy
-  let pos = player.scrToWld(vec2(win.mouseX, win.mouseY))
-  ctx.lineWidth = WorldScale
-  ctx.line((player.pos.x + 4, player.pos.y + 4), (pos.x, pos.y))
-  ctx.color = col.base.white
-  ctx.draw(prLineShape)
+  ctx.noTexture()
+  # player.drawLasers(ctx, step)
 
-method update*(player: var Player, step: float) =
+method update*(player: Player, step: float) =
   player.physics(step)
 
 proc newPlayer*(name: string): Player =

@@ -24,6 +24,7 @@
 
   "player": {
     "laser": {
+      "core": "_white",
       "destroy": "#ff0044",
       "place": "#2ce8f5"
     }

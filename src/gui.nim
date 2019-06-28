@@ -15,6 +15,6 @@ proc initGUI*() =
   # TODO: this is debug stuff, remove this
   let
     w1 = wm.newWindow(128, 128, 128, 128, "testing 1", wkUndecorated)
-    w2 = wm.newWindow(128, 256, 128, 128, "testing 2", wkUndecorated)
+    w2 = wm.newWindow(128, 256, 192, 128, "Hello, windowing", wkDecorated)
   wm.add(w1)
   wm.add(w2)

@@ -8,6 +8,8 @@ import lists
 
 import rapid/gfx
 import rapid/gfx/fxsurface
+import rapid/gfx/text
+import rapid/res/fonts
 
 import ../res
 import ../colors
@@ -27,11 +29,14 @@ type
     wkDecorated
   Window* = ref object of Box
     wm*: WindowManager
+    # Properties
     width*, height*: float
     title*: string
     kind*: WindowKind
+    # Interaction
     dragging: bool
     prevMousePos: Vec2[float]
+    closeButtonFill, closeButtonStroke: RColor
 
 #--
 # WM
@@ -51,7 +56,7 @@ proc add*(wm: WindowManager, win: Window) =
   wm.windows.append(win)
 
 proc bringToTop*(wm: WindowManager, win: Window) =
-  var handle = wm.windows.find(win)
+  let handle = wm.windows.find(win)
   wm.windows.remove(handle)
   wm.windows.append(handle)
 
@@ -67,6 +72,10 @@ proc newWindowManager*(win: RWindow): WindowManager =
 #--
 # Window
 #--
+
+proc close*(win: Window) =
+  let handle = win.wm.windows.find(win)
+  win.wm.windows.remove(handle)
 
 method event*(win: Window, ev: UIEvent) =
   var ctrl = win.children.tail
@@ -113,6 +122,32 @@ renderer(Window, Default, win):
     ctx.color = col.ui.window.border
     ctx.lrrect(0, 0, win.width, win.height, 8)
     ctx.draw(prLineShape)
+    if win.kind == wkDecorated:
+      let color =
+        if mouseInCircle(win.pos.x + 14, win.pos.y + 14, 8):
+          if res.win.mouseButton(mb1) == kaDown:
+            col.ui.window.buttons.close.click
+          else:
+            col.ui.window.buttons.close.hover
+        else:
+          col.ui.window.buttons.close.normal
+      win.closeButtonFill =
+        win.closeButtonFill.mix(color.fill, 0.4 * step)
+      win.closeButtonStroke =
+        win.closeButtonStroke.mix(color.stroke, 0.4 * step)
+      ctx.begin()
+      ctx.color = win.closeButtonFill
+      ctx.circle(14, 14, 5, 13)
+      ctx.draw()
+      ctx.begin()
+      ctx.color = win.closeButtonStroke
+      ctx.lcircle(14, 14, 5, 13)
+      ctx.color = col.base.white
+      ctx.draw(prLineShape)
+      let prevAlign = firaSans14b.horzAlign
+      firaSans14b.horzAlign = taCenter
+      ctx.text(firaSans14b, 16 + (win.width - 16) / 2, 6, win.title)
+      firaSans14b.horzAlign = prevAlign
 
 proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
                  title: string, kind: WindowKind) =
@@ -122,6 +157,9 @@ proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
   win.height = height
   win.title = title
   win.kind = kind
+
+  win.closeButtonFill = col.ui.window.buttons.close.normal.fill
+  win.closeButtonStroke = col.ui.window.buttons.close.normal.stroke
 
 proc newWindow*(wm: WindowManager, x, y, width, height: float, title: string,
                 kind: WindowKind): Window =

@@ -27,15 +27,18 @@ proc main() =
   load()
   initGUI()
 
-  render(sur, ctx):
-    ctx.lineSmooth = true
-
   sur.loop:
     draw ctx, step:
       ctx.clear(rgb(0, 0, 0))
+
       let start = epochTime()
+
+      ctx.lineSmooth = false
       currentSave.overworld.draw(ctx, step) # TODO: Replace with GUI window
+
+      ctx.lineSmooth = true
       wm.draw(ctx, step)
+
       if args.hasKey("debug.overlay"):
         ctx.text(firaSans14, 8, 8,
           "Planet Overgamma devel – compiled on " &

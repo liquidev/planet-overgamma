@@ -10,9 +10,11 @@ import rapid/gfx
 import rapid/gfx/fxsurface
 import rapid/gfx/text
 import rapid/res/fonts
+import rapid/world/tilemap
 
-import ../res
 import ../colors
+import ../res
+import ../world/world
 import controls
 import event
 import util
@@ -27,16 +29,21 @@ type
   WindowKind* = enum
     wkUndecorated
     wkDecorated
-  Window* = ref object of Box
+    wkGame
+  WindowObj* = object of Box
     wm*: WindowManager
     # Properties
     width*, height*: float
     title*: string
-    kind*: WindowKind
+    case kind*: WindowKind
+    of wkGame:
+      gameWorld*: World
+    else: discard
     # Interaction
     dragging: bool
     prevMousePos: Vec2[float]
     closeButtonFill, closeButtonStroke: RColor
+  Window* = ref WindowObj
 
 #--
 # WM
@@ -78,25 +85,34 @@ proc close*(win: Window) =
   win.wm.windows.remove(handle)
 
 method event*(win: Window, ev: UIEvent) =
-  var ctrl = win.children.tail
-  while not (ev.consumed or ctrl.isNil):
-    ctrl.value.event(ev)
-    ctrl = ctrl.prev
-  if not ev.consumed:
-    if mouseInArea(win.pos.x, win.pos.y, win.width, win.height) and
-       ev.kind == evMousePress or ev.kind == evMouseRelease:
-      win.dragging = ev.kind == evMousePress
-      if win.dragging:
-        win.wm.bringToTop(win)
-        ev.consume()
-    elif ev.kind == evMouseMove:
-      if win.dragging:
-        let delta = ev.mousePos - win.prevMousePos
-        win.pos += delta
-      win.prevMousePos = ev.mousePos
+  case win.kind
+  of wkUndecorated, wkDecorated:
+    var ctrl = win.children.tail
+    while not (ev.consumed or ctrl.isNil):
+      ctrl.value.event(ev)
+      ctrl = ctrl.prev
+    if not ev.consumed:
+      if mouseInArea(win.pos.x, win.pos.y, win.width, win.height) and
+        ev.kind == evMousePress or ev.kind == evMouseRelease:
+        win.dragging = ev.kind == evMousePress
+        if win.dragging:
+          win.wm.bringToTop(win)
+          ev.consume()
+        if ev.kind == evMouseRelease and
+          mouseInCircle(win.pos.x + 14, win.pos.y + 14, 8):
+          win.close()
+      elif ev.kind == evMouseMove:
+        if win.dragging:
+          let delta = ev.mousePos - win.prevMousePos
+          win.pos += delta
+        win.prevMousePos = ev.mousePos
+  of wkGame:
+    for spr in win.gameWorld:
+      spr.event(ev)
 
 renderer(Window, Default, win):
-  if win.kind in {wkDecorated, wkUndecorated}:
+  case win.kind
+  of wkUndecorated, wkDecorated:
     fx.begin(ctx, copyTarget = true)
 
     ctx.clearStencil(0)
@@ -111,6 +127,7 @@ renderer(Window, Default, win):
     fx.effect(fxBoxBlur, stencil = true)
     ctx.noStencilTest()
 
+    ctx.color = col.base.white
     fx.finish()
 
     ctx.begin()
@@ -148,15 +165,21 @@ renderer(Window, Default, win):
       firaSans14b.horzAlign = taCenter
       ctx.text(firaSans14b, 16 + (win.width - 16) / 2, 6, win.title)
       firaSans14b.horzAlign = prevAlign
+    for ctrl in win.children:
+      ctrl.draw(ctx, step)
+  of wkGame:
+    ctx.lineSmooth = false
+    win.gameWorld.draw(ctx, step)
+    ctx.lineSmooth = true
 
 proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
                  title: string, kind: WindowKind) =
+  win[] = WindowObj(kind: kind)
   win.initBox(x, y, rend = WindowDefault)
   win.wm = wm
   win.width = width
   win.height = height
   win.title = title
-  win.kind = kind
 
   win.closeButtonFill = col.ui.window.buttons.close.normal.fill
   win.closeButtonStroke = col.ui.window.buttons.close.normal.stroke

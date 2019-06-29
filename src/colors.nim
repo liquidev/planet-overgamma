@@ -11,17 +11,13 @@ import strutils
 
 import rapid/gfx
 
-import res
 import debug
+import util/jsondots
+import res
+
+export jsondots
 
 var col*: JsonNode
-
-{.push experimental: "dotOperators".}
-
-template `.`*(node: JsonNode, field: untyped): JsonNode =
-  node[astToStr(field)]
-
-{.pop.}
 
 converter toRColor*(node: JsonNode): RColor
 
@@ -74,5 +70,5 @@ converter toRColor*(node: JsonNode): RColor =
 
 proc loadColors*() =
   info("Loading", "colors")
-  col = parseFile(Data/"colors.json")
-  verbose("Colors", "finished loading")
+  col = json.parseFile(Data/"colors.json")
+  verbose("Colors", "finished")

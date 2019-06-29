@@ -25,7 +25,6 @@ proc main() =
   loadCmdline()
   initWindow()
   load()
-  initGUI()
 
   sur.loop:
     draw ctx, step:
@@ -33,10 +32,6 @@ proc main() =
 
       let start = epochTime()
 
-      ctx.lineSmooth = false
-      currentSave.overworld.draw(ctx, step) # TODO: Replace with GUI window
-
-      ctx.lineSmooth = true
       wm.draw(ctx, step)
 
       if args.hasKey("debug.overlay"):

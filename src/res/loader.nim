@@ -6,8 +6,9 @@
 
 import rapid/gfx
 
-import ../world/worldsave
 import ../colors
+import ../gui
+import ../world/worldsave
 
 include
   loader/loadcmd,
@@ -24,11 +25,14 @@ proc load*() =
   loadFonts()
   loadEffects()
   info("Loading", "finished shared resources")
+  initGUI()
+
   if args.hasKey("debug.autostart"):
     warn("Warning:", "beginning the game through --debug.autostart")
-    let seed = int64(epochTime() * 1000000000.0)
+    let seed = int64 epochTime() * 1_000_000_000
     info("Save", "seed = ", seed)
     currentSave = newSave(seed)
+    winGame.gameWorld = currentSave.overworld
 
 proc initWindow*() =
   win = initRWindow()

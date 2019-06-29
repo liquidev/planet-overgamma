@@ -7,6 +7,7 @@
 import sugar
 
 import rapid/gfx
+import rapid/world/sprite
 
 type
   UIEventKind* = enum
@@ -75,3 +76,6 @@ proc registerEvents*(win: RWindow, handler: UIEventHandler) =
                     kbMods: mods))
   win.onChar do (_: RWindow, rune: Rune, mods: RModKeys):
     handler(UIEvent(kind: evKeyChar, kcRune: rune, kcMods: mods))
+
+method event*(sprite: RSprite, event: UIEvent) {.base.} =
+  discard

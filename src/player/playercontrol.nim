@@ -7,38 +7,51 @@
 import rapid/gfx
 import rapid/world/sprite
 
-import ../res
 import ../util/direction
+import ../gui/event
 import playerdef
+import ../res
 
 const
   Gravity = vec2(0.0, 0.10)
-  Accel = 0.25
-  Decel = 0.8
-  JumpStrength = 2.0
-
   KLeft = keyA
   KRight = keyD
   KJump = keySpace
 
-proc initControls*(player: Player) =
-  win.onKeyPress do (win: RWindow, key: Key, scancode: int, mods: RModKeys):
-    if key == KJump and player.vel.y == 0.0:
-      player.jumpTime = 10.0
+method event*(player: Player, event: UIEvent) =
+  if event.kind in {evKeyPress, evKeyRelease}:
+    if event.key == KLeft:
+      player.movingLeft = event.kind == evKeyPress
+    elif event.key == KRight:
+      player.movingRight = event.kind == evKeyPress
+    elif event.key == KJump:
+      player.jumping = event.kind == evKeyPress
+      if player.jumping and player.vel.y == 0.0:
+        player.jumpTime = player.jumpSustainTime
+    else: return
+    event.consume()
+  elif event.kind in {evMousePress, evMouseRelease}:
+    player.laserMode =
+      if event.kind == evMousePress:
+        case event.mouseButton
+        of mb1: laserDestroy
+        of mb2: laserPlace
+        else: laserOff
+      else: laserOff
 
 proc control(player: Player, step: float) =
   # controls
-  if win.key(KLeft) == kaDown:
-    player.force(vec2(-Accel, 0.0))
+  if player.movingLeft:
+    player.force(vec2(-player.accel, 0.0))
     player.facing = hdirLeft
-  if win.key(KRight) == kaDown:
-    player.force(vec2(Accel, 0.0))
+  if player.movingRight:
+    player.force(vec2(player.accel, 0.0))
     player.facing = hdirRight
 
   # movement
-  if win.key(KJump) == kaDown:
+  if player.jumping:
     if player.jumpTime > 0.0:
-      player.vel.y = -JumpStrength
+      player.vel.y = -player.jumpStrength
     player.jumpTime -= step
   else:
     player.jumpTime = 0.0
@@ -54,4 +67,4 @@ proc physics*(player: Player, step: float) =
   player.control(step)
 
   player.force(Gravity)
-  player.vel.x *= Decel
+  player.vel.x *= player.decel

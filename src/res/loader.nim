@@ -8,12 +8,14 @@ import rapid/gfx
 
 import ../colors
 import ../gui
+import ../world/tiledb as tdb
 import ../world/worldsave
 
 include
   loader/loadcmd,
   loader/loadeffects,
   loader/loadfonts,
+  loader/loaditems,
   loader/loadsprites,
   loader/loadterrain
 
@@ -22,8 +24,10 @@ proc load*() =
   loadColors()
   terrainData = loadTerrain(terrain)
   loadSprites()
+  itemSpriteData = loadItems(itemSprites)
   loadFonts()
   loadEffects()
+  tiles = loadTileDatabase(Data/"tiles/tiles.json")
   info("Loading", "finished shared resources")
   initGUI()
 

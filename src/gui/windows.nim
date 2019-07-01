@@ -30,6 +30,7 @@ type
     wkUndecorated
     wkDecorated
     wkGame
+    wkHud
   WindowObj* = object of Box
     wm*: WindowManager
     # Properties
@@ -109,6 +110,7 @@ method event*(win: Window, ev: UIEvent) =
   of wkGame:
     for spr in win.gameWorld:
       spr.event(ev)
+  of wkHud: discard
 
 renderer(Window, Default, win):
   case win.kind
@@ -171,6 +173,9 @@ renderer(Window, Default, win):
     ctx.lineSmooth = false
     win.gameWorld.draw(ctx, step)
     ctx.lineSmooth = true
+  of wkHud:
+    for ctrl in win.children:
+      ctrl.draw(ctx, step)
 
 proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
                  title: string, kind: WindowKind) =

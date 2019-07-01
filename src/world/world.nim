@@ -13,16 +13,21 @@ import glm/noise
 import rapid/gfx
 import rapid/gfx/fxsurface
 import rapid/res/textures
+import rapid/world/sprite
 import rapid/world/tilemap
 
 import ../debug
 import ../res
-import ../player/playerbase
 import tile
 import worldconfig
+import ../items/worlditem
+
+export tilemap
 
 type
   World* = RTmWorld[Tile]
+
+var items: seq[Item]
 
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
   fx.begin(ctx)
@@ -57,16 +62,24 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
             (if wld[x, y - 1] == t: 0b1000 else: 0)
           key = (t.blockName, conn)
         ctx.rect(floor(x.float * 8), floor(y.float * 8), 8, 8,
-                terrainData.blocks[key])
+                 terrainData.blocks[key])
       of tkDecor:
         let key = (t.decorName, t.decorVar)
         ctx.rect(floor(x.float * 8), floor(y.float * 8), 8, 8,
-                terrainData.decor[key])
-      of tkFluid:
-        discard # TODO: fluids
+                 terrainData.decor[key])
     ctx.draw()
     ctx.noTexture()
-    wld.drawSprites(ctx, step)
+    items.setLen(0)
+    for spr in wld:
+      if not (spr of Item):
+        spr.draw(ctx, step)
+      else:
+        items.add(spr.Item)
+    ctx.begin()
+    ctx.texture = itemSprites
+    for it in items:
+      it.draw(ctx, step)
+    ctx.draw()
   fxQuantize.param("scale", WorldScale.float)
   fx.effect(fxQuantize)
   fx.finish()

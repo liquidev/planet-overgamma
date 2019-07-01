@@ -37,7 +37,7 @@ proc generateOverworld*(wld: var World, seed: int64) =
     for x in 0..<wld.width:
       let
         angle = x / wld.width * (6 * Pi)
-        y = 32 + (
+        y = 96 + (
           perlin(vec3(xo + cos(angle), yo + sin(angle), 0.0)) +
           perlin(vec3(xo + cos(angle), yo + sin(angle),
             perlin(vec2(xo + cos(angle), yo + sin(angle)))))
@@ -61,7 +61,7 @@ proc generateOverworld*(wld: var World, seed: int64) =
 
   verbose("World gen", "spawn player")
   block spawnPlayer:
-    var player = newPlayer(DefaultPlayerName)
+    var player = newPlayer(wld, DefaultPlayerName)
     let x = rng.rand(wld.width - 1)
     player.pos = vec2(x.float * 8, float(wld.highestY(x)) * 8)
     wld.add("player", player)

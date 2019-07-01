@@ -27,7 +27,10 @@
       "core": "_white",
       "destroy": "#ff0044",
       "place": "#2ce8f5",
-      "highlight": "_white"
+      "highlight": {
+        "inReach": "_white",
+        "outOfReach": "#3fff"
+      }
     }
   }
 }

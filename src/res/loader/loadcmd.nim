@@ -13,7 +13,6 @@ import ../../res
 
 proc loadCmdline*() =
   info("Parsing", "command line arguments")
-  args = newTable[string, string]()
   var opt = initOptParser(commandLineParams())
   for kind, k, v in getopt(opt):
     args[k] = v

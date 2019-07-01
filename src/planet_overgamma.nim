@@ -6,6 +6,7 @@
 
 import math
 import random
+import strutils
 import tables
 import times
 
@@ -36,10 +37,7 @@ proc main() =
 
       if args.hasKey("debug.overlay"):
         ctx.text(firaSans14, 8, 8,
-          "Planet Overgamma devel – compiled on " &
-            CompileDate & " " & CompileTime & " UTC\n" &
-          "frame time [ms]: " & $((epochTime() - start) * 1000) & "\n" &
-          "player pos: " & $currentSave.overworld["player"].pos)
+          formatFloat((epochTime() - start) * 1000, ffDecimal, 3) & " ms")
     update step:
       currentSave.overworld.update(step)
 

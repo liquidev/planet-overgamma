@@ -23,7 +23,7 @@ proc loadTerrain*(tex: var RTexture): TerrainData =
     packer = newRTexturePacker(256, 256, Tc)
 
   template autoPlace(tmpl, table, name, body) {.dirty.} =
-    result.table = newTable[(string, int), RTextureRect]()
+    info("Loading", astToStr(table))
     var
       images: seq[RImage]
       imageData: seq[(string, int)]
@@ -31,13 +31,12 @@ proc loadTerrain*(tex: var RTexture): TerrainData =
       images.add(img.subimg(x * w, y * h, w, h))
       imageData.add((name, n))
     body
+    info("Packing", astToStr(table))
     var uv = packer.place(images)
     for i, v in imageData:
       result.table.add(v, uv[i])
 
   block loadBlocks:
-    info("Loading", "blocks")
-
     autoPlace(bl, blocks, blockName):
       for fp in walkDirRec(Data/"tiles"/"blocks", relative = true):
         let (dir, name, ext) = fp.splitFile()
@@ -54,8 +53,6 @@ proc loadTerrain*(tex: var RTexture): TerrainData =
           bl(0, 2, 0b1001); bl(1, 2, 0b1011); bl(2, 2, 0b1010); bl(3, 2, 0b1000)
           bl(0, 3, 0b0001); bl(1, 3, 0b0011); bl(2, 3, 0b0010); bl(3, 3, 0b0000)
   block loadFluids:
-    info("Terrain", "fluids")
-    result.fluids = newTable[(string, int), RTextureRect]()
     autoPlace(fl, fluids, fluidName):
       for fp in walkDirRec(Data/"tiles"/"fluids", relative = true):
         let (dir, name, ext) = fp.splitFile()
@@ -69,8 +66,6 @@ proc loadTerrain*(tex: var RTexture): TerrainData =
           #  shallow      medium       med→deep     deep
           fl(0, 0, 0); fl(1, 0, 1); fl(2, 0, 2); fl(3, 0, 3)
   block loadDecor:
-    info("Terrain", "decor")
-    result.decor = newTable[(string, int), RTextureRect]()
     autoPlace(dc, decor, decorName):
       for fp in walkDirRec(Data/"tiles"/"decor", relative = true):
         let (dir, name, ext) = fp.splitFile()

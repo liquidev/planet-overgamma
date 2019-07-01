@@ -8,10 +8,13 @@ import rapid/world/sprite
 import glm
 
 import ../util/direction
+import ../items/inventory
+import ../world/world
 
 type
   Player* = ref object of RSprite
     # Metadata
+    world*: World
     name*: string
     # Movement
     accel*, decel*, jumpStrength*, jumpSustainTime*: float
@@ -23,8 +26,12 @@ type
     # World interaction
     mode*: InteractMode
     # Laser
-    laserCharge*, laserMaxCharge*, laserChargeSpeed*, laserMoveSpeed*: float
     laserMode*: LaserMode
+    laserCharge*, laserChargeMax*, laserChargeSpeed*: float
+    laserMaxReach*: float
+    # Inventory
+    inventory*: Inventory
+    itemPopups*: seq[tuple[id: string, amt: float, time: float]]
     # Upgrades
     augments*: seq[PlayerAugment]
   InteractMode* = enum

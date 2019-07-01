@@ -9,7 +9,6 @@ type
     tkVoid
     tkBlock
     tkDecor
-    tkFluid
   Tile* = ref object
     solid*: bool
     case kind*: TileKind
@@ -19,8 +18,6 @@ type
     of tkDecor:
       decorName*: string
       decorVar*: int
-    of tkFluid:
-      fluidName*: string
 
 proc isSolid*(tile: Tile): bool =
   result = tile.solid
@@ -34,15 +31,10 @@ proc blockTile*(name: string, solid: bool): Tile =
 proc decorTile*(name: string, variation: int): Tile =
   result = Tile(kind: tkDecor, decorName: name, decorVar: variation)
 
-proc fluidTile*(name: string): Tile =
-  result = Tile(kind: tkFluid, fluidName: name)
-
 proc `==`*(a, b: Tile): bool =
   result =
     if a.kind != b.kind or a.solid != b.solid: false
     elif a.kind == tkBlock:
       a.blockName == b.blockName
-    elif a.kind == tkFluid:
-      a.fluidName == b.fluidName
     else:
       false

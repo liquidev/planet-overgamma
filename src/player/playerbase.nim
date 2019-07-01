@@ -5,6 +5,7 @@
 #--
 
 import math
+import tables
 
 import rapid/gfx
 import rapid/gfx/texatlas
@@ -12,11 +13,14 @@ import rapid/world/sprite
 
 import ../colors
 import ../util/direction
+import ../math/extramath
+import ../items/inventory
 import playeraugments
 import playercontrol
 import playerdef
 import playermath
 import ../res
+import ../world/world
 import ../world/worldconfig
 
 export playeraugments
@@ -33,12 +37,22 @@ proc drawLasers(player: Player, ctx: RGfxContext, step: float) =
     len = sqrt(dx * dx + dy * dy)
     angle = arctan2(dest.y - src.y, dest.x - src.x)
 
+  ctx.clearStencil(255)
+  stencil(ctx, saReplace, 0):
+    ctx.begin()
+    ctx.rect(qdest.x + 1, qdest.y + 1, 6, 6)
+    ctx.draw()
+  ctx.stencilTest = (scEq, 255)
   ctx.begin()
-  ctx.color = col.player.laser.highlight
-  ctx.lrect(qdest.x, qdest.y, 7, 7)
-  ctx.lineWidth = 4
-  ctx.draw(prLineShape)
-  ctx.lineWidth = 1
+  let l = distance(player.pos, player.scrToWld(vec2(win.mouseX, win.mouseY)))
+  ctx.color =
+    if l > player.laserMaxReach: col.player.laser.highlight.outOfReach
+    else: col.player.laser.highlight.inReach
+  ctx.rect(qdest.x, qdest.y, 8, 8)
+  ctx.color = col.base.white
+  ctx.draw()
+  ctx.noStencilTest()
+  ctx.clearStencil(255)
 
   if player.laserMode != laserOff and player.laserCharge > 0:
     transform(ctx):
@@ -81,10 +95,11 @@ method draw*(player: Player, ctx: RGfxContext, step: float) =
 method update*(player: Player, step: float) =
   player.physics(step)
 
-proc newPlayer*(name: string): Player =
+proc newPlayer*(world: World, name: string): Player =
   result = Player(
     width: 8, height: 8,
-    name: name,
+    world: world, name: name,
+    inventory: newInventory(),
     augments: @[augmentBase]
   )
   result.updateAugments()

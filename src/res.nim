@@ -13,9 +13,11 @@ import rapid/res/fonts
 import rapid/res/images
 import rapid/res/textures
 
+import world/tiledb
+
 type
   TerrainData* = ref object
-    blocks*, fluids*, decor*: TableRef[(string, int), RTextureRect]
+    blocks*, fluids*, decor*: Table[(string, int), RTextureRect]
   Spritesheet* = object
     tex*: RTexture
     atl*: RAtlas
@@ -26,13 +28,16 @@ const
   Data* = "data"
 
 var
-  args*: TableRef[string, string]
+  args*: Table[string, string]
 
   win*: RWindow
   sur*: RGfx
 
   terrain*: RTexture
   terrainData*: TerrainData
+  itemSprites*: RTexture
+  itemSpriteData*: Table[string, RTextureRect]
+  tiles*: TileDatabase
 
   radio*: Spritesheet
 

@@ -11,7 +11,7 @@ import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/world/sprite
 
-import ../gui/controls
+import ../gui/control
 import ../util/direction
 import ../math/extramath
 import ../items/inventory

@@ -15,7 +15,7 @@ import rapid/world/tilemap
 import ../world/world
 import ../colors
 import ../res
-import controls
+import control
 import event
 
 #--

@@ -7,7 +7,7 @@
 import rapid/gfx
 
 import ../gui
-import ../gui/controls
+import ../gui/[control, button]
 import ../gui/windows
 import playerdef
 

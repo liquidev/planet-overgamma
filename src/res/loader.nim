@@ -4,27 +4,33 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
+import json
+
 import rapid/gfx
 
-import ../colors
-import ../gui
 import ../world/tiledb as tdb
 import ../world/worldsave
+import ../colors
+import ../gui
 
 include
   loader/loadcmd,
   loader/loadeffects,
   loader/loadfonts,
+  loader/loadicons,
   loader/loaditems,
   loader/loadsprites,
   loader/loadterrain
 
 proc load*() =
+  info("Loading", "settings")
+  settings = json.parseFile(Data/"settings.json").to(Settings)
   info("Loading", "shared resources")
   loadColors()
   terrainData = loadTerrain(terrain)
   loadSprites()
   itemSpriteData = loadItems(itemSprites)
+  loadIcons()
   loadFonts()
   loadEffects()
   tiles = loadTileDatabase(Data/"tiles/tiles.json")

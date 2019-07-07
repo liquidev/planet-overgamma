@@ -13,12 +13,12 @@ import ../util/direction
 import ../gui/event
 import ../math/extramath
 import ../items/inventory
-import playerdef
-import playermath
-import ../res
 import ../world/worldconfig
 import ../world/worldinteract
 import ../items/worlditem
+import ../res
+import playerdef
+import playermath
 
 const
   KLeft = keyA
@@ -26,12 +26,12 @@ const
   KJump = keySpace
 
 proc itemPopup*(player: Player, id: string, amount: float) =
-  const PopupTime = 1/60
+  const PopupTime = 150.0
   for popup in mitems(player.itemPopups):
     if popup.id == id:
       popup.amt += amount
       popup.time = PopupTime
-      break
+      return
   player.itemPopups.add((id, amount, PopupTime))
 
 method event*(player: Player, event: UIEvent) =

@@ -11,8 +11,8 @@ import strutils
 
 import rapid/gfx
 
-import debug
 import util/jsondots
+import debug
 import res
 
 export jsondots

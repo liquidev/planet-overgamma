@@ -12,12 +12,11 @@ import rapid/gfx/text
 import rapid/res/fonts
 import rapid/world/tilemap
 
+import ../world/world
 import ../colors
 import ../res
-import ../world/world
 import controls
 import event
-import util
 
 #--
 # Definitions
@@ -41,6 +40,7 @@ type
       gameWorld*: World
     else: discard
     # Interaction
+    draggable*: bool
     dragging: bool
     prevMousePos: Vec2[float]
     closeButtonFill, closeButtonStroke: RColor
@@ -93,19 +93,22 @@ method event*(win: Window, ev: UIEvent) =
       ctrl.value.event(ev)
       ctrl = ctrl.prev
     if not ev.consumed:
-      if mouseInArea(win.pos.x, win.pos.y, win.width, win.height) and
-        ev.kind == evMousePress or ev.kind == evMouseRelease:
+      if win.draggable and
+         win.mouseInArea(0, 0, win.width, win.height) and
+         ev.kind == evMousePress or ev.kind == evMouseRelease:
         win.dragging = ev.kind == evMousePress
         if win.dragging:
           win.wm.bringToTop(win)
           ev.consume()
-        if ev.kind == evMouseRelease and
-          mouseInCircle(win.pos.x + 14, win.pos.y + 14, 8):
+        if win.kind == wkDecorated and ev.kind == evMouseRelease and
+           win.mouseInCircle(14, 14, 8):
           win.close()
       elif ev.kind == evMouseMove:
         if win.dragging:
           let delta = ev.mousePos - win.prevMousePos
           win.pos += delta
+          win.pos.x = clamp(win.pos.x, 0, res.win.width.float - win.width)
+          win.pos.y = clamp(win.pos.y, 0, res.win.height.float - win.height)
         win.prevMousePos = ev.mousePos
   of wkGame:
     for spr in win.gameWorld:
@@ -115,35 +118,36 @@ method event*(win: Window, ev: UIEvent) =
 renderer(Window, Default, win):
   case win.kind
   of wkUndecorated, wkDecorated:
-    fx.begin(ctx, copyTarget = true)
+    if settings.graphics.blurBehindUI:
+      fx.begin(ctx, copyTarget = true)
 
-    ctx.clearStencil(0)
-    stencil(ctx, saReplace, 255):
-      ctx.begin()
-      ctx.rrect(0, 0, win.width, win.height, 8)
-      ctx.draw()
+      ctx.clearStencil(0)
+      stencil(ctx, saReplace, 255):
+        ctx.begin()
+        ctx.rrect(0, 0, win.width, win.height, 6)
+        ctx.draw()
 
-    ctx.stencilTest = (scEq, 255)
-    fxBoxBlur.param("radius", 7)
-    fx.effect(fxBoxBlur, stencil = true)
-    fx.effect(fxBoxBlur, stencil = true)
-    ctx.noStencilTest()
+      ctx.stencilTest = (scEq, 255)
+      fxBoxBlur.param("radius", 7)
+      fx.effect(fxBoxBlur, stencil = true)
+      fx.effect(fxBoxBlur, stencil = true)
+      ctx.noStencilTest()
 
-    ctx.color = col.base.white
-    fx.finish()
+      ctx.color = col.base.white
+      fx.finish()
 
     ctx.begin()
     ctx.color = col.ui.window.background
-    ctx.rrect(0, 0, win.width, win.height, 8)
+    ctx.rrect(0, 0, win.width, win.height, 6)
     ctx.draw()
 
     ctx.begin()
     ctx.color = col.ui.window.border
-    ctx.lrrect(0, 0, win.width, win.height, 8)
+    ctx.lrrect(0, 0, win.width, win.height, 6)
     ctx.draw(prLineShape)
     if win.kind == wkDecorated:
       let color =
-        if mouseInCircle(win.pos.x + 14, win.pos.y + 14, 8):
+        if win.mouseInCircle(14, 14, 8):
           if res.win.mouseButton(mb1) == kaDown:
             col.ui.window.buttons.close.click
           else:
@@ -185,6 +189,7 @@ proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
   win.width = width
   win.height = height
   win.title = title
+  win.draggable = true
 
   win.closeButtonFill = col.ui.window.buttons.close.normal.fill
   win.closeButtonStroke = col.ui.window.buttons.close.normal.stroke

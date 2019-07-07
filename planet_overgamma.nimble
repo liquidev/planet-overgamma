@@ -13,7 +13,7 @@ bin           = @["planet_overgamma"]
 requires "nim >= 0.20.0"
 requires "rapid"
 
-task run_debug, "Compile and run Planet Overgamma in debug mode":
+task runDebug, "Compile and run Planet Overgamma in debug mode":
   selfExec("c -r src/planet_overgamma " &
            "--debug.autostart --debug.overlay")
 

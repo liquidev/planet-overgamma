@@ -7,6 +7,7 @@
 import rapid/world/sprite
 import glm
 
+import ../gui/windows
 import ../util/direction
 import ../items/inventory
 import ../world/world
@@ -34,6 +35,8 @@ type
     itemPopups*: seq[tuple[id: string, amt: float, time: float]]
     # Upgrades
     augments*: seq[PlayerAugment]
+    # GUI
+    winInventory*: Window
   InteractMode* = enum
     imWorld
     imWires

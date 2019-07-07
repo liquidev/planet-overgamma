@@ -9,8 +9,8 @@ import tables
 import rapid/gfx
 import rapid/world/sprite
 
-import ../res
 import ../world/worldconfig
+import ../res
 
 type
   Item* = ref object of RSprite

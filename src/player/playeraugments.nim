@@ -29,4 +29,4 @@ proc updateAugments*(player: Player) =
       player.laserChargeMax += 3
       player.laserChargeSpeed += 0.1
       player.laserMaxReach += 5 * 8
-      player.inventory.addCapacity(512)
+      player.inventory.addCapacity(1024)

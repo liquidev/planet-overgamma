@@ -11,17 +11,21 @@ import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/world/sprite
 
-import ../colors
+import ../gui/controls
 import ../util/direction
 import ../math/extramath
 import ../items/inventory
+import ../world/world
+import ../world/worldconfig
+import ../colors
+import ../gui
+import ../res
 import playeraugments
 import playercontrol
 import playerdef
+import playerhud
 import playermath
-import ../res
-import ../world/world
-import ../world/worldconfig
+import playerui
 
 export playeraugments
 export playerdef
@@ -92,8 +96,19 @@ method draw*(player: Player, ctx: RGfxContext, step: float) =
   ctx.noTexture()
   player.drawLasers(ctx, step)
 
+proc updatePopups(player: Player, step: float) =
+  for popup in mitems(player.itemPopups):
+    popup.time -= step
+  var idx = 0
+  while idx < player.itemPopups.len:
+    if player.itemPopups[idx].time < 0:
+      player.itemPopups.delete(idx)
+    else:
+      inc(idx)
+
 method update*(player: Player, step: float) =
   player.physics(step)
+  player.updatePopups(step)
 
 proc newPlayer*(world: World, name: string): Player =
   result = Player(
@@ -103,3 +118,5 @@ proc newPlayer*(world: World, name: string): Player =
     augments: @[augmentBase]
   )
   result.updateAugments()
+  winHud.add(newPlayerHud(result))
+  result.initPlayerUI()

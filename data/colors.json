@@ -19,6 +19,12 @@
           "click":  { "stroke": "_darkRed", "fill": "_darkRed" }
         }
       }
+    },
+    "button": {
+      "dock": {
+        "hover": "#afff",
+        "click": "#6fff"
+      }
     }
   },
 

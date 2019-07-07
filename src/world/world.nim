@@ -16,11 +16,11 @@ import rapid/res/textures
 import rapid/world/sprite
 import rapid/world/tilemap
 
+import ../items/worlditem
 import ../debug
 import ../res
 import tile
 import worldconfig
-import ../items/worlditem
 
 export tilemap
 
@@ -30,7 +30,8 @@ type
 var items: seq[Item]
 
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
-  fx.begin(ctx)
+  if settings.graphics.pixelate:
+    fx.begin(ctx)
   transform(ctx):
     # camera
     let plr = wld["player"]
@@ -42,7 +43,7 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
     let
       (plrx, plry) = wld.tilePos(plr.pos.x + 4, plr.pos.y + 4)
       (ww, wh) = wld.tilePos(sur.width.float / WorldScale,
-                            sur.height.float / WorldScale)
+                             sur.height.float / WorldScale)
       vptop = plry - int(wh / 2) - 1
       vpleft = plrx - int(ww / 2) - 1
       vpbottom = plry + int(wh / 2) + 1
@@ -80,9 +81,10 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
     for it in items:
       it.draw(ctx, step)
     ctx.draw()
-  fxQuantize.param("scale", WorldScale.float)
-  fx.effect(fxQuantize)
-  fx.finish()
+  if settings.graphics.pixelate:
+    fxQuantize.param("scale", WorldScale.float)
+    fx.effect(fxQuantize)
+    fx.finish()
 
 proc highestY*(wld: World, x: int): int =
   for y in 0..<wld.height:

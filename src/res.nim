@@ -22,6 +22,11 @@ type
     tex*: RTexture
     atl*: RAtlas
 
+  GraphicsSettings* = object
+    pixelate*, blurBehindUI*: bool
+  Settings* = object
+    graphics*: GraphicsSettings
+
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,
          wrapH: wrapRepeat, wrapV: wrapRepeat)
@@ -29,6 +34,7 @@ const
 
 var
   args*: Table[string, string]
+  settings*: Settings
 
   win*: RWindow
   sur*: RGfx
@@ -38,6 +44,7 @@ var
   itemSprites*: RTexture
   itemSpriteData*: Table[string, RTextureRect]
   tiles*: TileDatabase
+  icons*: Table[string, RTexture]
 
   radio*: Spritesheet
 

@@ -11,11 +11,11 @@ import tables
 import glm
 import rapid/world/sprite
 
+import ../items/worlditem
 import ../res
 import tile
 import tiledb
 import world
-import ../items/worlditem
 
 proc drop*(world: World, x, y: float, drop: openarray[ItemDrop]) =
   for it in drop:

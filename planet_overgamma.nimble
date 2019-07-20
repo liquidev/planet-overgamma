@@ -10,7 +10,7 @@ bin           = @["planet_overgamma"]
 
 # Dependencies
 
-requires "nim >= 0.20.0"
+requires "nim >= 0.20.2"
 requires "rapid"
 
 task runDebug, "Compile and run Planet Overgamma in debug mode":

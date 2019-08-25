@@ -4,7 +4,7 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import glm
+import glm/vec
 
 const
   WorldWidth* = 256

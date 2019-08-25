@@ -44,6 +44,8 @@ type
     dragging: bool
     prevMousePos: Vec2[float]
     closeButtonFill, closeButtonStroke: RColor
+    # Callbacks
+    onClose*: proc (win: Window): bool
   Window* = ref WindowObj
 
 #--
@@ -82,8 +84,9 @@ proc newWindowManager*(win: RWindow): WindowManager =
 #--
 
 proc close*(win: Window) =
-  let handle = win.wm.windows.find(win)
-  win.wm.windows.remove(handle)
+  if win.onClose(win):
+    let handle = win.wm.windows.find(win)
+    win.wm.windows.remove(handle)
 
 method event*(win: Window, ev: UIEvent) =
   case win.kind
@@ -103,6 +106,7 @@ method event*(win: Window, ev: UIEvent) =
         if win.kind == wkDecorated and ev.kind == evMouseRelease and
            win.mouseInCircle(14, 14, 8):
           win.close()
+          ev.consume()
       elif ev.kind == evMouseMove:
         if win.dragging:
           let delta = ev.mousePos - win.prevMousePos
@@ -122,7 +126,7 @@ renderer(Window, Default, win):
       fx.begin(ctx, copyTarget = true)
 
       ctx.clearStencil(0)
-      stencil(ctx, saReplace, 255):
+      ctx.stencil(saReplace, 255):
         ctx.begin()
         ctx.rrect(0, 0, win.width, win.height, 6)
         ctx.draw()
@@ -167,10 +171,10 @@ renderer(Window, Default, win):
       ctx.lcircle(14, 14, 5, 13)
       ctx.color = col.base.white
       ctx.draw(prLineShape)
-      let prevAlign = firaSans14b.horzAlign
-      firaSans14b.horzAlign = taCenter
-      ctx.text(firaSans14b, 16 + (win.width - 16) / 2, 6, win.title)
-      firaSans14b.horzAlign = prevAlign
+      let prevAlign = firaSansB.horzAlign
+      firaSansB.horzAlign = taCenter
+      ctx.text(firaSansB, 16 + (win.width - 16) / 2, 6, win.title)
+      firaSansB.horzAlign = prevAlign
     for ctrl in win.children:
       ctrl.draw(ctx, step)
   of wkGame:

@@ -8,7 +8,7 @@ import options
 import random
 import tables
 
-import glm
+import glm/vec
 import rapid/world/sprite
 
 import ../items/worlditem

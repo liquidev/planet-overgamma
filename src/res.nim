@@ -10,7 +10,6 @@ import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/gfx/texpack
 import rapid/res/fonts
-import rapid/res/images
 import rapid/res/textures
 
 import world/tiledb
@@ -48,6 +47,6 @@ var
 
   radio*: Spritesheet
 
-  firaSans14*, firaSans14b*: RFont
+  firaSans*, firaSansB*: RFont
 
 include res/effects

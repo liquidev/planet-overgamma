@@ -4,7 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import strutils
 import tables
 
 import rapid/gfx
@@ -24,7 +23,7 @@ renderer(PlayerHud, Default, hud):
   block itemPopups:
     var width, y = 0.0
     for popup in hud.player.itemPopups:
-      let popupWidth = 28 + firaSans14.widthOf(popup.amt.itemAmtStr)
+      let popupWidth = 28 + firaSans.widthOf(popup.amt.itemAmtStr)
       if width < popupWidth:
         width = popupWidth
     let
@@ -39,7 +38,7 @@ renderer(PlayerHud, Default, hud):
     ctx.noTexture()
     y = 0
     for popup in hud.player.itemPopups:
-      ctx.text(firaSans14, baseX + 28, baseY - y - 36, popup.amt.itemAmtStr)
+      ctx.text(firaSans, baseX + 28, baseY - y - 36, popup.amt.itemAmtStr)
       y += 32
 
 proc newPlayerHud*(player: Player): PlayerHud =

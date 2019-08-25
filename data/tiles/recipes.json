@@ -1,0 +1,16 @@
+{
+  "blocks": {
+    "plants": {
+      "level": 0,
+      "ingredients": {
+        "plants": 1
+      }
+    },
+    "stone": {
+      "level": 0,
+      "ingredients": {
+        "rock": 1
+      }
+    }
+  }
+}

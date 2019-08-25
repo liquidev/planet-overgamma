@@ -12,18 +12,20 @@ import rapid/world/sprite
 import ../util/direction
 import ../gui/event
 import ../math/extramath
-import ../items/inventory
+import ../items/container
 import ../world/worldconfig
 import ../world/worldinteract
 import ../items/worlditem
 import ../res
 import playerdef
 import playermath
+import playerui
 
 const
   KLeft = keyA
   KRight = keyD
   KJump = keySpace
+  KOpenInventory = keyI
 
 proc itemPopup*(player: Player, id: string, amount: float) =
   const PopupTime = 150.0
@@ -44,6 +46,8 @@ method event*(player: Player, event: UIEvent) =
       player.jumping = event.kind == evKeyPress
       if player.jumping and player.vel.y == 0.0:
         player.jumpTime = player.jumpSustainTime
+    elif event.key == KOpenInventory:
+      player.openInventory()
     else: return
     event.consume()
   elif event.kind in {evMousePress, evMouseRelease}:

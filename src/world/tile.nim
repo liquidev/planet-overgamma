@@ -4,6 +4,8 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
+import rapid/world/aabb
+
 type
   TileKind* = enum
     tkVoid
@@ -21,6 +23,9 @@ type
 
 proc isSolid*(tile: Tile): bool =
   result = tile.solid
+
+proc hitbox*(x, y: float, tile: Tile): RAABounds =
+  result = newRAABB(x * 8, y * 8, 8, 8)
 
 proc voidTile*(): Tile =
   result = Tile(solid: false, kind: tkVoid)

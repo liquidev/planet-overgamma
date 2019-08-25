@@ -6,7 +6,6 @@
 
 import json
 import os
-import streams
 import strutils
 
 import rapid/gfx

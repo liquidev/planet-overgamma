@@ -5,19 +5,14 @@
 #--
 
 import math
-import random
-import strutils
 import tables
 
-import glm/noise
 import rapid/gfx
 import rapid/gfx/fxsurface
-import rapid/res/textures
 import rapid/world/sprite
 import rapid/world/tilemap
 
 import ../items/worlditem
-import ../debug
 import ../res
 import tile
 import worldconfig
@@ -32,7 +27,7 @@ var items: seq[Item]
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
   if settings.graphics.pixelate:
     fx.begin(ctx)
-  transform(ctx):
+  ctx.transform():
     # camera
     let plr = wld["player"]
     ctx.translate(sur.width / 2, sur.height / 2)
@@ -95,7 +90,7 @@ proc highestY*(wld: World, x: int): int =
 
 proc newWorld*(width, height: Natural): World =
   result = newRTmWorld[Tile](width, height, 8, 8)
-  result.implTile(tile.voidTile, tile.isSolid)
+  result.implTile(tile.voidTile, tile.isSolid, tile.hitbox)
   result.drawImpl = drawWorld
   result.oobTile = voidTile()
   result.wrapX = true

@@ -1,10 +1,20 @@
 {
   "base": {
     "transparent": "#0000",
+
     "white": "#fff",
     "black": "#000",
+
     "red": "#e43b44",
-    "darkRed": "#9e2835"
+    "darkRed": "#9e2835",
+    "darkBlue": "#124e89"
+  },
+
+  "world": {
+    "atmosphere": {
+      "high": "_black",
+      "low": "_darkBlue"
+    }
   },
 
   "ui": {
@@ -24,6 +34,12 @@
       "dock": {
         "hover": "#afff",
         "click": "#6fff"
+      }
+    },
+    "containerGrid": {
+      "item": {
+        "border": "_white",
+        "highlight": "#3fff"
       }
     }
   },

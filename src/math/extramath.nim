@@ -6,7 +6,7 @@
 
 import math
 
-import glm
+import glm/vec
 
 proc distance*(a, b: Vec2[float]): float =
   let

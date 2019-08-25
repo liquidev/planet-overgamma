@@ -17,6 +17,6 @@ proc loadFonts*() =
     Fonts = Data/"fonts"
     FiraSans = Fonts/"Fira_Sans"
   verbose("Font:", "Fira Sans")
-  firaSans14 = newRFont(FiraSans/"FiraSans-Regular.ttf", 14, 14, Tc)
-  firaSans14b = newRFont(FiraSans/"FiraSans-Bold.ttf", 14, 14, Tc)
+  firaSans = newRFont(FiraSans/"FiraSans-Regular.ttf", 14, 0, Tc)
+  firaSansB = newRFont(FiraSans/"FiraSans-Bold.ttf", 14, 0, Tc)
   verbose("Fonts", "finished")

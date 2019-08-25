@@ -4,7 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import rapid/gfx
 import rapid/gfx/fxsurface
 
 const

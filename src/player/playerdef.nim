@@ -5,11 +5,10 @@
 #--
 
 import rapid/world/sprite
-import glm
 
 import ../gui/windows
 import ../util/direction
-import ../items/inventory
+import ../items/container
 import ../world/world
 
 type
@@ -31,12 +30,12 @@ type
     laserCharge*, laserChargeMax*, laserChargeSpeed*: float
     laserMaxReach*: float
     # Inventory
-    inventory*: Inventory
+    inventory*: Container
     itemPopups*: seq[tuple[id: string, amt: float, time: float]]
     # Upgrades
     augments*: seq[PlayerAugment]
     # GUI
-    winInventory*: Window
+    winInventory*, winAssembler*: Window
   InteractMode* = enum
     imWorld
     imWires
@@ -46,6 +45,7 @@ type
     laserPlace
   PlayerAugment* = enum
     augmentBase
+    augmentDebug # --debug.augment
 
 const
   DefaultPlayerName* = "Radio"

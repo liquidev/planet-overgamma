@@ -4,8 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import sugar
-
 import rapid/gfx
 import rapid/world/sprite
 

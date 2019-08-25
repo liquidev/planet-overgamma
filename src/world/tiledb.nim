@@ -9,7 +9,6 @@ import options
 import tables
 
 import ../debug
-import tile
 
 type
   ItemDrop* = object

@@ -50,7 +50,7 @@ template renderer*(T, name, varName, body) {.dirty.} =
     body
 
 proc draw*(ctrl: Control, ctx: RGfxContext, step: float) =
-  # don't use `transform(ctx)` here to avoid unnecessary matrix copies
+  # don't use `ctx.transform()` here to avoid unnecessary matrix copies
   ctx.translate(ctrl.pos.x, ctrl.pos.y)
   ctrl.renderer(ctx, step, ctrl)
   ctx.translate(-ctrl.pos.x, -ctrl.pos.y)

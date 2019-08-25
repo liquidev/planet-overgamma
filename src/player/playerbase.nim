@@ -14,9 +14,8 @@ import rapid/world/sprite
 import ../gui/control
 import ../util/direction
 import ../math/extramath
-import ../items/inventory
+import ../items/container
 import ../world/world
-import ../world/worldconfig
 import ../colors
 import ../gui
 import ../res
@@ -42,7 +41,7 @@ proc drawLasers(player: Player, ctx: RGfxContext, step: float) =
     angle = arctan2(dest.y - src.y, dest.x - src.x)
 
   ctx.clearStencil(255)
-  stencil(ctx, saReplace, 0):
+  ctx.stencil(saReplace, 0):
     ctx.begin()
     ctx.rect(qdest.x + 1, qdest.y + 1, 6, 6)
     ctx.draw()
@@ -59,7 +58,7 @@ proc drawLasers(player: Player, ctx: RGfxContext, step: float) =
   ctx.clearStencil(255)
 
   if player.laserMode != laserOff and player.laserCharge > 0:
-    transform(ctx):
+    ctx.transform():
       ctx.translate(src.x, src.y)
       ctx.rotate(angle)
       ctx.begin()
@@ -80,7 +79,7 @@ method draw*(player: Player, ctx: RGfxContext, step: float) =
   ctx.begin()
   ctx.color = col.base.white
   ctx.texture = radio.tex
-  transform(ctx):
+  ctx.transform():
     let r =
       if player.vel.y > 0.001:
         radio.atl.rect(2, 0)
@@ -114,9 +113,11 @@ proc newPlayer*(world: World, name: string): Player =
   result = Player(
     width: 8, height: 8,
     world: world, name: name,
-    inventory: newInventory(),
+    inventory: newContainer(),
     augments: @[augmentBase]
   )
+  if args.hasKey("debug.augment"):
+    result.augments.add(augmentDebug)
   result.updateAugments()
   winHud.add(newPlayerHud(result))
   result.initPlayerUI()

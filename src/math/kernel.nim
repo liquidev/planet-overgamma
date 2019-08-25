@@ -4,7 +4,7 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import glm
+import glm/vec
 
 proc boxBlur*(radius: static[int]): array[radius, float] =
   for i in mitems(result):

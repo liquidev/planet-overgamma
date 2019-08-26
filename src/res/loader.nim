@@ -12,6 +12,7 @@ import ../world/tiledb as tdb
 import ../world/worldsave
 import ../colors
 import ../gui
+import ../lang
 
 include
   loader/loadcmd,
@@ -34,6 +35,7 @@ proc load*() =
   loadFonts()
   loadEffects()
   tiles = loadTileDatabase(Data/"tiles/tiles.json")
+  loadLanguage()
   info("Loading", "finished shared resources")
   initGUI()
 

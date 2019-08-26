@@ -10,12 +10,14 @@ import rapid/gfx
 import ../gui
 import ../gui/[control, button, containerview]
 import ../gui/windows
+import ../lang
 import ../res
 import playerdef
 
 proc openInventory*(player: Player) =
   if player.winInventory.isNil:
-    let win = wm.newWindow(64, 64, 192, 256, "Inventory", wkDecorated)
+    let win = wm.newWindow(64, 64, 192, 256,
+                           L"win.inventory title", wkDecorated)
     win.onClose = proc (win: Window): bool =
       player.winInventory = nil
       result = true
@@ -28,7 +30,8 @@ proc openInventory*(player: Player) =
 
 proc openAssembler*(player: Player) =
   if player.winAssembler.isNil:
-    let win = wm.newWindow(64, 64, 192, 256, "portAssembler", wkDecorated)
+    let win = wm.newWindow(64, 64, 192, 256,
+                           L"win.assembler title", wkDecorated)
     win.onClose = proc (win: Window): bool =
       player.winAssembler = nil
       result = true
@@ -41,7 +44,7 @@ proc updateToolboxPos(width, height: float) =
   winToolbox.pos = vec2(width - 12 - winToolbox.width, 12)
 
 proc initPlayerUI*(player: Player) =
-  winToolbox = wm.newWindow(12, 12, 32, 60, "Toolbox", wkUndecorated)
+  winToolbox = wm.newWindow(12, 12, 32, 60, L"win.toolbox title", wkUndecorated)
   winToolbox.draggable = false
   updateToolboxPos(win.width.float, win.height.float)
   win.onResize do (win: RWindow, width, height: Natural):

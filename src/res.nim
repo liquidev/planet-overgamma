@@ -21,10 +21,13 @@ type
     tex*: RTexture
     atl*: RAtlas
 
+  Settings* = object
+    general*: GeneralSettings
+    graphics*: GraphicsSettings
+  GeneralSettings* = object
+    language*: string
   GraphicsSettings* = object
     pixelate*, blurBehindUI*: bool
-  Settings* = object
-    graphics*: GraphicsSettings
 
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,

@@ -1,4 +1,7 @@
 {
+  "general": {
+    "language": "en_US"
+  },
   "graphics": {
     "pixelate": true,
     "blurBehindUI": true

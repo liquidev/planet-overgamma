@@ -4,8 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import rapid/gfx
-
 import gui/windows
 import debug
 import res

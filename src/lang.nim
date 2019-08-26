@@ -53,4 +53,3 @@ proc loadLanguage*() =
   if parseError: quit(QuitFailure)
   parser.close()
   verbose(settings.general.language & ":", $keys, " keys total")
-  echo lang

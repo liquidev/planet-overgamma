@@ -4,12 +4,15 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
+import tables
+
 import rapid/world/sprite
 
 import ../gui/windows
 import ../util/direction
 import ../items/container
 import ../world/world
+import recipedb
 
 type
   Player* = ref object of RSprite
@@ -25,6 +28,8 @@ type
     facing*: HDirection
     # World interaction
     mode*: InteractMode
+    recipe*: Recipe
+    recipesUnlocked*: OrderedTable[string, Recipe]
     # Laser
     laserMode*: LaserMode
     laserCharge*, laserChargeMax*, laserChargeSpeed*: float

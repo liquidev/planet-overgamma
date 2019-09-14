@@ -26,31 +26,32 @@ type
 
 renderer(ContainerGrid, Default, grid):
   var x, y = 0.0
-  for id, amt in grid.container:
-    ctx.clearStencil(0)
-    ctx.stencil(saReplace, 255):
+  for n in 1..5:
+    for id, amt in grid.container:
+      ctx.clearStencil(0)
+      ctx.stencil(saReplace, 255):
+        ctx.begin(); ctx.rect(x, y, 33, 33); ctx.draw()
+      ctx.stencil(saReplace, 0):
+        ctx.begin(); ctx.rect(x + 1, y + 1, 31, 31); ctx.draw()
+      ctx.stencilTest = (scEq, 255)
+      ctx.color = col"ui.containerGrid.item.border"
       ctx.begin(); ctx.rect(x, y, 33, 33); ctx.draw()
-    ctx.stencil(saReplace, 0):
-      ctx.begin(); ctx.rect(x + 1, y + 1, 31, 31); ctx.draw()
-    ctx.stencilTest = (scEq, 255)
-    ctx.color = col.ui.containerGrid.item.border
-    ctx.begin(); ctx.rect(x, y, 33, 33); ctx.draw()
-    ctx.color = col.base.white
-    ctx.noStencilTest()
+      ctx.color = col"base.white"
+      ctx.noStencilTest()
 
-    ctx.begin()
-    ctx.texture = itemSprites
-    ctx.rect(x + 4, y + 1, 24, 24, itemSpriteData[id])
-    ctx.draw()
-    ctx.noTexture()
+      ctx.begin()
+      ctx.texture = itemSprites
+      ctx.rect(x + 4, y + 1, 24, 24, itemSpriteData[id])
+      ctx.draw()
+      ctx.noTexture()
 
-    firaSans.height = 9
-    ctx.text(firaSans, x + 2, y + 30 - 9, amt.itemAmtStr)
-    firaSans.height = 14
-    x += 32
-    if x >= grid.cols.float * 32:
-      y += 32
-      x = 0
+      firaSans.height = 9
+      ctx.text(firaSans, x + 2, y + 30 - 9, amt.itemAmtStr)
+      firaSans.height = 14
+      x += 32
+      if x >= grid.cols.float * 32:
+        y += 32
+        x = 0
 
 proc initContainerGrid*(grid: ContainerGrid, x, y: float, container: Container,
                         cols: int, rend = ContainerGridDefault) =

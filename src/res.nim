@@ -12,6 +12,7 @@ import rapid/gfx/texpack
 import rapid/res/fonts
 import rapid/res/textures
 
+import player/recipedb
 import world/tiledb
 
 type
@@ -46,6 +47,7 @@ var
   itemSprites*: RTexture
   itemSpriteData*: Table[string, RTextureRect]
   tiles*: TileDatabase
+  recipes*: RecipeDatabase
   icons*: Table[string, RTexture]
 
   radio*: Spritesheet

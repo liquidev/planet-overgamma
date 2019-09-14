@@ -8,6 +8,7 @@ import json
 
 import rapid/gfx
 
+import ../player/recipedb
 import ../world/tiledb as tdb
 import ../world/worldsave
 import ../colors
@@ -35,6 +36,7 @@ proc load*() =
   loadFonts()
   loadEffects()
   tiles = loadTileDatabase(Data/"tiles/tiles.json")
+  recipes = loadRecipeDatabase(Data/"tiles/recipes.json")
   loadLanguage()
   info("Loading", "finished shared resources")
   initGUI()
@@ -50,5 +52,6 @@ proc initWindow*() =
   win = initRWindow()
     .size(1280, 720)
     .title("Planet Overgamma")
+    .antialiasLevel(4)
     .open()
   sur = win.openGfx()

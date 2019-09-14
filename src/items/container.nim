@@ -7,6 +7,8 @@
 import algorithm
 import tables
 
+import itemstorage
+
 type
   ContainerFilterMode* = enum
     cfmNone
@@ -14,7 +16,7 @@ type
     cfmBlacklist
   ContainerSortMode* = enum
     csmByAmount
-  Container* = ref object
+  Container* = ref object of ItemStorage
     items: OrderedTable[string, float]
     fUsedSpace: float
     fCapacity: float
@@ -27,10 +29,9 @@ iterator pairs*(con: Container): (string, float) =
   for id, amt in con.items:
     yield (id, amt)
 
-proc `[]`*(con: Container, id: string): float = con.items[id]
-proc usedSpace*(con: Container): float = con.fUsedSpace
-proc freeSpace*(con: Container): float = con.fCapacity - con.fUsedSpace
-proc capacity*(con: Container): float = con.fCapacity
+method `[]`*(con: Container, id: string): float = con.items[id]
+method usedSpace*(con: Container): float = con.fUsedSpace
+method capacity*(con: Container): float = con.fCapacity
 proc `capacity=`*(con: Container, newCap: float) =
   con.fCapacity = newCap
 proc addCapacity*(con: Container, cap: float) =
@@ -67,7 +68,7 @@ proc collectGarbage(con: Container) =
   if garbage.len > 0:
     con.sort()
 
-proc store*(con: Container, id: string, amount: float): float =
+method store*(con: Container, id: string, amount: float): float =
   case con.filterMode
   of cfmNone: discard
   of cfmWhitelist:
@@ -83,7 +84,7 @@ proc store*(con: Container, id: string, amount: float): float =
       con.items[id] += result
     con.fUsedSpace += result
 
-proc retrieve*(con: Container, id: string, amount: float): float =
+method retrieve*(con: Container, id: string, amount: float): float =
   result = min(con[id], amount)
   con.items[id] -= result
   con.fUsedSpace -= result

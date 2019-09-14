@@ -10,23 +10,16 @@
     "darkBlue": "#124e89"
   },
 
-  "world": {
-    "atmosphere": {
-      "high": "_black",
-      "low": "_darkBlue"
-    }
-  },
-
   "ui": {
     "window": {
       "background": "#7f000000",
-      "border": "_white",
+      "border": "base.white",
 
       "buttons": {
         "close": {
-          "normal": { "stroke": "_white",   "fill": "_transparent" },
-          "hover":  { "stroke": "_darkRed", "fill": "_red" },
-          "click":  { "stroke": "_darkRed", "fill": "_darkRed" }
+          "normal": { "stroke": "base.white",   "fill": "base.transparent" },
+          "hover":  { "stroke": "base.darkRed", "fill": "base.red" },
+          "click":  { "stroke": "base.darkRed", "fill": "base.darkRed" }
         }
       }
     },
@@ -38,7 +31,7 @@
     },
     "containerGrid": {
       "item": {
-        "border": "_white",
+        "border": "base.white",
         "highlight": "#3fff"
       }
     }
@@ -46,11 +39,11 @@
 
   "player": {
     "laser": {
-      "core": "_white",
+      "core": "base.white",
       "destroy": "#ff0044",
       "place": "#2ce8f5",
       "highlight": {
-        "inReach": "_white",
+        "inReach": "base.white",
         "outOfReach": "#3fff"
       }
     }

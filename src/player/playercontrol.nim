@@ -55,7 +55,9 @@ method event*(player: Player, event: UIEvent) =
       if event.kind == evMousePress:
         case event.mouseButton
         of mb1: laserDestroy
-        of mb2: laserPlace
+        of mb2:
+          if player.recipe != nil: laserPlace
+          else: laserOff
         else: laserOff
       else: laserOff
 

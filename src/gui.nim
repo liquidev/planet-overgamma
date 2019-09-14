@@ -15,8 +15,11 @@ var
 proc initGUI*() =
   info("Opening", "GUIs")
   wm = newWindowManager(win)
-  # TODO: dock, mode wheel
+  # TODO: mode wheel
   winGame = wm.newWindow(0, 0, 0, 0, "Game", wkGame)
   wm.add(winGame)
   winHud = wm.newWindow(0, 0, 0, 0, "HUD", wkHud)
   wm.add(winHud)
+
+  var winTest = wm.newWindow(128, 128, 256, 256, "Controls", wkDecorated)
+  wm.add(winTest)

@@ -1,13 +1,15 @@
 {
   "blocks": {
     "plants": {
-      "level": 0,
+      "tier": 0,
+      "assemblyTime": 1,
       "ingredients": {
         "plants": 1
       }
     },
     "stone": {
-      "level": 0,
+      "tier": 0,
+      "assemblyTime": 1,
       "ingredients": {
         "rock": 1
       }

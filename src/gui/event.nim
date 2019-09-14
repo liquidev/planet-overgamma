@@ -57,22 +57,22 @@ proc consume*(ev: UIEvent) =
   ev.fConsumed = true
 
 proc registerEvents*(win: RWindow, handler: UIEventHandler) =
-  win.onMousePress do (_: RWindow, button: MouseButton, mods: RModKeys):
+  win.onMousePress do (button: MouseButton, mods: RModKeys):
     handler(UIEvent(kind: evMousePress, mbButton: button, mbMods: mods))
-  win.onMouseRelease do (_: RWindow, button: MouseButton, mods: RModKeys):
+  win.onMouseRelease do (button: MouseButton, mods: RModKeys):
     handler(UIEvent(kind: evMouseRelease, mbButton: button, mbMods: mods))
-  win.onCursorMove do (_: RWindow, x, y: float):
+  win.onCursorMove do (x, y: float):
     handler(UIEvent(kind: evMouseMove, mmPos: vec2(x, y)))
-  win.onScroll do (_: RWindow, x, y: float):
+  win.onScroll do (x, y: float):
     handler(UIEvent(kind: evMouseScroll, sPos: vec2(x, y)))
 
-  win.onKeyPress do (_: RWindow, key: Key, scancode: int, mods: RModKeys):
+  win.onKeyPress do (key: Key, scancode: int, mods: RModKeys):
     handler(UIEvent(kind: evKeyPress, kbKey: key, kbScancode: scancode,
                     kbMods: mods))
-  win.onKeyRelease do (_: RWindow, key: Key, scancode: int, mods: RModKeys):
+  win.onKeyRelease do (key: Key, scancode: int, mods: RModKeys):
     handler(UIEvent(kind: evKeyRelease, kbKey: key, kbScancode: scancode,
                     kbMods: mods))
-  win.onChar do (_: RWindow, rune: Rune, mods: RModKeys):
+  win.onChar do (rune: Rune, mods: RModKeys):
     handler(UIEvent(kind: evKeyChar, kcRune: rune, kcMods: mods))
 
 method event*(sprite: RSprite, event: UIEvent) {.base.} =

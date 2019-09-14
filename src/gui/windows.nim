@@ -137,31 +137,31 @@ renderer(Window, Default, win):
       fx.effect(fxBoxBlur, stencil = true)
       ctx.noStencilTest()
 
-      ctx.color = col.base.white
+      ctx.color = col"base.white"
       fx.finish()
 
     ctx.begin()
-    ctx.color = col.ui.window.background
+    ctx.color = col"ui.window.background"
     ctx.rrect(0, 0, win.width, win.height, 6)
     ctx.draw()
 
     ctx.begin()
-    ctx.color = col.ui.window.border
+    ctx.color = col"ui.window.border"
     ctx.lrrect(0, 0, win.width, win.height, 6)
     ctx.draw(prLineShape)
     if win.kind == wkDecorated:
       let color =
         if win.mouseInCircle(14, 14, 8):
           if res.win.mouseButton(mb1) == kaDown:
-            col.ui.window.buttons.close.click
+            "ui.window.buttons.close.click"
           else:
-            col.ui.window.buttons.close.hover
+            "ui.window.buttons.close.hover"
         else:
-          col.ui.window.buttons.close.normal
+          "ui.window.buttons.close.normal"
       win.closeButtonFill =
-        win.closeButtonFill.mix(color.fill, 0.4 * step)
+        win.closeButtonFill.mix(col(color & ".fill"), 0.4 * step)
       win.closeButtonStroke =
-        win.closeButtonStroke.mix(color.stroke, 0.4 * step)
+        win.closeButtonStroke.mix(col(color & ".stroke"), 0.4 * step)
       ctx.begin()
       ctx.color = win.closeButtonFill
       ctx.circle(14, 14, 5, 13)
@@ -169,7 +169,7 @@ renderer(Window, Default, win):
       ctx.begin()
       ctx.color = win.closeButtonStroke
       ctx.lcircle(14, 14, 5, 13)
-      ctx.color = col.base.white
+      ctx.color = col"base.white"
       ctx.draw(prLineShape)
       let prevAlign = firaSansB.horzAlign
       firaSansB.horzAlign = taCenter
@@ -195,8 +195,8 @@ proc initWindow*(win: Window, wm: WindowManager, x, y, width, height: float,
   win.title = title
   win.draggable = true
 
-  win.closeButtonFill = col.ui.window.buttons.close.normal.fill
-  win.closeButtonStroke = col.ui.window.buttons.close.normal.stroke
+  win.closeButtonFill = col"ui.window.buttons.close.normal.fill"
+  win.closeButtonStroke = col"ui.window.buttons.close.normal.stroke"
 
 proc newWindow*(wm: WindowManager, x, y, width, height: float, title: string,
                 kind: WindowKind): Window =

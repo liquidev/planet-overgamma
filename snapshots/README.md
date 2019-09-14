@@ -1,3 +1,3 @@
 This folder contains important development milestones of Planet Overgamma.
-
-To create a snapshot, run `nimble snapshot`.
+These are x86_64 ELF executables, compiled on my main development machine
+running Fedora 30. This means that they will not work with old glibc versions.

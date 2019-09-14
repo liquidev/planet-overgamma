@@ -49,10 +49,10 @@ proc drawLasers(player: Player, ctx: RGfxContext, step: float) =
   ctx.begin()
   let l = distance(player.pos, player.scrToWld(vec2(win.mouseX, win.mouseY)))
   ctx.color =
-    if l > player.laserMaxReach: col.player.laser.highlight.outOfReach
-    else: col.player.laser.highlight.inReach
+    if l > player.laserMaxReach: col"player.laser.highlight.outOfReach"
+    else: col"player.laser.highlight.inReach"
   ctx.rect(qdest.x, qdest.y, 8, 8)
-  ctx.color = col.base.white
+  ctx.color = col"base.white"
   ctx.draw()
   ctx.noStencilTest()
   ctx.clearStencil(255)
@@ -64,20 +64,20 @@ proc drawLasers(player: Player, ctx: RGfxContext, step: float) =
       ctx.begin()
       ctx.color =
         case player.laserMode
-        of laserDestroy: col.player.laser.destroy
-        of laserPlace: col.player.laser.place
-        else: col.base.transparent
+        of laserDestroy: col"player.laser.destroy"
+        of laserPlace: col"player.laser.place"
+        else: col"base.transparent"
       ctx.rect(0, -player.laserCharge / 2, len, player.laserCharge)
       ctx.circle(len, 0, player.laserCharge * 0.75)
-      ctx.color = col.player.laser.core
+      ctx.color = col"player.laser.core"
       ctx.rect(0, -player.laserCharge / 4, len, player.laserCharge / 2)
       ctx.circle(len, 0, player.laserCharge * 0.5)
       ctx.draw()
-      ctx.color = col.base.white
+      ctx.color = col"base.white"
 
 method draw*(player: Player, ctx: RGfxContext, step: float) =
   ctx.begin()
-  ctx.color = col.base.white
+  ctx.color = col"base.white"
   ctx.texture = radio.tex
   ctx.transform():
     let r =

@@ -45,11 +45,11 @@ renderer(Button, Dock, btn):
   if btn.mouseInArea(0, 0, btn.width, btn.height):
     ctx.begin()
     ctx.color =
-      if win.mouseButton(mb1) == kaDown: col.ui.button.dock.click
-      else: col.ui.button.dock.hover
+      if win.mouseButton(mb1) == kaDown: col"ui.button.dock.click"
+      else: col"ui.button.dock.hover"
     ctx.lrrect(0, 0, btn.width, btn.height, 4)
     ctx.draw(prLineShape)
-    ctx.color = col.base.white
+    ctx.color = col"base.white"
   case btn.kind
   of buttonIcon:
     ctx.begin()

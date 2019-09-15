@@ -4,8 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import lists
-
 import rapid/gfx
 
 import ../res
@@ -21,6 +19,9 @@ type
     parent: Control
     pos*: Vec2[float]
     renderer*: ControlRenderer
+
+method width*(ctrl: Control): float {.base.} = 0
+method height*(ctrl: Control): float {.base.} = 0
 
 proc screenPos*(ctrl: Control): Vec2[float] =
   if ctrl.parent.isNil: ctrl.pos
@@ -64,21 +65,26 @@ method event*(ctrl: Control, ev: UIEvent) {.base.} =
 
 type
   Box* = ref object of Control
-    children*: DoublyLinkedList[Control]
+    children*: seq[Control]
+
+method width*(box: Box): float =
+  for child in box.children:
+    let realWidth = child.pos.x + child.width
+    if realWidth > result:
+      result = realWidth
 
 renderer(Box, Children, box):
   for child in box.children:
     child.draw(ctx, step)
 
 method event*(box: Box, ev: UIEvent) =
-  var ctrl = box.children.tail
-  while not (ev.consumed or ctrl.isNil):
-    ctrl.value.event(ev)
-    ctrl = ctrl.prev
+  for i in countdown(box.children.len - 1, 0):
+    box.children[i].event(ev)
+    if ev.consumed:
+      break
 
 proc initBox*(box: Box, x, y: float, rend = BoxChildren) =
   box.initControl(x, y, rend)
-  box.children = initDoublyLinkedList[Control]()
 
 proc newBox*(x, y: float, rend = BoxChildren): Box =
   result = Box()
@@ -86,10 +92,10 @@ proc newBox*(x, y: float, rend = BoxChildren): Box =
 
 proc add*(box: Box, child: Control): Box {.discardable.} =
   result = box
-  result.children.append(child)
+  result.children.add(child)
   child.parent = box
 
 proc bringToTop*(box: Box, child: Control) =
-  let ctrl = box.children.find(child)
-  box.children.remove(ctrl)
-  box.children.append(ctrl)
+  let i = box.children.find(child)
+  box.children.delete(i)
+  box.children.add(child)

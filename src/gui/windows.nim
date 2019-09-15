@@ -4,8 +4,6 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
-import lists
-
 import rapid/gfx
 import rapid/gfx/fxsurface
 import rapid/gfx/text
@@ -24,7 +22,7 @@ import event
 
 type
   WindowManager* = ref object
-    windows*: DoublyLinkedList[Window]
+    windows*: seq[Window]
   WindowKind* = enum
     wkUndecorated
     wkDecorated
@@ -33,7 +31,7 @@ type
   WindowObj* = object of Box
     wm*: WindowManager
     # Properties
-    width*, height*: float
+    fWidth, fHeight: float
     title*: string
     case kind*: WindowKind
     of wkGame:
@@ -57,21 +55,20 @@ proc draw*(wm: WindowManager, ctx: RGfxContext, step: float) =
     win.draw(ctx, step)
 
 proc event*(wm: WindowManager, ev: UIEvent) =
-  var win = wm.windows.tail
-  while not (ev.consumed or win.isNil):
-    win.value.event(ev)
-    win = win.prev
+  for i in countdown(wm.windows.len - 1, 0):
+    wm.windows[i].event(ev)
+    if ev.consumed:
+      break
 
 proc add*(wm: WindowManager, win: Window) =
-  wm.windows.append(win)
+  wm.windows.add(win)
 
 proc bringToTop*(wm: WindowManager, win: Window) =
-  let handle = wm.windows.find(win)
-  wm.windows.remove(handle)
-  wm.windows.append(handle)
+  let i = wm.windows.find(win)
+  wm.windows.delete(i)
+  wm.windows.add(win)
 
 proc initWindowManager*(wm: WindowManager, win: RWindow) =
-  wm.windows = initDoublyLinkedList[Window]()
   win.registerEvents do (ev: UIEvent):
     wm.event(ev)
 
@@ -83,37 +80,43 @@ proc newWindowManager*(win: RWindow): WindowManager =
 # Window
 #--
 
+method width*(win: Window): float = win.fWidth
+method height*(win: Window): float = win.fHeight
+proc `width=`*(win: Window, width: float) =
+  win.fWidth = width
+proc `height=`*(win: Window, height: float) =
+  win.fHeight = height
+
 proc close*(win: Window) =
   if win.onClose(win):
     let handle = win.wm.windows.find(win)
-    win.wm.windows.remove(handle)
+    win.wm.windows.delete(handle)
 
 method event*(win: Window, ev: UIEvent) =
   case win.kind
   of wkUndecorated, wkDecorated:
-    var ctrl = win.children.tail
-    while not (ev.consumed or ctrl.isNil):
-      ctrl.value.event(ev)
-      ctrl = ctrl.prev
-    if not ev.consumed:
-      if win.draggable and
-         win.mouseInArea(0, 0, win.width, win.height) and
-         ev.kind == evMousePress or ev.kind == evMouseRelease:
-        win.dragging = ev.kind == evMousePress
-        if win.dragging:
-          win.wm.bringToTop(win)
-          ev.consume()
-        if win.kind == wkDecorated and ev.kind == evMouseRelease and
-           win.mouseInCircle(14, 14, 8):
-          win.close()
-          ev.consume()
-      elif ev.kind == evMouseMove:
-        if win.dragging:
-          let delta = ev.mousePos - win.prevMousePos
-          win.pos += delta
-          win.pos.x = clamp(win.pos.x, 0, res.win.width.float - win.width)
-          win.pos.y = clamp(win.pos.y, 0, res.win.height.float - win.height)
-        win.prevMousePos = ev.mousePos
+    for i in countdown(win.children.len - 1, 0):
+      win.children[i].event(ev)
+      if ev.consumed:
+        return
+    if win.draggable and
+       win.mouseInArea(0, 0, win.width, win.height) and
+       ev.kind == evMousePress or ev.kind == evMouseRelease:
+      win.dragging = ev.kind == evMousePress
+      if win.dragging:
+        win.wm.bringToTop(win)
+        ev.consume()
+      if win.kind == wkDecorated and ev.kind == evMouseRelease and
+         win.mouseInCircle(14, 14, 8):
+        win.close()
+        ev.consume()
+    elif ev.kind == evMouseMove:
+      if win.dragging:
+        let delta = ev.mousePos - win.prevMousePos
+        win.pos += delta
+        win.pos.x = clamp(win.pos.x, 0, res.win.width.float - win.width)
+        win.pos.y = clamp(win.pos.y, 0, res.win.height.float - win.height)
+      win.prevMousePos = ev.mousePos
   of wkGame:
     for spr in win.gameWorld:
       spr.event(ev)

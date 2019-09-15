@@ -73,6 +73,12 @@ method width*(box: Box): float =
     if realWidth > result:
       result = realWidth
 
+method height*(box: Box): float =
+  for child in box.children:
+    let realHeight = child.pos.y + child.height
+    if realHeight > result:
+      result = realHeight
+
 renderer(Box, Children, box):
   for child in box.children:
     child.draw(ctx, step)

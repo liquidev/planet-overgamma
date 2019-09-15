@@ -20,7 +20,7 @@ type
     buttonIcon
   ButtonOnClickProc* = proc (btn: Button)
   ButtonObj = object of Control
-    width*, height*: float
+    fWidth, fHeight: float
     case kind*: ButtonKind
     of buttonText:
       text*: string
@@ -29,6 +29,13 @@ type
       icon*: string
     onClick*: ButtonOnClickProc
   Button* = ref ButtonObj
+
+method width*(btn: Button): float = btn.fWidth
+method height*(btn: Button): float = btn.fHeight
+proc `width=`*(btn: Button, width: float) =
+  btn.fWidth = width
+proc `height=`*(btn: Button, height: float) =
+  btn.fHeight = height
 
 method event*(btn: Button, ev: UIEvent) =
   if ev.kind in {evMousePress, evMouseRelease}:

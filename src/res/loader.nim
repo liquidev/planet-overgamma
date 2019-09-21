@@ -52,6 +52,6 @@ proc initWindow*() =
   win = initRWindow()
     .size(1280, 720)
     .title("Planet Overgamma")
-    .antialiasLevel(4)
+    .antialiasLevel(settings.graphics.msaa)
     .open()
   sur = win.openGfx()

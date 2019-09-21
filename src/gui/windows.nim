@@ -7,7 +7,6 @@
 import rapid/gfx
 import rapid/gfx/fxsurface
 import rapid/gfx/text
-import rapid/res/fonts
 import rapid/world/tilemap
 
 import ../world/world
@@ -88,7 +87,7 @@ proc `height=`*(win: Window, height: float) =
   win.fHeight = height
 
 proc close*(win: Window) =
-  if win.onClose(win):
+  if win.onClose == nil or win.onClose(win):
     let handle = win.wm.windows.find(win)
     win.wm.windows.delete(handle)
 
@@ -174,10 +173,8 @@ renderer(Window, Default, win):
       ctx.lcircle(14, 14, 5, 13)
       ctx.color = col"base.white"
       ctx.draw(prLineShape)
-      let prevAlign = firaSansB.horzAlign
-      firaSansB.horzAlign = taCenter
-      ctx.text(firaSansB, 16 + (win.width - 16) / 2, 6, win.title)
-      firaSansB.horzAlign = prevAlign
+      ctx.text(firaSansB, 16 + (win.width - 16) / 2, 6, win.title,
+               hAlign = taCenter)
     for ctrl in win.children:
       ctrl.draw(ctx, step)
   of wkGame:

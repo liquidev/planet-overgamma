@@ -46,8 +46,6 @@ method event*(player: Player, event: UIEvent) =
       player.jumping = event.kind == evKeyPress
       if player.jumping and player.vel.y == 0.0:
         player.jumpTime = player.jumpSustainTime
-    elif event.key == KOpenInventory:
-      player.openInventory()
     else: return
     event.consume()
   elif event.kind in {evMousePress, evMouseRelease}:

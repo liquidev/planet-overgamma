@@ -25,11 +25,13 @@ type
     fSortMode: ContainerSortMode
     fSortOrder: SortOrder
 
-iterator pairs*(con: Container): (string, float) =
-  for id, amt in con.items:
-    yield (id, amt)
-
 method `[]`*(con: Container, id: string): float = con.items[id]
+
+method iterate*(con: Container): ItemIterator =
+  result = iterator (): tuple[id: string, amt: float] =
+    for id, amt in con.items:
+      yield (id, amt)
+
 method usedSpace*(con: Container): float = con.fUsedSpace
 method capacity*(con: Container): float = con.fCapacity
 proc `capacity=`*(con: Container, newCap: float) =

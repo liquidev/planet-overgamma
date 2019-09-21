@@ -8,7 +8,6 @@ import tables
 
 import rapid/gfx
 import rapid/gfx/text
-import rapid/res/fonts
 
 import ../gui/control
 import ../res

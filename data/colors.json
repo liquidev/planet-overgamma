@@ -34,6 +34,13 @@
         "border": "base.white",
         "highlight": "#3fff"
       }
+    },
+    "textbox": {
+      "placeholder": "#9fffffff",
+      "text": "base.white",
+      "normal": "#7fffffff",
+      "focused": "base.white",
+      "caret": "ui.textbox.text"
     }
   },
 

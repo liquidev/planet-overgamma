@@ -9,7 +9,7 @@ import tables
 import rapid/gfx
 import rapid/gfx/texatlas
 import rapid/gfx/texpack
-import rapid/res/fonts
+import rapid/gfx/text
 import rapid/res/textures
 
 import player/recipedb
@@ -29,6 +29,7 @@ type
     language*: string
   GraphicsSettings* = object
     pixelate*, blurBehindUI*: bool
+    msaa*: range[0..8]
 
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,

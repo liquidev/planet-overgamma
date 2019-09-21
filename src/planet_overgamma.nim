@@ -24,6 +24,9 @@ proc main() =
   load()
 
   sur.loop:
+    init ctx:
+      if settings.graphics.msaa > 0:
+        ctx.antialiasing = true
     draw ctx, step:
       ctx.clear(gray(0))
 

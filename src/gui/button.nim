@@ -6,8 +6,8 @@
 
 import tables
 
+import rapid/gfx/text
 import rapid/gfx
-import rapid/res/fonts
 
 import ../colors
 import ../res

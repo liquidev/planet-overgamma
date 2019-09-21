@@ -3,7 +3,8 @@
     "language": "en_US"
   },
   "graphics": {
-    "pixelate": true,
-    "blurBehindUI": true
+    "blurBehindUI": true,
+    "msaa": 4,
+    "pixelate": true
   }
 }

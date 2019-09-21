@@ -27,6 +27,10 @@ proc screenPos*(ctrl: Control): Vec2[float] =
   if ctrl.parent.isNil: ctrl.pos
   else: ctrl.parent.screenPos + ctrl.pos
 
+proc mouse*(ctrl: Control): Vec2[float] =
+  let sp = ctrl.screenPos
+  result = vec2(win.mouseX - sp.x, win.mouseY - sp.y)
+
 proc mouseInArea*(ctrl: Control, x, y, w, h: float): bool =
   let
     a = ctrl.screenPos + vec2(x, y)

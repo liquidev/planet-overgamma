@@ -14,6 +14,7 @@ type
     evMouseMove
     evMouseScroll
     evKeyPress
+    evKeyRepeat
     evKeyRelease
     evKeyChar
   UIEvent* = ref object
@@ -26,7 +27,7 @@ type
       mmPos: Vec2[float]
     of evMouseScroll:
       sPos: Vec2[float]
-    of evKeyPress, evKeyRelease:
+    of evKeyPress, evKeyRepeat, evKeyRelease:
       kbKey: Key
       kbScancode: int
       kbMods: RModKeys
@@ -68,6 +69,9 @@ proc registerEvents*(win: RWindow, handler: UIEventHandler) =
 
   win.onKeyPress do (key: Key, scancode: int, mods: RModKeys):
     handler(UIEvent(kind: evKeyPress, kbKey: key, kbScancode: scancode,
+                    kbMods: mods))
+  win.onKeyRepeat do (key: Key, scancode: int, mods: RModKeys):
+    handler(UIEvent(kind: evKeyRepeat, kbKey: key, kbScancode: scancode,
                     kbMods: mods))
   win.onKeyRelease do (key: Key, scancode: int, mods: RModKeys):
     handler(UIEvent(kind: evKeyRelease, kbKey: key, kbScancode: scancode,

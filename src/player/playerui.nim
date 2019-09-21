@@ -8,7 +8,7 @@ import glm/vec
 import rapid/gfx
 
 import ../gui
-import ../gui/[control, button, containerview]
+import ../gui/[control, button, storageview]
 import ../gui/windows
 import ../lang
 import ../res
@@ -17,13 +17,13 @@ import playerdef
 
 proc openInventory*(player: Player) =
   if player.winInventory.isNil:
-    let win = wm.newWindow(64, 64, 256 + 31, 256,
+    let win = wm.newWindow(64, 64, 320, 480,
                            L"win.inventory title", wkDecorated)
     win.onClose = proc (win: Window): bool =
       player.winInventory = nil
       result = true
 
-    let view = newContainerGrid(15, 32, player.inventory, 8)
+    let view = newStorageGrid(15, 32, player.inventory, 8)
     win.add(view)
 
     wm.add(win)

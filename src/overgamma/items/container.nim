@@ -26,6 +26,7 @@ type
     fSortOrder: SortOrder
 
 method `[]`*(con: Container, id: string): float = con.items[id]
+method len*(con: Container): int = con.items.len
 
 method iterate*(con: Container): ItemIterator =
   result = iterator (): tuple[id: string, amt: float] =

@@ -26,6 +26,7 @@ type
     next*: TextBox
     fontSize*: int
     placeholder*: string
+    onInput*: proc ()
 
 method width*(tb: TextBox): float = tb.fWidth
 method height*(tb: TextBox): float =
@@ -44,12 +45,11 @@ proc resetBlink(tb: TextBox) =
 proc canBackspace(tb: TextBox): bool = tb.caret in 1..tb.fText.len
 proc canDelete(tb: TextBox): bool = tb.caret in 0..<tb.fText.len
 
-method event*(tb: TextBox, ev: UIEvent) =
+method onEvent*(tb: TextBox, ev: UIEvent) =
   if ev.kind == evMousePress:
     tb.focused = tb.mouseInArea(0, 0, tb.width, tb.height)
     if tb.focused:
       tb.resetBlink()
-      ev.consume()
   elif tb.focused and ev.kind in {evKeyChar, evKeyPress, evKeyRepeat}:
     case ev.kind
     of evKeyChar:
@@ -75,6 +75,7 @@ method event*(tb: TextBox, ev: UIEvent) =
     tb.textString = $tb.fText
     tb.resetBlink()
     ev.consume()
+    tb.onInput()
 
 
 renderer(TextBox, Normal, tb):
@@ -116,6 +117,7 @@ proc initTextBox*(tb: TextBox, x, y, w: float, placeholder, text = "",
   tb.fontSize = fontSize
   if prev != nil:
     prev.next = tb
+  tb.onInput = proc () = discard
 
 proc newTextBox*(x, y, w: float, placeholder, text = "", fontSize = 14,
                  prev: TextBox = nil, rend = TextBoxNormal): TextBox =

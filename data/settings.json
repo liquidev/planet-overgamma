@@ -5,6 +5,7 @@
   "graphics": {
     "blurBehindUI": true,
     "msaa": 4,
-    "pixelate": true
+    "pixelate": true,
+    "vsync": true
   }
 }

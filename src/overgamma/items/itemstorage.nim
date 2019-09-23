@@ -11,6 +11,7 @@ type
   ItemIterator* = iterator (): tuple[id: string, amt: float] {.closure.}
 
 method `[]`*(s: ItemStorage, id: string): float {.base.} = discard
+method len*(s: ItemStorage): int {.base.} = discard
 method iterate*(s: ItemStorage): ItemIterator {.base.} = discard
 method capacity*(s: ItemStorage): float {.base.} = discard
 method usedSpace*(s: ItemStorage): float {.base.} = discard

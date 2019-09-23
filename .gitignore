@@ -1,2 +1,5 @@
 # apitrace
 *.trace
+
+# Build artifacts
+build

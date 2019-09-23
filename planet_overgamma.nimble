@@ -13,8 +13,15 @@ bin           = @["planet_overgamma"]
 requires "nim >= 0.20.2"
 requires "rapid"
 
+proc initBuild() =
+  if dirExists("build"):
+    rmdir("build")
+  mkdir("build")
+  mkdir("build/data")
+
 task runDebug, "Compile and run Planet Overgamma in debug mode":
-  selfExec("c -r src/planet_overgamma " &
+  initBuild()
+  selfExec("c -r -o:build/overgamma src/overgamma/overgamma " &
            "--debug.autostart --debug.showDrawTime " &
            "--debug.augment")
 

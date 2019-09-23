@@ -16,7 +16,7 @@ import event
 type
   ControlRenderer* = proc (ctx: RGfxContext, step: float, ctrl: Control)
   Control* = ref object of RootObj
-    parent: Control
+    parent*: Control
     pos*: Vec2[float]
     renderer*: ControlRenderer
 
@@ -60,8 +60,12 @@ proc draw*(ctrl: Control, ctx: RGfxContext, step: float) =
   ctrl.renderer(ctx, step, ctrl)
   ctx.translate(-ctrl.pos.x, -ctrl.pos.y)
 
-method event*(ctrl: Control, ev: UIEvent) {.base.} =
+method onEvent*(ctrl: Control, ev: UIEvent) {.base.} =
   discard
+
+proc event*(ctrl: Control, ev: UIEvent) =
+  if not ev.consumed:
+    ctrl.onEvent(ev)
 
 #--
 # Box
@@ -87,7 +91,7 @@ renderer(Box, Children, box):
   for child in box.children:
     child.draw(ctx, step)
 
-method event*(box: Box, ev: UIEvent) =
+method onEvent*(box: Box, ev: UIEvent) =
   for i in countdown(box.children.len - 1, 0):
     box.children[i].event(ev)
     if ev.consumed:

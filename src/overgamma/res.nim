@@ -30,6 +30,7 @@ type
   GraphicsSettings* = object
     pixelate*, blurBehindUI*: bool
     msaa*: range[0..8]
+    vsync*: bool
 
 const
   Tc* = (minFilter: fltNearest, magFilter: fltNearest,

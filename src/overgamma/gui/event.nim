@@ -4,6 +4,8 @@
 # copyright (C) 2018-19 iLiquid
 #--
 
+import unicode
+
 import rapid/gfx
 import rapid/world/sprite
 
@@ -35,6 +37,18 @@ type
       kcRune: Rune
       kcMods: RModKeys
   UIEventHandler* = proc (event: UIEvent)
+
+proc `$`*(ev: UIEvent): string =
+  result = $ev.kind & ' ' & (
+    case ev.kind
+    of evMousePress, evMouseRelease: $ev.mbButton & " + " & $ev.mbMods
+    of evMouseMove: $ev.mmPos
+    of evMouseScroll: $ev.sPos
+    of evKeyPress, evKeyRepeat, evKeyRelease:
+      $ev.kbKey & " (" & $ev.kbScancode & ") + " & $ev.kbMods
+    of evKeyChar: $ev.kcRune.int & " `" & $ev.kcRune & "` + " & $ev.kcMods
+  )
+  result.add(" - consumed: " & $ev.fConsumed)
 
 proc kind*(ev: UIEvent): UIEventKind = ev.kind
 proc consumed*(ev: UIEvent): bool = ev.fConsumed

@@ -91,7 +91,7 @@ proc close*(win: Window) =
     let handle = win.wm.windows.find(win)
     win.wm.windows.delete(handle)
 
-method event*(win: Window, ev: UIEvent) =
+method onEvent*(win: Window, ev: UIEvent) =
   case win.kind
   of wkUndecorated, wkDecorated:
     for i in countdown(win.children.len - 1, 0):

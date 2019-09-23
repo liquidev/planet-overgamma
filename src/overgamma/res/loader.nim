@@ -24,9 +24,12 @@ include
   loader/loadsprites,
   loader/loadterrain
 
-proc load*() =
+proc preload*() =
   info("Loading", "settings")
   settings = json.parseFile(Data/"settings.json").to(Settings)
+  loadCmdline()
+
+proc load*() =
   info("Loading", "shared resources")
   loadColors()
   terrainData = loadTerrain(terrain)
@@ -55,3 +58,4 @@ proc initWindow*() =
     .antialiasLevel(settings.graphics.msaa)
     .open()
   sur = win.openGfx()
+  sur.vsync = settings.graphics.vsync

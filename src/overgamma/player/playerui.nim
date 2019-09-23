@@ -23,7 +23,7 @@ proc openInventory*(player: Player) =
       player.winInventory = nil
       result = true
 
-    let view = newStorageGrid(15, 32, player.inventory, 8)
+    let view = newStorageView(15, 32, player.inventory, 8)
     win.add(view)
 
     wm.add(win)

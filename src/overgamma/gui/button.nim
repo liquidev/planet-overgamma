@@ -37,7 +37,7 @@ proc `width=`*(btn: Button, width: float) =
 proc `height=`*(btn: Button, height: float) =
   btn.fHeight = height
 
-method event*(btn: Button, ev: UIEvent) =
+method onEvent*(btn: Button, ev: UIEvent) =
   if ev.kind in {evMousePress, evMouseRelease}:
     if btn.mouseInArea(0, 0, btn.width, btn.height):
       ev.consume()

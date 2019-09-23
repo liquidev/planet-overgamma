@@ -6,7 +6,7 @@ description   = "You crash on an irradiated, overgrown planet. Use modular " &
                 "machines to find your way back home"
 license       = "GPL-3.0"
 srcDir        = "src"
-bin           = @["planet_overgamma"]
+bin           = @["../build/overgamma"]
 
 # Dependencies
 
@@ -17,7 +17,7 @@ proc initBuild() =
   if dirExists("build"):
     rmdir("build")
   mkdir("build")
-  mkdir("build/data")
+  mkdir("build/content")
 
 task runDebug, "Compile and run Planet Overgamma in debug mode":
   initBuild()

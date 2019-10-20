@@ -6,7 +6,7 @@ description   = "You crash on an irradiated, overgrown planet. Use modular " &
                 "machines to find your way back home"
 license       = "GPL-3.0"
 srcDir        = "src"
-bin           = @["../build/overgamma"]
+bin           = @["src/overgamma/overgamma"]
 
 # Dependencies
 

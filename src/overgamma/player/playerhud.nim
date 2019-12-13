@@ -1,15 +1,9 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import tables
 
 import rapid/gfx
 import rapid/gfx/text
+import rdgui/control
 
-import ../gui/control
 import ../res
 import playerdef
 import playermath

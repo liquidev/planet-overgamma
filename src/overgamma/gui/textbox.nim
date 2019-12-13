@@ -1,19 +1,13 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import unicode
 
 import rapid/gfx/text
 import rapid/gfx
+import rdgui/control
+import rdgui/event
 
 import ../math/extramath
 import ../colors
 import ../res
-import control
-import event
 
 type
   TextBox* = ref object of Control
@@ -47,7 +41,7 @@ proc canDelete(tb: TextBox): bool = tb.caret in 0..<tb.fText.len
 
 method onEvent*(tb: TextBox, ev: UIEvent) =
   if ev.kind == evMousePress:
-    tb.focused = tb.mouseInArea(0, 0, tb.width, tb.height)
+    tb.focused = tb.mouseInRect(0, 0, tb.width, tb.height)
     if tb.focused:
       tb.resetBlink()
   elif tb.focused and ev.kind in {evKeyChar, evKeyPress, evKeyRepeat}:

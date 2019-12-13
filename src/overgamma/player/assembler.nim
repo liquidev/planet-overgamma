@@ -1,14 +1,8 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import tables
 
 import rapid/gfx
+import rdgui/control
 
-import ../gui/control
 import ../res
 import playerdef
 
@@ -24,7 +18,7 @@ type
       discard
   AssemblerView* = ref AssemblerViewObj
 
-renderer(AssemblerView, Default, view):
+AssemblerView.renderer(Default, view):
   var y = 0
   for name, recipe in recipes.blocks:
     ctx.begin()

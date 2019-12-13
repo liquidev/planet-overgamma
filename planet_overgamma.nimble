@@ -12,6 +12,9 @@ bin           = @["src/overgamma/overgamma"]
 
 requires "nim >= 0.20.2"
 requires "rapid"
+requires "euwren >= 0.9.0"
+
+# Tasks
 
 proc initBuild() =
   if dirExists("build"):

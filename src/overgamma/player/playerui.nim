@@ -1,15 +1,13 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import glm/vec
 import rapid/gfx
+import rdgui/button
+import rdgui/control
+import rdgui/windows
 
 import ../gui
-import ../gui/[control, button, storageview]
-import ../gui/windows
+import ../gui/pobutton
+import ../gui/powindows
+import ../gui/storageview
 import ../lang
 import ../res
 import assembler
@@ -17,9 +15,8 @@ import playerdef
 
 proc openInventory*(player: Player) =
   if player.winInventory.isNil:
-    let win = wm.newWindow(64, 64, 320, 480,
-                           L"win.inventory title", wkDecorated)
-    win.onClose = proc (win: Window): bool =
+    let win = wm.newUserWindow(64, 64, 320, 480, L"win.inventory title")
+    win.onClose = proc (): bool =
       player.winInventory = nil
       result = true
 
@@ -33,9 +30,8 @@ proc openInventory*(player: Player) =
 
 proc openAssembler*(player: Player) =
   if player.winAssembler.isNil:
-    let win = wm.newWindow(64, 64, 256, 384,
-                           L"win.assembler title", wkDecorated)
-    win.onClose = proc (win: Window): bool =
+    let win = wm.newUserWindow(64, 64, 256, 384, L"win.assembler title")
+    win.onClose = proc (): bool =
       player.recipe = nil
       player.winAssembler = nil
       result = true
@@ -52,19 +48,18 @@ proc updateToolboxPos(width, height: float) =
   winToolbox.pos = vec2(width - 12 - winToolbox.width, 12)
 
 proc initPlayerUI*(player: Player) =
-  winToolbox = wm.newWindow(12, 12, 32, 60, L"win.toolbox title", wkUndecorated)
-  winToolbox.draggable = false
+  winToolbox = wm.newDockWindow(12, 12, 32, 60)
   updateToolboxPos(win.width.float, win.height.float)
   win.onResize do (width, height: Natural):
     updateToolboxPos(width.float, height.float)
   wm.add(winToolbox)
 
-  var inventoryButton = newButton(4, 4, 24, 24, "inventory", ButtonDock)
-  inventoryButton.onClick = proc (btn: Button) =
+  var inventoryButton = newButton(4, 4, 24, 24, ButtonDock("inventory"))
+  inventoryButton.onClick = proc () =
     player.openInventory()
 
-  var assemblerButton = newButton(4, 32, 24, 24, "assembler", ButtonDock)
-  assemblerButton.onClick = proc (btn: Button) =
+  var assemblerButton = newButton(4, 32, 24, 24, ButtonDock("assembler"))
+  assemblerButton.onClick = proc () =
     player.openAssembler()
 
   winToolbox.add(inventoryButton)

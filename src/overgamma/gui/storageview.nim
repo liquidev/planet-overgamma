@@ -1,14 +1,10 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import math
 import tables
 
 import rapid/gfx
 import rapid/gfx/text
+import rdgui/control
+import rdgui/event
 
 import ../items/itemstorage
 import ../player/playermath
@@ -16,8 +12,6 @@ import ../util/fuzzy
 import ../colors
 import ../res
 import ../lang
-import control
-import event
 import textbox
 
 type
@@ -101,15 +95,16 @@ renderer(StorageView, Default, view):
 proc initStorageView*(view: StorageView, x, y: float, storage: ItemStorage,
                       cols: int, rend = StorageViewDefault) =
   view.initControl(x, y, rend)
-  view.search = newTextBox(0, 0, 0, "Search…")
-  view.grid = newStorageGrid(0, view.search.height + 8, storage, cols)
+  view.onContain do:
+    view.search = newTextBox(0, 0, 0, "Search…")
+    view.grid = newStorageGrid(0, view.search.height + 8, storage, cols)
 
-  view.search.width = view.grid.width
-  view.search.onInput = proc () =
-    view.grid.search(view.search.text)
+    view.search.width = view.grid.width
+    view.search.onInput = proc () =
+      view.grid.search(view.search.text)
 
-  view.search.parent = view
-  view.grid.parent = view
+    view.contain(view.search)
+    view.contain(view.grid)
 
 proc newStorageView*(x, y: float, storage: ItemStorage, cols: int,
                      rend = StorageViewDefault): StorageView =

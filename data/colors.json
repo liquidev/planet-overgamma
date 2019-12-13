@@ -16,17 +16,17 @@
       "border": "base.white",
 
       "buttons": {
-        "close": {
-          "normal": { "stroke": "base.white",   "fill": "base.transparent" },
-          "hover":  { "stroke": "base.darkRed", "fill": "base.red" },
-          "click":  { "stroke": "base.darkRed", "fill": "base.darkRed" }
-        }
+        "close": { "stroke": "base.darkRed", "fill": "base.red" }
       }
     },
     "button": {
       "dock": {
         "hover": "#afff",
         "click": "#6fff"
+      },
+      "window": {
+        "stroke": "base.white",
+        "fill": "base.transparent"
       }
     },
     "containerGrid": {

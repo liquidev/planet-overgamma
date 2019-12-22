@@ -3,5 +3,5 @@ const
 
 switch("app", "gui")
 switch("define", "nimCallDepthLimit=" & $MaxCallStackDepth)
-#switch("opt", "speed")
+switch("opt", "speed")
 warning("LockLevel", off)

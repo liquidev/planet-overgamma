@@ -20,6 +20,7 @@ type
     of tkDecor:
       decorName*: string
       decorVar*: int
+    decor*: Tile
 
 proc isSolid*(tile: Tile): bool =
   result = tile.solid

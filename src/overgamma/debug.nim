@@ -7,6 +7,10 @@
 import strutils
 import terminal
 
+proc header*(msg: varargs[string, `$`]) =
+  when not defined(noheader):
+    stderr.styledWriteLine(fgWhite, styleBright, "# ", msg.join(), resetStyle)
+
 proc error*(kind: string, msg: varargs[string, `$`]) =
   when not defined(noerror):
     stderr.styledWriteLine(fgRed, styleBright, align(kind, 12), " ",

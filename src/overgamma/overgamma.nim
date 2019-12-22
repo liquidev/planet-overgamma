@@ -48,3 +48,4 @@ proc main() =
       currentSave.overworld.update(step)
 
 when isMainModule: main()
+

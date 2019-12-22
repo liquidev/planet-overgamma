@@ -16,7 +16,7 @@ import ../world/world
 # Render utilities
 #--
 
-proc glass*(ctx: RGfxContext, x, y, width, height: float) = 
+proc glass*(ctx: RGfxContext, x, y, width, height: float) =
   if settings.graphics.blurBehindUI:
     fx.begin(ctx, copyTarget = true)
 

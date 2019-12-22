@@ -8,6 +8,7 @@ import ../world/worldsave
 import ../colors
 import ../gui
 import ../lang
+import ../mods/modloader
 
 include
   loader/loadcmd,
@@ -24,19 +25,20 @@ proc preload*() =
   loadCmdline()
 
 proc load*() =
-  info("Loading", "shared resources")
+  info("Loading", "core resources")
   loadColors()
-  terrainData = loadTerrain(terrain)
+  mods.loadMods("mods")
   loadSprites()
   itemSpriteData = loadItems(itemSprites)
   loadIcons()
   loadFonts()
   loadEffects()
-  tiles = loadTileDatabase(Data/"tiles/tiles.json")
+  tiles = newTileDatabase()
   recipes = loadRecipeDatabase(Data/"tiles/recipes.json")
-  loadLanguage()
-  info("Loading", "finished shared resources")
+  loadLanguage("data/lang")
+  info("Loading", "finished core resources")
   initGUI()
+  mods.initMods()
 
   if args.hasKey("debug.autostart"):
     warn("Warning:", "beginning the game through --debug.autostart")

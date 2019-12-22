@@ -12,20 +12,31 @@ import strtabs
 import debug
 import res
 
+type
+  LanguageError* = object of Exception
+
 var lang: StringTableRef
 
 proc L*(key: string): string =
+  ## Returns the language string ``key``.
   result =
     if key in lang: lang[key]
     else: key
 
-proc loadLanguage*() =
-  info("Loading", "language: " & settings.general.language)
-  var langFs = newFileStream("data/lang"/settings.general.language & ".cfg")
+proc loadLanguage*(dir: string, prefix = "") =
+  ## Loads the current language from ``dir``, prepending keys with
+  ## ``{prefix}.`` as a form of primitive namespacing.
+  if lang == nil:
+    verbose("Creating", "new language string table")
+    lang = newStringTable(modeStyleInsensitive)
+  info("Loading", "language: " & prefix & "/" & settings.general.language)
+  var langFs = newFileStream(dir/settings.general.language & ".cfg")
   if langFs == nil:
     error("Error:", "could not find language file " & settings.general.language)
-    quit(QuitFailure)
-  lang = newStringTable(modeCaseSensitive)
+    return
+  let prefix =
+    if prefix.len == 0: ""
+    else: prefix & '.'
   var
     parser: CfgParser
     parseError = false
@@ -39,17 +50,19 @@ proc loadLanguage*() =
     of cfgError:
       parseError = true
       error("Lang/error:",
-            parser.getFilename(), ":", parser.getLine(), " ", ev.msg)
+            parser.getFilename(), "(", parser.getLine(), "): ", ev.msg)
     of cfgOption:
       parseError = true
       error("Lang/error:",
-            parser.getFilename(), ":", parser.getLine(),
-            " Options are not supported in language files")
+            parser.getFilename(), "(", parser.getLine(), "): " &
+            "Options are not supported in language files")
     of cfgSectionStart:
       section = ev.section
     of cfgKeyValuePair:
-      lang[section & ' ' & ev.key] = ev.value
+      lang[prefix & section & ' ' & ev.key] = ev.value
       inc(keys)
-  if parseError: quit(QuitFailure)
+  if parseError:
+    raise newException(LanguageError,
+                       "errors occured while loading language from " & dir)
   parser.close()
   verbose(settings.general.language & ":", $keys, " keys total")

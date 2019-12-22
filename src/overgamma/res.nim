@@ -12,12 +12,11 @@ import rapid/gfx/texpack
 import rapid/gfx/text
 import rapid/res/textures
 
+import mods/moddef
 import player/recipedb
 import world/tiledb
 
 type
-  TerrainData* = ref object
-    blocks*, fluids*, decor*: Table[(string, int), RTextureRect]
   Spritesheet* = object
     tex*: RTexture
     atl*: RAtlas
@@ -37,6 +36,8 @@ const
          wrapH: wrapRepeat, wrapV: wrapRepeat)
   Data* = "data"
 
+include res/sheet
+
 var
   args*: Table[string, string]
   settings*: Settings
@@ -44,8 +45,10 @@ var
   win*: RWindow
   sur*: RGfx
 
+  mods*: Table[string, Mod]
+  sheets*: Table[string, Sheet]
+
   terrain*: RTexture
-  terrainData*: TerrainData
   itemSprites*: RTexture
   itemSpriteData*: Table[string, RTextureRect]
   tiles*: TileDatabase
@@ -56,4 +59,12 @@ var
 
   firaSans*, firaSansB*: RFont
 
+proc sheet*(name: string): Sheet =
+  if name notin sheets:
+    result = newSheet()
+    sheets[name] = result
+  else:
+    result = sheets[name]
+
 include res/effects
+

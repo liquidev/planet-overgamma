@@ -27,6 +27,9 @@ var items: seq[Item]
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
   if settings.graphics.pixelate:
     fx.begin(ctx)
+  let
+    blockSheet = sheet".blocks"
+    decorSheet = sheet".decor"
   ctx.transform():
     # camera
     let plr = wld["player"]
@@ -51,12 +54,11 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
       of tkVoid: discard
       of tkBlock:
         let
-          conn =
+          variant =
             (if wld[x + 1, y] == t: 0b0001 else: 0) or
             (if wld[x - 1, y] == t: 0b0010 else: 0) or
             (if wld[x, y + 1] == t: 0b0100 else: 0) or
             (if wld[x, y - 1] == t: 0b1000 else: 0)
-          key = (t.blockName, conn)
         ctx.rect(floor(x.float * 8), floor(y.float * 8), 8, 8,
                  terrainData.blocks[key])
       of tkDecor:

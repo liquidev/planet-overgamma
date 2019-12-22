@@ -21,7 +21,9 @@ var items: seq[Item]
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
   if settings.graphics.pixelate:
     fx.begin(ctx)
-  let tilesheet = sheet".tiles"
+  let
+    tilesheet = sheet".tiles"
+    itemsheet = sheet".items"
   ctx.transform:
     # camera
     let plr = wld["player"]
@@ -65,7 +67,7 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
       else:
         items.add(spr.Item)
     ctx.begin()
-    ctx.texture = itemSprites
+    ctx.texture = itemsheet.texture
     for it in items:
       it.draw(ctx, step)
     ctx.draw()

@@ -23,9 +23,9 @@ renderer(PlayerHud, Default, hud):
       baseX = win.width / 2 - width / 2
       baseY = win.height / 2
     ctx.begin()
-    ctx.texture = itemSprites
+    ctx.texture = sheet".items".texture
     for popup in hud.player.itemPopups:
-      ctx.rect(baseX, baseY - y - 42, 24, 24, itemSpriteData[popup.id])
+      ctx.rect(baseX, baseY - y - 42, 24, 24, sheet".items"[popup.id][0])
       y += 32
     ctx.draw()
     ctx.noTexture()

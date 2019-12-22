@@ -35,8 +35,7 @@ proc search*(grid: StorageGrid, phrase: string) =
       grid.searchResults.add(id, amt)
 
 renderer(StorageGrid, Default, grid):
-  var
-    x, y = 0.0
+  var x, y = 0.0
   for n in 0..<StorageGridRepeat:
     for id, amt in grid.searchResults:
       ctx.clearStencil(0)
@@ -51,8 +50,8 @@ renderer(StorageGrid, Default, grid):
       ctx.noStencilTest()
 
       ctx.begin()
-      ctx.texture = itemSprites
-      ctx.rect(x + 4, y + 1, 28, 28, itemSpriteData[id])
+      ctx.texture = sheet".items".texture
+      ctx.rect(x + 4, y + 1, 28, 28, sheet".items"[id][0])
       ctx.draw()
       ctx.noTexture()
 

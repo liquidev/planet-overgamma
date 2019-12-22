@@ -3,8 +3,9 @@ import times
 
 import rapid/gfx
 
+import ../items/itemdb
 import ../player/recipedb
-import ../world/tiledb as tdb
+import ../world/tiledb
 import ../world/worldsave
 import ../colors
 import ../gui
@@ -16,7 +17,6 @@ include
   loader/loadeffects,
   loader/loadfonts,
   loader/loadicons,
-  loader/loaditems,
   loader/loadsprites
 
 proc preload*() =
@@ -29,11 +29,11 @@ proc load*() =
   loadColors()
   mods.loadMods("mods")
   loadSprites()
-  itemSpriteData = loadItems(itemSprites)
   loadIcons()
   loadFonts()
   loadEffects()
   tiles = newTileDatabase()
+  res.items = newItemDatabase()
   recipes = loadRecipeDatabase(Data/"tiles/recipes.json")
   loadLanguage("data/lang")
   info("Loading", "finished core resources")

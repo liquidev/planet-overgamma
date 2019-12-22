@@ -10,7 +10,8 @@ proc newItemDatabase*(): ItemDatabase =
   ## Creates an empty item database.
   new(result)
 
-proc add*(db: ItemDatabase, name: string, id: ItemDesc) =
-  ## Adds the given item descriptor into the database.
-  db.items.add(name, id)
+proc newItemDesc*(name, uiName: string): ItemDesc =
+  ## Creates a new item descriptor.
+  result.name = name
+  result.uiName = uiName
 

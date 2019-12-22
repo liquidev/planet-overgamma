@@ -5,9 +5,10 @@ import rapid/gfx/texpack
 import rapid/res/images
 
 import ../debug
-import ../world/tiledb
+import ../items/itemdb
 import ../lang
 import ../res
+import ../world/tiledb
 import moddef
 
 proc wrenPO*(wren: Wren) =
@@ -22,6 +23,15 @@ proc wrenPO*(wren: Wren) =
     [L]:
       `[]` do (key: string) -> string:
         result = L(key)
+  wren.foreign(".items/itemdb"):
+    ItemDesc:
+      *newItemDesc -> new
+    ItemDatabase:
+      {.noFields.}
+      add do (db: ItemDatabase, name: string, id: ItemDesc):
+        db.items[name] = id
+      `[]` do (db: ItemDatabase, name: string) -> ItemDesc:
+        result = db.items[name]
   wren.foreign(".world/tiledb"):
     ItemDropKind - id
     ItemDrop:
@@ -37,9 +47,9 @@ proc wrenPO*(wren: Wren) =
         db.blocks[name] = td
       addDecor do (db: TileDatabase, name: string, td: TileDesc):
         db.decor[name] = td
-      getBlock do (db: TileDatabase, name: string) -> TileDesc:
+      `block` do (db: TileDatabase, name: string) -> TileDesc:
         result = db.blocks[name]
-      getDecor do (db: TileDatabase, name: string) -> TileDesc:
+      decor do (db: TileDatabase, name: string) -> TileDesc:
         result = db.decor[name]
   wren.foreign(".res"):
     Sheet:
@@ -59,12 +69,14 @@ proc wrenPO*(wren: Wren) =
       }
       """
     [Res]:
-      ?tiles do -> TileDatabase: tiles
+      ?tiles do -> TileDatabase: res.tiles
+      ?items do -> ItemDatabase: res.items
   wren.foreign(".api"):
     """
     import ".rapid/res/images" for RImage
 
     import ".debug" for Debug
+    import ".items/itemdb" for ItemDesc
     import ".lang" for L
     import ".res" for Res, Sheet
     import ".world/tiledb" for TileDesc
@@ -116,6 +128,16 @@ proc wrenPO*(wren: Wren) =
         var tileDesc = TileDesc.new(name, L[codename + ".decor " + name],
                                     hardness, drops)
         Res.tiles.addDecor(fullName, tileDesc)
+      }
+
+      item(name, spritePath) {
+        var fullName = codename + "." + name
+        Debug.verbose("Item", fullName + " <- " +
+                              codename + ":" + spritePath)
+        var image = RImage.load(path + "/" + spritePath)
+        Sheet[".items"][fullName] = [Sheet[".items"].add(image)]
+        var itemDesc = ItemDesc.new(name, L[codename + ".items " + name])
+        Res.items.add(fullName, itemDesc)
       }
       """
 

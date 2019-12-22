@@ -21,5 +21,5 @@ method store*(s: ItemStorage, id: string, amt: float): float {.base.} =
 method retrieve*(s: ItemStorage, id: string, amt: float): float {.base.} =
   discard
 
-
 proc freeSpace*(s: ItemStorage): float = s.capacity - s.usedSpace
+

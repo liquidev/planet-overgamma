@@ -1,9 +1,3 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import tables
 
 import rapid/gfx
@@ -19,7 +13,7 @@ type
 
 method draw*(item: Item, ctx: RGfxContext, step: float) =
   # Items are always drawn in batches
-  ctx.rect(item.pos.x - 1, item.pos.y - 1, 8, 8, itemSpriteData[item.id])
+  ctx.rect(item.pos.x - 1, item.pos.y - 1, 8, 8, sheet".items"[item.id][0])
 
 method update*(item: Item, step: float) =
   item.force(Gravity * 0.5)

@@ -6,6 +6,7 @@ import rapid/gfx/texpack
 import rapid/gfx/text
 import rapid/res/textures
 
+import items/itemdb
 import mods/moddef
 import player/recipedb
 import world/tiledb
@@ -42,9 +43,8 @@ var
   mods*: Table[string, Mod]
   sheets*: Table[string, Sheet]
 
-  itemSprites*: RTexture
-  itemSpriteData*: Table[string, RTextureRect]
   tiles*: TileDatabase
+  items*: ItemDatabase
   recipes*: RecipeDatabase
   icons*: Table[string, RTexture]
 

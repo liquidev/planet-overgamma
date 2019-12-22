@@ -30,5 +30,5 @@ proc updateAugments*(player: Player) =
       player.inventory.addCapacity(1024)
     of augmentDebug:
       player.inventory.addCapacity(65536)
-      discard player.inventory.store("plants", 1024)
-      discard player.inventory.store("rock", 1024)
+      discard player.inventory.store("overbase.plantMatter", 1024)
+      discard player.inventory.store("overbase.rocks", 1024)

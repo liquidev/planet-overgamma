@@ -1,9 +1,3 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import random
 
 import glm/noise
@@ -54,10 +48,10 @@ proc generateOverworld*(wld: var World, seed: int64) =
         blurredY = heightMap.conv(x, Blur)
       # plants
       if y.float >= normalY:
-        wld[x, y] = blockTile("plants", solid = true)
+        wld[x, y] = blockTile("overbase.plants", solid = true)
       # stone
       if y.float >= blurredY + 16:
-        wld[x, y] = blockTile("stone", solid = true)
+        wld[x, y] = blockTile("overbase.stone", solid = true)
 
   verbose("World gen", "spawn player")
   block spawnPlayer:
@@ -74,8 +68,8 @@ proc generateOverworld*(wld: var World, seed: int64) =
         noise = (perlin(vec3(xo + cos(angle), yo + sin(angle), 1.0)) + 1) / 2
         y = wld.highestY(x)
       if rng.rand(1.0) > noise:
-        wld[x, y] = decorTile("grass", rng.rand(0..2))
+        wld[x, y] = decorTile("overbase.grass", rng.rand(0..2))
       if rng.rand(1.0) < 0.15:
-        wld[x, y] = decorTile("pebbles", rng.rand(0..2))
+        wld[x, y] = decorTile("overbase.pebbles", rng.rand(0..2))
 
   verbose("World gen", "finished")

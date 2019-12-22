@@ -1,4 +1,5 @@
 import json
+import times
 
 import rapid/gfx
 
@@ -16,8 +17,7 @@ include
   loader/loadfonts,
   loader/loadicons,
   loader/loaditems,
-  loader/loadsprites,
-  loader/loadterrain
+  loader/loadsprites
 
 proc preload*() =
   info("Loading", "settings")

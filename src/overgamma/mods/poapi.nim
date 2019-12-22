@@ -90,7 +90,7 @@ proc wrenPO*(wren: Wren) =
         var variants = []
         var vw = image.width / 4
         var vh = image.height / 4
-        Sheet[".blocks"][name] = Sheet[".blocks"].addGrid(image, vw, vh, [
+        Sheet[".tiles"][fullName] = Sheet[".tiles"].addGrid(image, vw, vh, [
           [3, 3], [0, 3], [2, 3], [1, 3],
           [3, 0], [0, 0], [2, 0], [1, 0],
           [3, 2], [0, 2], [2, 2], [1, 2],
@@ -98,7 +98,7 @@ proc wrenPO*(wren: Wren) =
         ])
         var tileDesc = TileDesc.new(name, L[codename + ".blocks " + name],
                                     hardness, drops)
-        Res.tiles.addBlock(codename + "." + name, tileDesc)
+        Res.tiles.addBlock(fullName, tileDesc)
       }
       decor(name, tilesheetPath, hardness, drops) {
         var fullName = codename + "." + name
@@ -112,10 +112,10 @@ proc wrenPO*(wren: Wren) =
         for (x in 0...image.width / vh) {
           grid.add([x, 0])
         }
-        Sheet[".decor"][name] = Sheet[".decor"].addGrid(image, vw, vh, grid)
+        Sheet[".tiles"][fullName] = Sheet[".tiles"].addGrid(image, vw, vh, grid)
         var tileDesc = TileDesc.new(name, L[codename + ".decor " + name],
                                     hardness, drops)
-        Res.tiles.addDecor(codename + "." + name, tileDesc)
+        Res.tiles.addDecor(fullName, tileDesc)
       }
       """
 

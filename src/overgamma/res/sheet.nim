@@ -1,4 +1,4 @@
-## Simple spritesheet manager.
+## A simple spritesheet manager.
 
 import tables
 

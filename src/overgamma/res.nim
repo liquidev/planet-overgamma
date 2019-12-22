@@ -1,9 +1,3 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import tables
 
 import rapid/gfx
@@ -48,7 +42,6 @@ var
   mods*: Table[string, Mod]
   sheets*: Table[string, Sheet]
 
-  terrain*: RTexture
   itemSprites*: RTexture
   itemSpriteData*: Table[string, RTextureRect]
   tiles*: TileDatabase

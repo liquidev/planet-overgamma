@@ -1,9 +1,3 @@
-#--
-# Planet Overgamma
-# a game about planets, machines, and robots.
-# copyright (C) 2018-19 iLiquid
-#--
-
 import math
 import tables
 
@@ -27,10 +21,8 @@ var items: seq[Item]
 proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
   if settings.graphics.pixelate:
     fx.begin(ctx)
-  let
-    blockSheet = sheet".blocks"
-    decorSheet = sheet".decor"
-  ctx.transform():
+  let tilesheet = sheet".tiles"
+  ctx.transform:
     # camera
     let plr = wld["player"]
     ctx.translate(sur.width / 2, sur.height / 2)
@@ -47,7 +39,7 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
       vpbottom = plry + int(wh / 2) + 1
       vpright = plrx + int(ww / 2) + 1
 
-    ctx.texture = terrain
+    ctx.texture = tilesheet.texture
     ctx.begin()
     for x, y, t in areab(wld, vptop, vpleft, vpbottom, vpright):
       case t.kind
@@ -60,11 +52,10 @@ proc drawWorld*(ctx: RGfxContext, wld: World, step: float) =
             (if wld[x, y + 1] == t: 0b0100 else: 0) or
             (if wld[x, y - 1] == t: 0b1000 else: 0)
         ctx.rect(floor(x.float * 8), floor(y.float * 8), 8, 8,
-                 terrainData.blocks[key])
+                 tilesheet[t.blockName][variant])
       of tkDecor:
-        let key = (t.decorName, t.decorVar)
         ctx.rect(floor(x.float * 8), floor(y.float * 8), 8, 8,
-                 terrainData.decor[key])
+                 tilesheet[t.decorName][t.decorVar])
     ctx.draw()
     ctx.noTexture()
     items.setLen(0)

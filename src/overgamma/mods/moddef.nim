@@ -1,3 +1,5 @@
+import os
+
 import euwren
 
 type
@@ -35,6 +37,22 @@ proc initMetadata*(m: Mod, name, author, version, description: string) =
 
 proc initVM*(m: Mod, index: string) =
   ## Initialize the mod's VM, this does not run the provided index script.
-  m.wren = newWren()
   m.index = index
+  m.wren = newWren()
+  m.wren.onLoadModule do (name: string) -> string:
+    let filename =
+      if name.len > 0 and name[0] == '/':
+        # absolute path
+        m.path/../name
+      else:
+        # relative path
+        m.path/name
+    result = readFile(addFileExt(filename, "wren"))
+  m.wren.onResolveModule do (importer, name: string) -> string:
+    if name.len > 0 and name[0] in {'/', '.'}:
+      # API or absolute path
+      result = name
+    else:
+      # relative path
+      result = importer/name
 

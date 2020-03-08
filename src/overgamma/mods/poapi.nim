@@ -8,7 +8,9 @@ import ../debug
 import ../items/itemdb
 import ../lang
 import ../res
+import ../world/tile
 import ../world/tiledb
+import ../world/world
 import moddef
 
 proc wrenPO*(wren: Wren) =
@@ -32,6 +34,9 @@ proc wrenPO*(wren: Wren) =
         db.items[name] = id
       `[]` do (db: ItemDatabase, name: string) -> ItemDesc:
         result = db.items[name]
+  wren.foreign(".world"):
+    World:
+      *newWorld -> new
   wren.foreign(".world/tiledb"):
     ItemDropKind - id
     ItemDrop:

@@ -1,14 +1,7 @@
-# Planet Overgamma
-You crash on an overgrown planet. It seems like it's irradiated with some
-unknown energy, which caused its primitive plant-like lifeforms to mutate and
-grow all over the planet.
+heyyyyyyy there fella  
+this boy is heavily unfinished pls dont touch kthx
 
-A platformer/survival hybrid, originally made for GitHub Game Off 2018.
-You can find the game jam version [here](https://lqdev.itch.io/planet-overgamma-classic),
-and its source code is available on the `classic` branch.
+in the meantime why don't you check out [mindustry][mindustry] it's another cool
+game that, unlike this, is actually finished
 
-*Work in progress.*
-
-## Credits
- - iLiquid - code, graphics, sound
- - doomy - pickup sound
+  [mindustry]: https://mindustrygame.github.io/

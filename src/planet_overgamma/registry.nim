@@ -5,43 +5,46 @@ import std/tables
 type
   IdBase = uint32
 
-  RegistryId*[Tag] = distinct IdBase
+  RegistryId*[T] = distinct IdBase
     ## A registry element identifier.
 
-  Registry*[Tag] = object
-    ## Name-ID registry.
-    nameToId: Table[string, RegistryId[Tag]]
+  Registry*[T] = object
+    ## Name-ID-resource registry.
+    nameToId: Table[string, RegistryId[T]]
     idToName: seq[string]
+    idToResource: seq[T]
 
   NameError* = object of ValueError
     ## Raised when an ID cannot be looked up by name.
 
-proc `$`*[Tag](id: RegistryId[Tag]): string =
+proc `$`*[T](id: RegistryId[T]): string =
   ## Stringifies the given ID.
-  $Tag & '(' & $IdBase(id) & ')'
+  $T & '(' & $IdBase(id) & ')'
 
-proc `==`*[Tag](a, b: RegistryId[Tag]): bool =
+proc `==`*[T](a, b: RegistryId[T]): bool =
   ## Compares the two IDs for equality.
   # {.borrow.} doesn't want to work with generics.
   IdBase(a) == IdBase(b)
 
-proc register*[Tag](reg: var Registry[Tag], name: string): RegistryId[Tag] =
+proc register*[T](reg: var Registry[T], name: string,
+                  resource: sink T): RegistryId[T] =
   ## Registers a name and returns its unique ID.
 
-  result = RegistryId[Tag](reg.idToName.len)
+  result = RegistryId[T](reg.idToName.len)
   reg.nameToId[name] = result
   reg.idToName.add(name)
+  reg.idToResource.add(resource)
 
-proc id*[Tag](reg: var Registry[Tag], name: string): RegistryId[Tag] =
+proc id*[T](reg: Registry[T], name: string): RegistryId[T] =
   ## Returns the ID for the given name. Raises an exception if the ID doesn't
   ## exist.
 
   if name notin reg.nameToId:
-    raise newException(NameError, $Tag & " with name " & name &
+    raise newException(NameError, $T & " with name " & name &
                                   " doesn't exist")
   reg.nameToId[name]
 
-proc name*[Tag](reg: var Registry[Tag], id: RegistryId[Tag]): string =
+proc name*[T](reg: Registry[T], id: RegistryId[T]): string =
   ## Returns the name corresponding to this ID. Raises an exception if the ID is
   ## invalid (wasn't returned by this registry).
 
@@ -49,3 +52,31 @@ proc name*[Tag](reg: var Registry[Tag], id: RegistryId[Tag]): string =
   if i notin 0..<reg.idToName.len:
     raise newException(NameError, "invalid ID: " & $id)
   reg.idToName[i]
+
+proc get*[T](reg: Registry[T], id: RegistryId[T]): lent T =
+  ## Returns a reference to the resource with the given ID.
+
+  let i = int(id)
+  if i notin 0..<reg.idToName.len:
+    raise newException(NameError, "invalid ID: " & $id)
+  reg.idToResource[i]
+
+proc get*[T](reg: var Registry[T], id: RegistryId[T]): var T =
+  ## Returns a mutable reference to the resource with the given ID.
+
+  let i = int(id)
+  if i notin 0..<reg.idToName.len:
+    raise newException(NameError, "invalid ID: " & $id)
+  reg.idToResource[i]
+
+proc get*[T](reg: Registry[T], name: string): lent T =
+  ## Returns a mutable reference to the resource with the given name.
+  ## **This procedure is slow** and should be avoided in hot loops. Instead,
+  ## pre-fetch the ID before the loop and use it to access the resource.
+  reg.resource(reg.id(name))
+
+proc get*[T](reg: var Registry[T], name: string): var T =
+  ## Returns a mutable reference to the resource with the given name.
+  ## **This procedure is slow** and should be avoided in hot loops. Instead,
+  ## pre-fetch the ID before the loop and use it to access the resource.
+  reg.resource(reg.id(name))

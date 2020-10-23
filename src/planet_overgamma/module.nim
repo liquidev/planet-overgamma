@@ -61,3 +61,20 @@ proc registerBlock*(m: Module, name: string, desc: sink Block): BlockId =
 
   result = m.g.blockRegistry.register(m.namespaced(name), desc)
   hint "registered block ", m.namespaced(name), " -> ", result
+
+proc blockId*(m: Module, name: string): BlockId =
+  ## Gets the block ID for the given name.
+  m.g.blockRegistry.id(name)
+
+# as much as i don't like using ``getX``, ``block`` is a keyword in Nim so
+# this'll have to do
+# the ruby API won't have this limitation as keywords are contextual and as far
+# as i could tell ``block`` isn't a keyword in ruby anyways
+
+proc getBlock*(m: Module, id: BlockId): lent Block =
+  ## Returns an immutable reference to the block descriptor with the given ID.
+  m.g.blockRegistry.get(id)
+
+proc getBlock*(m: Module, name: string): lent Block =
+  ## Returns an immutable reference to the block descriptor with the given name.
+  m.g.blockRegistry.get(name)

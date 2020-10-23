@@ -1,5 +1,7 @@
 ## Cool tileset manager. Allows you to load block patches easily.
 
+import std/tables
+
 import aglet
 import glm/vec
 import rapid/graphics/atlas_texture
@@ -11,6 +13,8 @@ type
   Tileset* = ref object
     # rgba8, because we don't need HDR anyways
     atlas*: AtlasTexture[Rgba8]
+    singles: Table[string, Rectf]
+    blockPatches: Table[string, BlockPatch]
 
   TileSide* = enum
     tsRight
@@ -82,10 +86,19 @@ proc newTileset*(window: Window, atlasSize: Vec2i): Tileset =
   new result
   result.atlas = window.newAtlasTexture[:Rgba8](atlasSize)
 
-proc loadBlockPatch*(tileset: Tileset, filename: string): BlockPatch =
+proc loadSingle*(tileset: Tileset, name, filename: string): Rectf =
+  ## Loads a single sprite (or just "single") from the given path.
+
+  hint "loading single ", name, " from ", filename
+
+  let image = loadPngImage(filename)
+  result = tileset.atlas.add(image)
+  tileset.singles[name] = result
+
+proc loadBlockPatch*(tileset: Tileset, name, filename: string): BlockPatch =
   ## Loads a block patch from the given path.
 
-  # block patches look at bit like this:
+  # block patches look like this:
   #
   # +-- --- --+ +-+
   # |.. ... ..| |.|
@@ -105,7 +118,7 @@ proc loadBlockPatch*(tileset: Tileset, filename: string): BlockPatch =
   # the top left tile is (0, 0) and the bottom right tile is (3, 3)
   # you can see examples in /data/core/tiles
 
-  hint "loading block patch: ", filename
+  hint "loading block patch ", name, " from ", filename
 
   let
     image = loadPngImage(filename)
@@ -135,3 +148,12 @@ proc loadBlockPatch*(tileset: Tileset, filename: string): BlockPatch =
     TileSideSet(0b1110): add(2, 1),
     TileSideSet(0b1111): add(1, 1),
   ]
+  tileset.blockPatches[name] = result
+
+proc single*(tileset: Tileset, name: string): Rectf =
+  ## Returns a single from the tileset.
+  tileset.singles[name]
+
+proc blockPatch*(tileset: Tileset, name: string): BlockPatch =
+  ## Returns a block patch from the tileset.
+  tileset.blockPatches[name]

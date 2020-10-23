@@ -10,6 +10,7 @@ import rapid/input
 
 import logger
 import tileset
+import tiles
 
 type
   Game* = ref object
@@ -18,6 +19,17 @@ type
     window*: Window
     graphics*: Graphics
     input*: Input
+
+    masterTileset*: Tileset
+      ## The master tileset is used when rendering the world, so it should
+      ## contain all blocks, machines, and other types of tiles.
+      # screw you SJWs i ain't changing this name to "mainTileset"
+      # any day or night
+
+    blockRegistry*: BlockRegistry
+
+const MasterTilesetSize* {.intdefine.} = 512
+  # this should probably be turned into a setting at some point
 
 proc load*(g: var Game) =
   ## Loads/allocates all basic resources (window, graphics context, effect
@@ -47,3 +59,9 @@ proc load*(g: var Game) =
 
   hint "preparing input"
   g.input = g.window.newInput()
+
+  hint "allocating graphics resources"
+  g.masterTileset = g.window.newTileset(vec2i(MasterTilesetSize))
+
+  hint "allocating game data storage resources"
+  g.blockRegistry = newBlockRegistry()

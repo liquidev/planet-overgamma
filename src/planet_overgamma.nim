@@ -36,13 +36,13 @@ proc main() =
       g.input.process(event)
 
     update:
-      # this runs at a constant rate of 60 Hz
+      # this block runs at a constant rate of 60 Hz
       if g.input.keyJustPressed(keySpace):
         echo "spacing out"
       g.input.finishTick()
 
     draw step:
-      # this runs as many times as possible
+      # this block runs as fast as possible (or synced to Vblank, aka V-sync)
       # ``step`` is the percentage between the current and next timestep
       var frame = g.window.render()
       frame.clearColor(colBlack)

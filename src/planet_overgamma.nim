@@ -5,6 +5,7 @@ import rapid/game
 import rapid/graphics
 import rapid/input
 
+import planet_overgamma/game_registry
 import planet_overgamma/logger
 import planet_overgamma/module
 import planet_overgamma/resources
@@ -29,12 +30,14 @@ proc main() =
   # allocate global resource space on the stack
   var
     g: Game
+    r: GameRegistry
     core: Module
     world: World
 
   info "preparing global resources"
+  new(r)
   g.load()
-  core.loadCore(g)
+  core.loadCore(g, r)
 
   info "we're ready to rock!"
 

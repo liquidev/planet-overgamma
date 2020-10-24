@@ -2,17 +2,18 @@
 
 import std/os
 
+import game_registry
 import logger
 import module
 import resources
 import tiles
 
-proc loadCore*(m: var Module, g: Game) =
+proc loadCore*(m: var Module, g: Game, r: GameRegistry) =
   ## Loads the core module.
 
   info "loading core module"
 
-  m = g.newModule("Core", rootPath = "data/core")
+  m = newModule(g, r, "Core", rootPath = "data/core")
 
   hint "core: resources"
 

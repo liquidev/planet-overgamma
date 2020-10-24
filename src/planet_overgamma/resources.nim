@@ -1,8 +1,6 @@
 ## Resource storage, distribution, and management.
 
 import std/monotimes
-import std/parseopt
-import std/strutils
 import std/times
 
 import aglet
@@ -12,7 +10,6 @@ import rapid/input
 
 import logger
 import tileset
-import tiles
 
 type
   GameState* = enum
@@ -32,11 +29,9 @@ type
     masterTileset*: Tileset
       ## The master tileset is used when rendering the world, so it should
       ## contain all blocks, machines, and other types of tiles.
+
       # screw you SJWs i ain't changing this name to "mainTileset"
       # any day or night
-
-    # game data
-    blockRegistry*: BlockRegistry
 
     # runtime
     state*: GameState

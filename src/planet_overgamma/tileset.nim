@@ -31,10 +31,10 @@ type
 
 const
   # values for internal use
-  tsseRight = 1 shl tsRight.uint8
-  tsseBottom = 1 shl tsBottom.uint8
-  tsseLeft = 1 shl tsLeft.uint8
-  tsseTop = 1 shl tsTop.uint8
+  tsseRight* = 1 shl tsRight.uint8
+  tsseBottom* = 1 shl tsBottom.uint8
+  tsseLeft* = 1 shl tsLeft.uint8
+  tsseTop* = 1 shl tsTop.uint8
 
   # the empty tile side set
   tssEmpty* = TileSideSet(0)

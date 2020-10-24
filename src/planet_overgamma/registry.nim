@@ -8,7 +8,7 @@ type
   RegistryId*[T] = distinct IdBase
     ## A registry element identifier.
 
-  Registry*[T] = object
+  Registry*[T] {.byref.} = object
     ## Name-ID-resource registry.
     nameToId: Table[string, RegistryId[T]]
     idToName: seq[string]

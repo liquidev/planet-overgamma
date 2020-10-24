@@ -64,6 +64,12 @@ proc `==`*(a, b: Tile): bool =
   of tkEmpty: true
   of tkBlock: a.blockId == b.blockId
 
+proc connectsTo*(a, b: Tile): bool =
+  ## Returns whether two tiles should connect to each other.
+  # for now this is just a simple equality comparison, but this may get extended
+  # at some point
+  a == b
+
 const
   emptyTile* = Tile(kind: tkEmpty)
     ## Empty tile constant.

@@ -8,6 +8,7 @@ import std/strutils
 
 import aglet/rect
 
+import game_registry
 import logger
 import registry
 import resources
@@ -17,14 +18,16 @@ import tiles
 type
   Module* = ref object
     g*: Game
+    r*: GameRegistry
     name*: string
     rootPath*: string
 
-proc newModule*(g: Game, name, rootPath: string): Module =
+proc newModule*(g: Game, r: GameRegistry, name, rootPath: string): Module =
   ## Creates a new game module.
 
   new result
   result.g = g
+  result.r = r
   result.name = name
   result.rootPath = rootPath
 
@@ -59,12 +62,12 @@ proc registerBlock*(m: Module, name: string, desc: sink Block): BlockId =
   ## Registers a block using the given descriptor, with the given name.
   ## The given name is namespaced automatically.
 
-  result = m.g.blockRegistry.register(m.namespaced(name), desc)
+  result = m.r.blockRegistry.register(m.namespaced(name), desc)
   hint "registered block ", m.namespaced(name), " -> ", result
 
 proc blockId*(m: Module, name: string): BlockId =
   ## Gets the block ID for the given name.
-  m.g.blockRegistry.id(name)
+  m.r.blockRegistry.id(name)
 
 # as much as i don't like using ``getX``, ``block`` is a keyword in Nim so
 # this'll have to do
@@ -73,8 +76,8 @@ proc blockId*(m: Module, name: string): BlockId =
 
 proc getBlock*(m: Module, id: BlockId): lent Block =
   ## Returns an immutable reference to the block descriptor with the given ID.
-  m.g.blockRegistry.get(id)
+  m.r.blockRegistry.get(id)
 
 proc getBlock*(m: Module, name: string): lent Block =
   ## Returns an immutable reference to the block descriptor with the given name.
-  m.g.blockRegistry.get(name)
+  m.r.blockRegistry.get(name)

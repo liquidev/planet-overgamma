@@ -73,10 +73,10 @@ proc get*[T](reg: Registry[T], name: string): lent T =
   ## Returns a mutable reference to the resource with the given name.
   ## **This procedure is slow** and should be avoided in hot loops. Instead,
   ## pre-fetch the ID before the loop and use it to access the resource.
-  reg.resource(reg.id(name))
+  reg.get(reg.id(name))
 
 proc get*[T](reg: var Registry[T], name: string): var T =
   ## Returns a mutable reference to the resource with the given name.
   ## **This procedure is slow** and should be avoided in hot loops. Instead,
   ## pre-fetch the ID before the loop and use it to access the resource.
-  reg.resource(reg.id(name))
+  reg.get(reg.id(name))

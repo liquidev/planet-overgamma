@@ -23,6 +23,7 @@ proc loadCore*(m: var Module, g: Game) =
 
   const blocks = {
     "plants":      (kind: Patch,),
+    "rock":        (kind: Patch,),
     "bricks":      (kind: Patch,),
     "light_metal": (kind: Patch,),
     "heavy_metal": (kind: Patch,),

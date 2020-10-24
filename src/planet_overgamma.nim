@@ -9,6 +9,7 @@ import planet_overgamma/logger
 import planet_overgamma/module
 import planet_overgamma/resources
 import planet_overgamma/tiles
+import planet_overgamma/world
 
 import planet_overgamma/core
 
@@ -29,6 +30,7 @@ proc main() =
   var
     g: Game
     core: Module
+    world: World
 
   info "preparing global resources"
   g.load()

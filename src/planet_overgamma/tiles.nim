@@ -54,3 +54,20 @@ type
     of tkEmpty: discard
     of tkBlock:
       blockId*: BlockId
+
+proc `==`*(a, b: Tile): bool =
+  ## Compares two tiles for equality.
+
+  if a.kind != b.kind: return false
+
+  case a.kind
+  of tkEmpty: true
+  of tkBlock: a.blockId == b.blockId
+
+const
+  emptyTile* = Tile(kind: tkEmpty)
+    ## Empty tile constant.
+
+proc blockTile*(id: BlockId): Tile =
+  ## Creates a new block tile.
+  Tile(kind: tkBlock, blockId: id)

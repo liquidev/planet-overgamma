@@ -5,9 +5,9 @@ import std/tables
 type
   ParameterDataType* = enum
     ## A parameter's data type.
-    pdtInt
-    pdtFloat
-    pdtString
+    pdtInt = "int"
+    pdtFloat = "float"
+    pdtString = "string"
 
   ParameterKind* = enum
     ## A parameter's input field kind.
@@ -40,9 +40,17 @@ type
   Arguments* = Table[string, Argument]
     ## A set of arguments passed to parameters.
 
-proc param*(kind: ParameterKind, dataType: ParameterDataType): Parameter =
-  ## Creates and initializes a parameter.
-  Parameter(kind: kind, dataType: dataType)
+proc inputBoxParam*(dataType: ParameterDataType): Parameter =
+  ## Creates and initializes an input box parameter.
+  Parameter(kind: pkInputBox, dataType: dataType)
+
+proc sliderParam*(dataType: ParameterDataType, range: Slice[float]): Parameter =
+  ## Creates and initializes a slider parameter.
+  Parameter(kind: pkSlider, dataType: dataType, sliderRange: range)
+
+proc dragParam*(dataType: ParameterDataType): Parameter =
+  ## Creates and initializes a drag parameter.
+  Parameter(kind: pkDrag, dataType: dataType)
 
 proc arg*(value: int32): Argument =
   ## Creates an int argument.

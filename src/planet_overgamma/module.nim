@@ -14,6 +14,7 @@ import registry
 import resources
 import tileset
 import tiles
+import world_generation
 
 type
   Module* = ref object
@@ -81,3 +82,23 @@ proc getBlock*(m: Module, id: BlockId): lent Block =
 proc getBlock*(m: Module, name: string): lent Block =
   ## Returns an immutable reference to the block descriptor with the given name.
   m.r.blockRegistry.get(name)
+
+proc registerWorldGenerator*(m: Module, name: string,
+                             desc: sink WorldGenerator): WorldGeneratorId =
+  ## Registers a world generator using the given desciptor, with the given name.
+  ## The name is namespaced automatically.
+
+  result = m.r.worldGenRegistry.register(m.namespaced(name), desc)
+  hint "registered world generator ", m.namespaced(name), " -> ", result
+
+proc worldGeneratorId*(m: Module, name: string): WorldGeneratorId =
+  ## Gets the world generator ID for the given name.
+  m.r.worldGenRegistry.id(name)
+
+proc getWorldGenerator*(m: Module, id: WorldGeneratorId): lent WorldGenerator =
+  ## Returns an immutable reference to the world generator with the given ID.
+  m.r.worldGenRegistry.get(id).WorldGenerator
+
+proc getWorldGenerator*(m: Module, name: string): lent WorldGenerator =
+  ## Returns an immutable reference to the world generator with the given name.
+  m.r.worldGenRegistry.get(name).WorldGenerator

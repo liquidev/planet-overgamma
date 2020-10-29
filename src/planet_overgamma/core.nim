@@ -8,6 +8,8 @@ import module
 import resources
 import tiles
 
+import core/worldgen_canon
+
 proc loadCore*(m: var Module, g: Game, r: GameRegistry) =
   ## Loads the core module.
 
@@ -41,3 +43,7 @@ proc loadCore*(m: var Module, g: Game, r: GameRegistry) =
     of Patch:
       let patch = m.loadBlockPatch(name, filename)
       discard m.registerBlock(name, initBlock(patch))
+
+  hint "core: generation"
+
+  discard m.registerWorldGenerator("canon", getCanonWorldGenerator())

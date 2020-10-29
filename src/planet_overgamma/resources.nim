@@ -1,6 +1,7 @@
 ## Resource storage, distribution, and management.
 
 import std/monotimes
+import std/os
 import std/times
 
 import aglet
@@ -8,6 +9,7 @@ import aglet/window/glfw
 import rapid/graphics
 import rapid/input
 
+import common
 import logger
 import tileset
 
@@ -33,11 +35,25 @@ type
       # screw you SJWs i ain't changing this name to "mainTileset"
       # any day or night
 
+    programPlain*: Program[Vertex]
+
+    dpDefault*: DrawParams
+
     # runtime
     state*: GameState
 
 const MasterTilesetSize* {.intdefine.} = 512
   # this should probably be turned into a setting at some point
+
+template loadStaticProgram[T](window: Window,
+                              vertex, fragment: static string): Program[T] =
+  ## Creates a shader program from slurp'ed source code. ``fragment`` and
+  ## ``vertex`` are paths to the files that should be slurp'ed.
+
+  const
+    vertexSource = slurp(vertex).glsl
+    fragmentSource = slurp(fragment).glsl
+  window.newProgram[:T](vertexSource, fragmentSource)
 
 proc load*(g: var Game) =
   ## Loads/allocates all basic resources (window, graphics context, effect
@@ -65,6 +81,18 @@ proc load*(g: var Game) =
 
   hint "creating a graphics context"
   g.graphics = g.window.newGraphics()
+
+  hint "loading shaders"
+  template loadProgram(commonPath: static string): Program[Vertex] =
+    hint "shader: ", commonPath
+    const
+      vert = commonPath.addFileExt("vert")
+      frag = commonPath.addFileExt("frag")
+    g.window.loadStaticProgram[:Vertex](vert, frag)
+  g.programPlain = loadProgram("shaders/plain")
+
+  hint "hashing up draw params"
+  g.dpDefault = defaultDrawParams()
 
   hint "preparing input"
   g.input = g.window.newInput()

@@ -84,21 +84,58 @@ proc updateMesh*(world: World, g: Game, br: BlockRegistry,
   mesh.uploadVertices(vertices)
   mesh.uploadIndices(indices)
 
+import rapid/physics/chipmunk
+
+iterator chunksInViewport(world: World, viewport: Rectf,
+                          scale: float32): (Vec2i, var Chunk) =
+  ## Yields all chunks in the given viewport rectangle.
+
+  template toTileCoordinates(pos: Vec2f): Vec2i =
+    floor(pos / scale / world.tilemap.tileSize).vec2i
+
+  template toChunkCoordinates(pos: Vec2f): Vec2i =
+    toTileCoordinates(pos) div ChunkSize
+
+  var
+    topLeftChunk = toChunkCoordinates(viewport.topLeft)
+    bottomRightChunk = toChunkCoordinates(viewport.bottomRight)
+    worldWidthInChunks = world.width / ChunkSize
+
+  # special case because wrapping doesn't want to work very well at
+  # the x < 0 and y < 0 seams
+  topLeftChunk.x -= int32(topLeftChunk.x <= 0)
+  topLeftChunk.y -= int32(topLeftChunk.y <= 0)
+
+  for y in topLeftChunk.y..bottomRightChunk.y:
+    for x in topLeftChunk.x..bottomRightChunk.x:
+      let
+        chunkPosition = vec2i(x.int32, y.int32)
+        wrappedX = floorMod(chunkPosition.x.float32, worldWidthInChunks).int32
+        wrappedPosition = vec2i(wrappedX, chunkPosition.y)
+      if world.tilemap.hasChunk(wrappedPosition):
+        yield (chunkPosition, world.tilemap.chunk(wrappedPosition))
+
+
 proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
   ## Renders the world using the given camera position. The camera looks at the
   ## center of the screen.
 
+  const scale = 3.0
+
   let
     projection =
       ortho(0f, target.width.float32, target.height.float32, 0f, -1f, 1f)
-    translation = -camera + target.size.vec2f / 2
+    translation = camera - target.size.vec2f / 2
     view = mat4f()
-      .translate(vec3f(translation, 0))
-      .scale(3)
+      .translate(vec3f(-translation, 0))
+      .scale(scale)
+    viewport = rectf(translation, target.size.vec2f)
 
-  for position, chunk in chunks(world.tilemap):
+  g.graphics.resetShape()
+
+  for position, chunk in world.chunksInViewport(viewport, scale):
     let
-      offset = vec2f(position * vec2i(ChunkSize)) *
+      offset = vec2f(position * ChunkSize) *
                world.tilemap.tileSize
       mesh = chunk.user.mesh
       model = mat4f().translate(vec3f(offset, 0))
@@ -111,3 +148,16 @@ proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
         magFilter = fmNearest,
       )
     }, g.dpDefault)
+    g.graphics.transform:
+      g.graphics.translate(-translation)
+      g.graphics.scale(scale)
+      g.graphics.lineRectangle(offset, ChunkSize.vec2f * world.tilemap.tileSize, color = colRed)
+      g.graphics.text(g.sansRegular, offset, $position)
+
+  # g.graphics.transform:
+  #   g.graphics.translate(-translation)
+  #   g.graphics.scale(scale)
+  #   world.space.debugDraw(g.graphics.debugDrawOptions(
+  #     shapeOutlineColor = colWhite
+  #   ))
+  g.graphics.draw(target)

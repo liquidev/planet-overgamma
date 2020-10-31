@@ -8,6 +8,13 @@
 ## - actually nothing atm since the game doesn't exist yet TODO fill this in
 ##   once i actually have some code in place
 
+# defines
+
+{.define: rapidChipmunkGraphicsDebugDraw.}
+
+
+# imports
+
 import std/monotimes
 import std/os
 import std/parseopt
@@ -19,6 +26,7 @@ import aglet
 import rapid/game
 import rapid/graphics
 import rapid/input
+import rapid/physics/chipmunk
 
 import planet_overgamma/game_registry
 import planet_overgamma/logger
@@ -30,6 +38,9 @@ import planet_overgamma/world_renderer
 import planet_overgamma/world_generation
 
 import planet_overgamma/core
+
+
+# CLI
 
 type
   CommandLine = object
@@ -67,11 +78,15 @@ proc parseCommandLine(cli: var CommandLine) =
         cli.worldGenArgs[name] = arg
     of cmdEnd: doAssert false
 
+
+# main
+
 proc main() =
   ## Entry point. This is where the magic happens™
   ##
   ## I heard that putting your code in a separate main proc makes the program
-  ## run faster. Well, to be honest, I don't believe that.
+  ## run faster. Well, to be honest, I don't believe that, but here's why I made
+  ## ``main()`` into a separate proc anyways:
   ##
   ## Planet Overgamma uses a main proc to have better control over the lifetime
   ## of variables. It also allows me to shadow import names such as ``world``.
@@ -134,6 +149,8 @@ proc main() =
       if g.input.keyIsDown(keyUp):
         camera += vec2f(0, -8)
       g.input.finishTick()
+
+      world.space.update(1 / 60)
 
     draw step:
       # this block runs as fast as possible (or synced to Vblank, aka V-sync)

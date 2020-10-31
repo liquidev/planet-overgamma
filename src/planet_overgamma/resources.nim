@@ -28,16 +28,20 @@ type
     input*: Input
 
     # graphics resources
+    programPlain*: Program[Vertex]
+    dpDefault*: DrawParams
+
+    sansRegular*: Font
+    sansBold*: Font
+    sansItalic*: Font
+    sansBoldItalic*: Font
+
     masterTileset*: Tileset
       ## The master tileset is used when rendering the world, so it should
       ## contain all blocks, machines, and other types of tiles.
 
       # screw you SJWs i ain't changing this name to "mainTileset"
       # any day or night
-
-    programPlain*: Program[Vertex]
-
-    dpDefault*: DrawParams
 
     # runtime
     state*: GameState
@@ -91,11 +95,23 @@ proc load*(g: var Game) =
     g.window.loadStaticProgram[:Vertex](vert, frag)
   g.programPlain = loadProgram("shaders/plain")
 
-  hint "hashing up draw params"
+  hint "allocating graphics resources"
+  g.masterTileset = g.window.newTileset(vec2i(MasterTilesetSize))
   g.dpDefault = defaultDrawParams()
+
+  hint "loading fonts"
+  const
+    sansRegularTtf = slurp("fonts/FiraSans-Regular.ttf")
+    sansBoldTtf = slurp("fonts/FiraSans-Bold.ttf")
+    sansItalicTtf = slurp("fonts/FiraSans-Italic.ttf")
+    sansBoldItalicTtf = slurp("fonts/FiraSans-BoldItalic.ttf")
+  g.sansRegular = g.graphics.newFont(sansRegularTtf, height = 14)
+  g.sansBold = g.graphics.newFont(sansBoldTtf, height = 14)
+  g.sansItalic = g.graphics.newFont(sansItalicTtf, height = 14)
+  g.sansBoldItalic = g.graphics.newFont(sansBoldItalicTtf, height = 14)
 
   hint "preparing input"
   g.input = g.window.newInput()
 
-  hint "allocating graphics resources"
-  g.masterTileset = g.window.newTileset(vec2i(MasterTilesetSize))
+const
+  FiraSansLicense* = slurp("fonts/FiraSans-OFL.txt")

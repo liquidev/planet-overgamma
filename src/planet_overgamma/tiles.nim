@@ -28,15 +28,17 @@ type
     of bgkAutotile:
       patch*: BlockPatch
 
+    isSolid*: bool
+
   BlockRegistry* = Registry[Block]
 
-proc initBlock*(graphic: Rectf): Block =
+proc initBlock*(graphic: Rectf, isSolid: bool): Block =
   ## Creates a new single-graphic block.
-  Block(graphicKind: bgkSingle, graphic: graphic)
+  Block(graphicKind: bgkSingle, graphic: graphic, isSolid: isSolid)
 
-proc initBlock*(patch: BlockPatch): Block =
+proc initBlock*(patch: BlockPatch, isSolid: bool): Block =
   ## Creates a new auto-tile block.
-  Block(graphicKind: bgkAutotile, patch: patch)
+  Block(graphicKind: bgkAutotile, patch: patch, isSolid: isSolid)
 
 
 # tile

@@ -25,24 +25,24 @@ proc loadCore*(m: var Module, g: Game, r: GameRegistry) =
       Patch
 
   const blocks = {
-    "plants":      (kind: Patch,),
-    "rock":        (kind: Patch,),
-    "bricks":      (kind: Patch,),
-    "light_metal": (kind: Patch,),
-    "heavy_metal": (kind: Patch,),
+    "plants":      (kind: Patch, solid: true),
+    "rock":        (kind: Patch, solid: true),
+    "bricks":      (kind: Patch, solid: true),
+    "light_metal": (kind: Patch, solid: true),
+    "heavy_metal": (kind: Patch, solid: true),
   }
 
   for (name, data) in blocks:
     let
-      (kind,) = data
+      (kind, solid) = data
       filename = addFileExt("tiles"/name, "png")
     case kind
     of Single:
       let single = m.loadSingle(name, filename)
-      discard m.registerBlock(name, initBlock(single))
+      discard m.registerBlock(name, initBlock(single, solid))
     of Patch:
       let patch = m.loadBlockPatch(name, filename)
-      discard m.registerBlock(name, initBlock(patch))
+      discard m.registerBlock(name, initBlock(patch, solid))
 
   hint "core: generation"
 

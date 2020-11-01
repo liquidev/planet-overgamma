@@ -90,21 +90,13 @@ iterator chunksInViewport(world: World, viewport: Rectf,
                           scale: float32): (Vec2i, var Chunk) =
   ## Yields all chunks in the given viewport rectangle.
 
-  template toTileCoordinates(pos: Vec2f): Vec2i =
-    floor(pos / scale / world.tilemap.tileSize).vec2i
-
   template toChunkCoordinates(pos: Vec2f): Vec2i =
-    toTileCoordinates(pos) div ChunkSize
+    floor(pos / scale / world.tilemap.tileSize / ChunkSize).vec2i
 
   var
     topLeftChunk = toChunkCoordinates(viewport.topLeft)
     bottomRightChunk = toChunkCoordinates(viewport.bottomRight)
     worldWidthInChunks = world.width / ChunkSize
-
-  # special case because wrapping doesn't want to work very well at
-  # the x < 0 and y < 0 seams
-  topLeftChunk.x -= int32(topLeftChunk.x <= 0)
-  topLeftChunk.y -= int32(topLeftChunk.y <= 0)
 
   for y in topLeftChunk.y..bottomRightChunk.y:
     for x in topLeftChunk.x..bottomRightChunk.x:
@@ -154,10 +146,10 @@ proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
       g.graphics.lineRectangle(offset, ChunkSize.vec2f * world.tilemap.tileSize, color = colRed)
       g.graphics.text(g.sansRegular, offset, $position)
 
-  # g.graphics.transform:
-  #   g.graphics.translate(-translation)
-  #   g.graphics.scale(scale)
-  #   world.space.debugDraw(g.graphics.debugDrawOptions(
-  #     shapeOutlineColor = colWhite
-  #   ))
+  g.graphics.transform:
+    g.graphics.translate(-translation)
+    g.graphics.scale(scale)
+    world.space.debugDraw(g.graphics.debugDrawOptions(
+      shapeOutlineColor = colWhite
+    ))
   g.graphics.draw(target)

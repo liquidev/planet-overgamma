@@ -60,8 +60,8 @@ proc repeatX(world: World, position: Vec2i): Vec2i {.inline.} =
   # the world is repeated once on the left and once on the right instead of
   # infinitely because a couple of `if` statements is cheaper than `mod`
   result = position
-  if result.x < 0: result.x += world.width
-  if result.x >= world.width: result.x -= world.width
+  result.x += world.width * int32(result.x < 0)
+  result.x -= world.width * int32(result.x >= world.width)
 
 proc `[]`*(world: World, position: Vec2i): var MapTile =
   ## Returns a mutable reference to the map tile at the given position.

@@ -55,14 +55,14 @@ proc updateBody*(world: World, br: BlockRegistry, chunkPosition: Vec2i) =
     template checkSide(sideIdent: untyped, tiledx, tiledy: int,
                        offsetA, offsetB: Vec2f) =
       if isSolid(tiledx, tiledy) and segments.sideIdent != nil:
-        coll.body.removeShape(segments.sideIdent)
+        world.space.delShape(segments.sideIdent)
         segments.sideIdent = nil
       elif not isSolid(tiledx, tiledy) and segments.sideIdent == nil:
         let topLeft = positionInChunk.vec2f * tileSize
         segments.sideIdent = coll.body.newSegmentShape(
           topLeft + offsetA,
           topLeft + offsetB,
-        )
+        ).addTo(world.space)
 
     checkSide right,
       tiledx = 1, tiledy = 0,

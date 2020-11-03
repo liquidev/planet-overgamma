@@ -8,13 +8,10 @@
 ## - actually nothing atm since the game doesn't exist yet TODO fill this in
 ##   once i actually have some code in place
 
-# defines
-
-{.define: rapidChipmunkGraphicsDebugDraw.}
-
 
 # imports
 
+import std/json
 import std/monotimes
 import std/os
 import std/parseopt
@@ -23,15 +20,19 @@ import std/tables
 import std/times
 
 import aglet
+import rapid/ec
 import rapid/game
 import rapid/graphics
+import rapid/graphics/tracers
 import rapid/input
-import rapid/physics/chipmunk
+import rapid/physics/simple
 
+import planet_overgamma/controls
 import planet_overgamma/game_registry
 import planet_overgamma/logger
 import planet_overgamma/module
 import planet_overgamma/parameters
+import planet_overgamma/player
 import planet_overgamma/resources
 import planet_overgamma/world
 import planet_overgamma/world_renderer
@@ -109,11 +110,16 @@ proc main() =
     r: GameRegistry
     core: Module
     world: World
+    player: Player
+    playerSprites: PlayerSprites
+    controls: Controls
 
   info "preparing global resources"
   new(r)
   g.load()
   core.loadCore(g, r)
+  playerSprites = g.graphics.loadPlayerSprites("data/sprites/player_blue")
+  controls = json.parseFile("data/controls.json").to(Controls)
 
   info "we're ready to rock!"
 
@@ -129,8 +135,13 @@ proc main() =
     hint "world generation finished, took ",
          inMilliseconds(getMonoTime() - startTime).int / 1000, " seconds"
 
-  # temporary: world camera
-  var camera = vec2f(0, 0)
+  # temporary until i add game states
+  hint "spawning player"
+  player = newPlayer(world.space,
+                     world.playerSpawnPoint * world.tilemap.tileSize +
+                       world.tilemap.tileSize / 2,
+                     controls, g.input, playerSprites)
+  world.entities.add(player)
 
   # run the game loop
   runGameWhile not g.window.closeRequested:
@@ -140,17 +151,13 @@ proc main() =
 
     update:
       # this block runs at a constant rate of 60 Hz
-      if g.input.keyIsDown(keyRight):
-        camera += vec2f(8, 0)
-      if g.input.keyIsDown(keyDown):
-        camera += vec2f(0, 8)
-      if g.input.keyIsDown(keyLeft):
-        camera += vec2f(-8, 0)
-      if g.input.keyIsDown(keyUp):
-        camera += vec2f(0, -8)
-      g.input.finishTick()
 
+      resetTracers()
+
+      world.entities.update()
       world.space.update(1 / 60)
+
+      g.input.finishTick()
 
     draw step:
       # this block runs as fast as possible (or synced to Vblank, aka V-sync)
@@ -158,7 +165,8 @@ proc main() =
       var frame = g.window.render()
       frame.clearColor(colBlack)
 
-      frame.renderWorld(g, world, camera)
+      let camera = player.renderer.interpolatedPosition(step)
+      frame.renderWorld(g, world, camera, step)
 
       frame.finish()
 

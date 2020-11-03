@@ -7,7 +7,7 @@ import aglet
 import rapid/ec
 import rapid/game/tilemap
 import rapid/math/vector
-import rapid/physics/chipmunk
+import rapid/physics/simple
 
 import common
 import tiles
@@ -21,14 +21,13 @@ const
 type
   MapTile* = tuple[background, foreground: Tile]
 
-  TileCollisionShapes* = tuple[right, bottom, left, top: SegmentShape]
-  ChunkCollisionData* = object
-    body*: Body
-    segments*: array[ChunkSize * ChunkSize, TileCollisionShapes]
+proc isSolid*(tile: MapTile): bool =
+  ## Returns whether the given map tile is solid.
+  tile.foreground.kind == tkBlock and tile.foreground.isSolid
 
+type
   ChunkData* = object
     mesh*: Mesh[Vertex]
-    collision*: ChunkCollisionData
 
   Chunk* = UserChunk[MapTile, ChunkSize, ChunkSize, ChunkData]
   Tilemap* = UserChunkTilemap[MapTile, ChunkSize, ChunkSize, ChunkData]
@@ -36,8 +35,14 @@ type
 
   World* = ref object
     tilemap*: Tilemap
-    space*: Space
+    space*: Space[Tilemap]
     entities*: seq[RootEntity]
+
+    playerSpawnPoint*: Vec2f
+      ## The position at which players are spawned. This should be initialized
+      ## to some place above ground so that players don't spawn inside of the
+      ## map, *from which there is no escape.*
+
     dirtyChunks: HashSet[Vec2i]
     width: int32
 
@@ -52,13 +57,13 @@ proc newWorld*(width: int32): World =
     newUserChunkTilemap[MapTile, ChunkSize, ChunkSize, ChunkData](
       TileSize, emptyMapTile
     )
-  result.space = newSpace(gravity = vec2f(0, 9.81))
+  result.space = result.tilemap.newSpace(gravity = vec2f(0, 8.0))
   result.dirtyChunks.init()
   result.width = width
 
 proc repeatX(world: World, position: Vec2i): Vec2i {.inline.} =
   # the world is repeated once on the left and once on the right instead of
-  # infinitely because a couple of `if` statements is cheaper than `mod`
+  # infinitely because a couple of comparisons is faster than `mod`
   result = position
   result.x += world.width * int32(result.x < 0)
   result.x -= world.width * int32(result.x >= world.width)
@@ -101,14 +106,12 @@ proc width*(world: World): int32 =
   world.width
 
 import resources
-import world_collisions
 import world_renderer
 
 proc updateChunk*(world: World, g: Game, br: BlockRegistry, position: Vec2i) =
   ## Updates a single chunk's mesh and physics body.
 
   world.updateMesh(g, br, position)
-  world.updateBody(br, position)
 
   world.dirtyChunks.excl(position)
 

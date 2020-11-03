@@ -2,8 +2,10 @@
 ## the appropriate draw calls, etc.
 
 import aglet
+import rapid/ec
 import rapid/graphics
 import rapid/graphics/atlas_texture
+import rapid/graphics/tracers
 import rapid/math/rectangle
 
 import common
@@ -84,8 +86,6 @@ proc updateMesh*(world: World, g: Game, br: BlockRegistry,
   mesh.uploadVertices(vertices)
   mesh.uploadIndices(indices)
 
-import rapid/physics/chipmunk
-
 iterator chunksInViewport(world: World, viewport: Rectf,
                           scale: float32): (Vec2i, var Chunk) =
   ## Yields all chunks in the given viewport rectangle.
@@ -108,7 +108,8 @@ iterator chunksInViewport(world: World, viewport: Rectf,
         yield (chunkPosition, world.tilemap.chunk(wrappedPosition))
 
 
-proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
+proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f,
+                  step: float32) =
   ## Renders the world using the given camera position. The camera looks at the
   ## center of the screen.
 
@@ -117,7 +118,7 @@ proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
   let
     projection =
       ortho(0f, target.width.float32, target.height.float32, 0f, -1f, 1f)
-    translation = camera - target.size.vec2f / 2
+    translation = camera * scale - target.size.vec2f / 2
     view = mat4f()
       .translate(vec3f(-translation, 0))
       .scale(scale)
@@ -140,16 +141,11 @@ proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f) =
         magFilter = fmNearest,
       )
     }, g.dpDefault)
-    g.graphics.transform:
-      g.graphics.translate(-translation)
-      g.graphics.scale(scale)
-      g.graphics.lineRectangle(offset, ChunkSize.vec2f * world.tilemap.tileSize, color = colRed)
-      g.graphics.text(g.sansRegular, offset, $position)
 
   g.graphics.transform:
     g.graphics.translate(-translation)
     g.graphics.scale(scale)
-    world.space.debugDraw(g.graphics.debugDrawOptions(
-      shapeOutlineColor = colWhite
-    ))
+    world.entities.shape(g.graphics, step)
+
   g.graphics.draw(target)
+

@@ -85,6 +85,8 @@ proc load*(g: var Game) =
 
   hint "creating a graphics context"
   g.graphics = g.window.newGraphics()
+  g.graphics.spriteMinFilter = fmNearest
+  g.graphics.spriteMagFilter = fmNearest
 
   hint "loading shaders"
   template loadProgram(commonPath: static string): Program[Vertex] =

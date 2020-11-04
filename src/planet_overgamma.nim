@@ -154,8 +154,7 @@ proc main() =
 
       resetTracers()
 
-      world.entities.update()
-      world.space.update(1 / 60)
+      world.update()
 
       g.input.finishTick()
 

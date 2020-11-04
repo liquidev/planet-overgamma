@@ -49,8 +49,14 @@ type
 
   PlayerRenderer* = object of RootComponent
     body: Body
+    controls: Controls
+    input: Input
+
     sprites: PlayerSprites
+
     flip: bool
+    walkCycleTick: uint8
+    falling: bool
 
   Player* = ref object of RootEntity
     body*: Body
@@ -68,13 +74,13 @@ proc resist(speed, terminalVelocity, coeffLimit: float32): float32 =
   let coeff = 1 / terminalVelocity.pow(power)
   speed * max(-coeff * speed.pow(power) + 1, coeffLimit)
 
-proc update(pc: var PlayerController) =
+proc componentUpdate(pc: var PlayerController) =
 
   # controls
 
   const
-    speed = 16
-    jump = 196
+    speed = 0.25
+    jump = 3.5
 
   if pc.input.keyIsDown(pc.controls.kLeft):
     pc.body.applyForce(vec2f(-speed, 0))
@@ -104,16 +110,52 @@ proc interpolatedPosition*(pr: PlayerRenderer, step: float32): Vec2f =
   ## Returns the interpolated position of the player.
   pr.body.position
 
-proc shape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
-  let
-    sprite = pr.sprites.idle
-    spriteOffset = sprite.size.vec2f - PlayerHitboxSize
-  graphics.sprite(sprite, pr.body.position - spriteOffset)
+const
+  walkCycleLength: uint8 = 20
+  halfWalkCycle: uint8 = walkCycleLength div 2
 
-proc init(pr: var PlayerRenderer, body: Body, sprites: PlayerSprites) =
+proc componentUpdate(pr: var PlayerRenderer) =
+  # this assumes 60 tps
+
+  # sprite directions
+  if pr.input.keyIsDown(pr.controls.kLeft):
+    pr.flip = true
+  if pr.input.keyIsDown(pr.controls.kRight):
+    pr.flip = false
+
+  # walking animation
+  if abs(pr.body.velocity.x) > 0.2:
+    inc pr.walkCycleTick
+    if pr.walkCycleTick > walkCycleLength:
+      pr.walkCycleTick = 0
+  else:
+    pr.walkCycleTick = 0
+
+  if pr.body.velocity.y < 0:
+    pr.walkCycleTick = 1
+  pr.falling = pr.body.velocity.y > 0
+
+proc componentShape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
+  let
+    sprite =
+      if pr.falling: pr.sprites.fall
+      elif pr.walkCycleTick in 1u8..halfWalkCycle: pr.sprites.walk
+      else: pr.sprites.idle
+    offset = sprite.size.vec2f - PlayerHitboxSize
+    position = pr.body.position - offset
+  graphics.transform:
+    graphics.translate(position + sprite.size.vec2f / 2)
+    graphics.scale(float32(not pr.flip) * 2 - 1, 1)
+    graphics.sprite(sprite, -sprite.size.vec2f / 2)
+
+proc init(pr: var PlayerRenderer, body: Body,
+          controls: Controls, input: Input,
+          sprites: PlayerSprites) =
   ## Initializes a player's renderer component.
 
   pr.body = body
+  pr.controls = controls
+  pr.input = input
   pr.sprites = sprites
 
   pr.autoImplement()
@@ -131,6 +173,6 @@ proc newPlayer*(space: Space, position: Vec2f, controls: Controls,
   result.body.position = position
 
   result.controller.init(result.body, controls, input)
-  result.renderer.init(result.body, sprites)
+  result.renderer.init(result.body, controls, input, sprites)
 
   result.registerComponents()

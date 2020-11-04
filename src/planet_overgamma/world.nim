@@ -35,7 +35,7 @@ type
 
   World* = ref object
     tilemap*: Tilemap
-    space*: Space[Tilemap]
+    space*: Space[World]
     entities*: seq[RootEntity]
 
     playerSpawnPoint*: Vec2f
@@ -49,17 +49,9 @@ type
 const
   emptyMapTile* = MapTile (emptyTile, emptyTile)
 
-proc newWorld*(width: int32): World =
-  ## Creates a new, blank world.
-
-  new result
-  result.tilemap =
-    newUserChunkTilemap[MapTile, ChunkSize, ChunkSize, ChunkData](
-      TileSize, emptyMapTile
-    )
-  result.space = result.tilemap.newSpace(gravity = vec2f(0, 8.0))
-  result.dirtyChunks.init()
-  result.width = width
+proc tileSize*(world: World): Vec2f =
+  ## Returns the tile size of the world.
+  TileSize
 
 proc repeatX(world: World, position: Vec2i): Vec2i {.inline.} =
   # the world is repeated once on the left and once on the right instead of
@@ -99,6 +91,37 @@ proc `[]=`*(world: World, position: Vec2i, tile: sink MapTile) =
   world.tilemap[position] = tile
   world.dirtyChunks.incl(world.tilemap.chunkPosition(position))
 
+iterator tiles*(world: World): (Vec2i, var MapTile) =
+  ## Iterates over all of the world's tiles.
+
+  for position, tile in tiles(world.tilemap):
+    yield (position, tile)
+
+proc initSpace(world: World) =
+
+  world.space.onUpdateBodyX proc (body: Body) =
+    # the base calculation
+    body.position.x += body.velocity.x
+
+    # wrapping around the world border
+    let unitWidth = float32(world.width) * world.tilemap.tileSize.x
+    body.position.x += float32(body.position.x < 0) * unitWidth
+    body.position.x -= float32(body.position.x >= unitWidth) * unitWidth
+
+proc newWorld*(width: int32): World =
+  ## Creates a new, blank world.
+
+  new result
+  result.tilemap =
+    newUserChunkTilemap[MapTile, ChunkSize, ChunkSize, ChunkData](
+      TileSize, emptyMapTile
+    )
+  result.space = result.newSpace(gravity = vec2f(0, 0.15))
+  result.dirtyChunks.init()
+  result.width = width
+
+  result.initSpace()
+
 proc width*(world: World): int32 =
   ## Returns the width of the world. Note that *only* the width is finite
   ## because the world wraps around (like a planet, duh), but the height isn't
@@ -121,3 +144,9 @@ proc updateChunks*(world: World, g: Game, br: BlockRegistry) =
   while world.dirtyChunks.len > 0:  # for position in world.dirtyChunks:
     let position = world.dirtyChunks.pop()
     world.updateChunk(g, br, position)
+
+proc update*(world: World) =
+  ## Ticks a world once.
+
+  world.entities.update()
+  world.space.update()

@@ -32,6 +32,8 @@ proc canonGenerate(world: var World, r: GameRegistry, args: Arguments) =
     for y in -x .. 0:
       world[vec2i(x.int32, y.int32)] = (emptyTile, br.blockTile(bRock))
 
+  world[vec2i(0, -1)] = (emptyTile, br.blockTile(bRock))
+
   world.playerSpawnPoint = vec2f(6, -20)
 
 proc getCanonWorldGenerator*(): WorldGenerator =

@@ -1,6 +1,8 @@
 ## World type and modification.
 
+import std/options
 import std/sets
+import std/sugar
 import std/tables
 
 import aglet
@@ -9,7 +11,9 @@ import rapid/game/tilemap
 import rapid/math/vector
 import rapid/physics/simple
 
+import camera
 import common
+import ecext
 import tiles
 
 export tilemap except Chunk
@@ -37,6 +41,8 @@ type
     tilemap*: Tilemap
     space*: Space[World]
     entities*: seq[RootEntity]
+
+    camera*: Camera
 
     playerSpawnPoint*: Vec2f
       ## The position at which players are spawned. This should be initialized
@@ -99,14 +105,8 @@ iterator tiles*(world: World): (Vec2i, var MapTile) =
 
 proc initSpace(world: World) =
 
-  world.space.onUpdateBodyX proc (body: Body) =
-    # the base calculation
-    body.position.x += body.velocity.x
-
-    # wrapping around the world border
-    let unitWidth = float32(world.width) * world.tilemap.tileSize.x
-    body.position.x += float32(body.position.x < 0) * unitWidth
-    body.position.x -= float32(body.position.x >= unitWidth) * unitWidth
+  let unitWidth = float32(world.width) * world.tilemap.tileSize.x
+  world.space.boundsX = some(0f..unitWidth)
 
 proc newWorld*(width: int32): World =
   ## Creates a new, blank world.
@@ -141,12 +141,13 @@ proc updateChunk*(world: World, g: Game, br: BlockRegistry, position: Vec2i) =
 proc updateChunks*(world: World, g: Game, br: BlockRegistry) =
   ## Updates all chunks flagged as dirty.
 
-  while world.dirtyChunks.len > 0:  # for position in world.dirtyChunks:
+  while world.dirtyChunks.len > 0:
     let position = world.dirtyChunks.pop()
     world.updateChunk(g, br, position)
 
 proc update*(world: World) =
   ## Ticks a world once.
 
-  world.entities.update()
+  world.entities.update(world.camera)
   world.space.update()
+  world.entities.lateUpdate(world.camera)

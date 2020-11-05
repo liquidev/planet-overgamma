@@ -8,6 +8,7 @@ import rapid/graphics/atlas_texture
 import rapid/graphics/tracers
 import rapid/math/rectangle
 
+import camera
 import common
 import registry
 import resources
@@ -86,14 +87,14 @@ proc updateMesh*(world: World, g: Game, br: BlockRegistry,
   mesh.uploadVertices(vertices)
   mesh.uploadIndices(indices)
 
-iterator chunksInViewport(world: World, viewport: Rectf,
-                          scale: float32): (Vec2i, var Chunk) =
+iterator chunksInViewport(world: World, screenSize: Vec2f): (Vec2i, var Chunk) =
   ## Yields all chunks in the given viewport rectangle.
 
   template toChunkCoordinates(pos: Vec2f): Vec2i =
-    floor(pos / scale / world.tilemap.tileSize / ChunkSize).vec2i
+    floor(pos / world.camera.scale / world.tilemap.tileSize / ChunkSize).vec2i
 
-  var
+  let
+    viewport = world.camera.viewport
     topLeftChunk = toChunkCoordinates(viewport.topLeft)
     bottomRightChunk = toChunkCoordinates(viewport.bottomRight)
     worldWidthInChunks = world.width / ChunkSize
@@ -108,25 +109,19 @@ iterator chunksInViewport(world: World, viewport: Rectf,
         yield (chunkPosition, world.tilemap.chunk(wrappedPosition))
 
 
-proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f,
-                  step: float32) =
+proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
   ## Renders the world using the given camera position. The camera looks at the
   ## center of the screen.
-
-  const scale = 3.0
 
   let
     projection =
       ortho(0f, target.width.float32, target.height.float32, 0f, -1f, 1f)
-    translation = camera * scale - target.size.vec2f / 2
-    view = mat4f()
-      .translate(vec3f(-translation, 0))
-      .scale(scale)
-    viewport = rectf(translation, target.size.vec2f)
+    view = world.camera.matrix
+    viewport = world.camera.viewport
 
   g.graphics.resetShape()
 
-  for position, chunk in world.chunksInViewport(viewport, scale):
+  for position, chunk in world.chunksInViewport(target.size.vec2f):
     let
       offset = vec2f(position * ChunkSize) *
                world.tilemap.tileSize
@@ -142,9 +137,7 @@ proc renderWorld*(target: Target, g: Game, world: World, camera: Vec2f,
       )
     }, g.dpDefault)
 
-  g.graphics.transform:
-    g.graphics.translate(-translation)
-    g.graphics.scale(scale)
+  g.graphics.transform(world.camera):
     world.entities.shape(g.graphics, step)
 
   g.graphics.draw(target)

@@ -16,6 +16,7 @@ import std/monotimes
 import std/os
 import std/parseopt
 import std/strutils
+import std/sugar
 import std/tables
 import std/times
 
@@ -119,7 +120,7 @@ proc main() =
   g.load()
   core.loadCore(g, r)
   playerSprites = g.graphics.loadPlayerSprites("data/sprites/player_blue")
-  controls = json.parseFile("data/controls.json").to(Controls)
+  controls = loadControls("data/controls.json")
 
   info "we're ready to rock!"
 
@@ -135,12 +136,18 @@ proc main() =
     hint "world generation finished, took ",
          inMilliseconds(getMonoTime() - startTime).int / 1000, " seconds"
 
+  if world.isNil:
+    error "looks like i forgot to tell you to run the game with the " &
+          "following CLI arguments:"
+    error "--worldGen:Core::canon --passWorldGen:width:int=32"
+    error "best regards, lqdev"
+    quit(1)
+
   # temporary until i add game states
   hint "spawning player"
-  player = newPlayer(world.space,
-                     world.playerSpawnPoint * world.tilemap.tileSize +
-                       world.tilemap.tileSize / 2,
-                     controls, g.input, playerSprites)
+  player = world.newPlayer(world.playerSpawnPoint * world.tilemap.tileSize +
+                             world.tilemap.tileSize / 2,
+                           controls, g.input, playerSprites)
   world.entities.add(player)
 
   # run the game loop
@@ -164,8 +171,10 @@ proc main() =
       var frame = g.window.render()
       frame.clearColor(colBlack)
 
-      let camera = player.renderer.interpolatedPosition(step)
-      frame.renderWorld(g, world, camera, step)
+      world.camera.screenSize = frame.size.vec2f
+      world.camera.position = player.renderer.interpolatedPosition(step)
+      world.camera.scale = 4.0
+      frame.renderWorld(g, world, step)
 
       frame.finish()
 

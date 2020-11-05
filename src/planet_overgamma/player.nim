@@ -3,13 +3,17 @@
 
 import std/os
 
-import rapid/ec
+import aglet/input as ain
 import rapid/physics/simple
 import rapid/graphics
 import rapid/graphics/image
-import rapid/input
+import rapid/input as rin
+import rapid/math/interpolation
 
+import camera
 import controls
+import ecext
+import world
 
 
 # sprites
@@ -47,7 +51,22 @@ type
     controls: Controls
     input: Input
 
-  PlayerRenderer* = object of RootComponent
+  LaserMode* = enum
+    lmDig
+    lmPlace
+    lmTinker
+
+  PlayerLaser* = object of ExtComponent
+    body: Body
+    input: Input
+    world: World
+
+    target: Interpolated[Vec2f]
+    charge: Interpolated[float32]
+    chargeSpeed, chargeMax: float32
+    mode: LaserMode
+
+  PlayerRenderer* = object of ExtComponent
     body: Body
     controls: Controls
     input: Input
@@ -62,6 +81,7 @@ type
     body*: Body
     controller*: PlayerController
     renderer*: PlayerRenderer
+    laser*: PlayerLaser
 
 const PlayerHitboxSize* = vec2f(8, 6)
 
@@ -108,14 +128,16 @@ proc init(pc: var PlayerController, body: Body,
 
 proc interpolatedPosition*(pr: PlayerRenderer, step: float32): Vec2f =
   ## Returns the interpolated position of the player.
-  pr.body.position
+  pr.body.position.lerp(step)
 
 const
   walkCycleLength: uint8 = 20
   halfWalkCycle: uint8 = walkCycleLength div 2
 
-proc componentUpdate(pr: var PlayerRenderer) =
+proc componentLateUpdate(pr: var PlayerRenderer, camera: var Camera) =
   # this assumes 60 tps
+
+  pr.tickInterpolated()
 
   # sprite directions
   if pr.input.keyIsDown(pr.controls.kLeft):
@@ -135,6 +157,8 @@ proc componentUpdate(pr: var PlayerRenderer) =
     pr.walkCycleTick = 1
   pr.falling = pr.body.velocity.y > 0
 
+  camera.position = pr.body.position
+
 proc componentShape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
   let
     sprite =
@@ -142,7 +166,8 @@ proc componentShape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
       elif pr.walkCycleTick in 1u8..halfWalkCycle: pr.sprites.walk
       else: pr.sprites.idle
     offset = sprite.size.vec2f - PlayerHitboxSize
-    position = pr.body.position - offset
+    position = pr.body.position.lerp(step) - offset
+
   graphics.transform:
     graphics.translate(position + sprite.size.vec2f / 2)
     graphics.scale(float32(not pr.flip) * 2 - 1, 1)
@@ -158,21 +183,76 @@ proc init(pr: var PlayerRenderer, body: Body,
   pr.input = input
   pr.sprites = sprites
 
-  pr.autoImplement()
+  pr.autoImplementExt()
+
+
+# component: laser
+
+proc blockTarget(pl: PlayerLaser): Vec2f =
+  pl.target / pl.world.tileSize
+
+proc componentLateUpdate(pl: var PlayerLaser, camera: var Camera) =
+
+  pl.tickInterpolated()
+
+  if pl.input.mouseButtonIsDown(mbLeft) or pl.input.mouseButtonIsDown(mbRight):
+    pl.target <- camera.toWorld(pl.input.mousePosition)
+    pl.charge <-+ pl.chargeSpeed
+    pl.charge <- min(pl.charge, pl.chargeMax)
+    pl.mode =
+      if pl.input.mouseButtonIsDown(mbLeft): lmDig
+      else: lmPlace
+  else:
+    pl.charge <- 0
+
+proc componentShape(pl: var PlayerLaser, graphics: Graphics, step: float32) =
+
+  const
+    laserGlowColors = [
+      lmDig: hex"#EB134A",
+      lmPlace: hex"#00EAFF",
+      lmTinker: hex"#FFF324"
+    ]
+    laserCoreColor = hex"#FFFFFF"
+
+  if pl.charge > 0:
+    let
+      playerPosition = pl.body.position.lerp(step) + pl.body.size / 2
+      target = pl.target.lerp(step)
+      charge = pl.charge.lerp(step)
+      laserColor = laserGlowColors[pl.mode]
+    graphics.line(playerPosition, target, thickness = charge * 1.2,
+                  cap = lcRound, laserColor, laserColor)
+    graphics.circle(target, charge, laserColor)
+    graphics.line(playerPosition, target, thickness = charge / 2,
+                  cap = lcRound, laserCoreColor, laserCoreColor)
+    graphics.circle(target, charge / 2, laserCoreColor)
+
+proc init(pl: var PlayerLaser, body: Body, input: Input) =
+  ## Initializes a player's laser component.
+
+  pl.body = body
+  pl.input = input
+  pl.chargeSpeed = 0.3
+  pl.chargeMax = 3
+
+  pl.onLateUpdate componentLateUpdate
+  pl.autoImplementExt()
 
 
 # entity: player
 
-proc newPlayer*(space: Space, position: Vec2f, controls: Controls,
+proc newPlayer*(world: World, position: Vec2f, controls: Controls,
                 input: Input, sprites: PlayerSprites): Player =
   ## Creates and initializes a new player.
 
   new result
 
-  result.body = newBody(PlayerHitboxSize).addTo(space)
+  result.body = newBody(PlayerHitboxSize).addTo(world.space)
   result.body.position = position
 
   result.controller.init(result.body, controls, input)
   result.renderer.init(result.body, controls, input, sprites)
+  result.laser.init(result.body, input)
 
   result.registerComponents()

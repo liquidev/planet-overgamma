@@ -74,7 +74,7 @@ proc load*(g: var Game) =
   block:
     let start = getMonoTime()
     g.window = g.aglet.newWindowGlfw(
-      width = 1024, height = 768,
+      width = 1024, height = 767,
       title = "Planet Overgamma 2: Electric Boogaloo",
       hints = winHints(),
     )

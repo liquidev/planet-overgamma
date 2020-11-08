@@ -2,6 +2,7 @@
 ## other stuff.
 
 import std/os
+import std/sugar
 
 import aglet/input as ain
 import rapid/physics/simple
@@ -12,7 +13,10 @@ import rapid/math/interpolation
 
 import camera
 import controls
+import logger
 import ecext
+import registry
+import tiles
 import world
 
 
@@ -24,6 +28,11 @@ type
 proc loadPlayerSprites*(graphics: Graphics,
                         pathIdle, pathWalk, pathFall: string): PlayerSprites =
   ## Loads player sprites from PNG files pointer to by the given paths.
+
+  hint "loading player sprites"
+  hint "  - idle: ", pathIdle
+  hint "  - walk: ", pathWalk
+  hint "  - fall: ", pathFall
 
   result = (
     idle: graphics.addSprite(loadPngImage(pathIdle)),
@@ -64,6 +73,7 @@ type
     target: Interpolated[Vec2f]
     charge: Interpolated[float32]
     chargeSpeed, chargeMax: float32
+    reach: float32
     mode: LaserMode
 
   PlayerRenderer* = object of ExtComponent
@@ -188,24 +198,61 @@ proc init(pr: var PlayerRenderer, body: Body,
 
 # component: laser
 
-proc blockTarget(pl: PlayerLaser): Vec2f =
-  pl.target / pl.world.tileSize
+{.push inline.}
+
+proc tileTarget(pl: PlayerLaser): Vec2i =
+  floor(pl.target / pl.world.tileSize).vec2i
+
+proc active(pl: PlayerLaser): bool =
+  pl.input.mouseButtonIsDown(mbLeft) or pl.input.mouseButtonIsDown(mbRight)
+
+proc justActivated(pl: PlayerLaser): bool =
+  pl.input.mouseButtonJustPressed(mbLeft) or
+  pl.input.mouseButtonJustPressed(mbRight)
+
+{.pop.}
 
 proc componentLateUpdate(pl: var PlayerLaser, camera: var Camera) =
 
   pl.tickInterpolated()
 
-  if pl.input.mouseButtonIsDown(mbLeft) or pl.input.mouseButtonIsDown(mbRight):
-    pl.target <- camera.toWorld(pl.input.mousePosition)
-    pl.charge <-+ pl.chargeSpeed
-    pl.charge <- min(pl.charge, pl.chargeMax)
-    pl.mode =
-      if pl.input.mouseButtonIsDown(mbLeft): lmDig
-      else: lmPlace
+  let
+    rawTarget = camera.toWorld(pl.input.mousePosition)
+    distFromTargetToPlayer =
+      distance(rawTarget, pl.body.position + pl.body.size / 2)
+    targetDir = (rawTarget - pl.body.position) / distFromTargetToPlayer
+    target =
+      pl.body.position + targetDir * min(distFromTargetToPlayer, pl.reach)
+  pl.target <- target
+
+  if pl.active:
+    pl.charge <-+ (pl.chargeMax - pl.charge) * pl.chargeSpeed
   else:
     pl.charge <- 0
 
-proc componentShape(pl: var PlayerLaser, graphics: Graphics, step: float32) =
+proc componentUpdate(pl: var PlayerLaser) =
+
+  if pl.justActivated or pl.charge > 0:
+    let
+      mapTile = pl.world[pl.tileTarget]
+      background = pl.input.mouseButtonIsDown(mbRight)
+      tile = mapTile.get(background)
+    if pl.justActivated:
+      pl.mode = lmDig
+#         if tile.kind == tkEmpty: lmPlace
+#         else: lmDig
+    case pl.mode
+    of lmDig:
+      if tile.kind == tkBlock:
+        let desc = pl.world.r.blockRegistry.get(tile.blockId)
+        if pl.charge > desc.hardness:
+          pl.world.destroyTile(pl.tileTarget, background)
+          pl.charge <- max(0, pl.charge - desc.hardness * 2)
+    of lmPlace: discard "TODO"
+    of lmTinker: discard "TODO"
+
+proc componentShape(pl: var PlayerLaser, graphics: Graphics, camera: Camera,
+                    step: float32) =
 
   const
     laserGlowColors = [
@@ -214,7 +261,9 @@ proc componentShape(pl: var PlayerLaser, graphics: Graphics, step: float32) =
       lmTinker: hex"#FFF324"
     ]
     laserCoreColor = hex"#FFFFFF"
+    guideColor = hex"#FFFFFF"
 
+  # pretty lasers
   if pl.charge > 0:
     let
       playerPosition = pl.body.position.lerp(step) + pl.body.size / 2
@@ -228,16 +277,29 @@ proc componentShape(pl: var PlayerLaser, graphics: Graphics, step: float32) =
                   cap = lcRound, laserCoreColor, laserCoreColor)
     graphics.circle(target, charge / 2, laserCoreColor)
 
-proc init(pl: var PlayerLaser, body: Body, input: Input) =
+  # guide
+  let
+    target =
+      if pl.charge > 0: pl.target
+      else: camera.toWorld(pl.input.mousePosition)
+    tileTopLeft = floor(target / pl.world.tileSize) * pl.world.tileSize
+    thickness = max(1 / camera.scale, pl.charge / pl.chargeMax)
+  graphics.lineRectangle(tileTopLeft, pl.world.tileSize, thickness,
+                         guideColor)
+
+proc init(pl: var PlayerLaser, body: Body, input: Input, world: World) =
   ## Initializes a player's laser component.
 
   pl.body = body
   pl.input = input
-  pl.chargeSpeed = 0.3
-  pl.chargeMax = 3
+  pl.world = world
 
-  pl.onLateUpdate componentLateUpdate
+  pl.chargeSpeed = 0.05
+  pl.chargeMax = 3
+  pl.reach = 48
+
   pl.autoImplementExt()
+  pl.onLateUpdate componentLateUpdate
 
 
 # entity: player
@@ -253,6 +315,6 @@ proc newPlayer*(world: World, position: Vec2f, controls: Controls,
 
   result.controller.init(result.body, controls, input)
   result.renderer.init(result.body, controls, input, sprites)
-  result.laser.init(result.body, input)
+  result.laser.init(result.body, input, world)
 
   result.registerComponents()

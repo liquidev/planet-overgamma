@@ -2,6 +2,7 @@
 
 import aglet/rect
 
+import items
 import registry
 import tileset
 
@@ -29,16 +30,37 @@ type
       patch*: BlockPatch
 
     isSolid*: bool
+      ## Controls whether the player can collide with the block.
+    hardness*: float32
+      ## Controls how difficult the block is to destroy.
+      ## The player's laser must charge up *at least* to this value before the
+      ## block is destroyed.
+    drops*: ItemDrops
+      ## The items dropped when the tile is destroyed.
 
   BlockRegistry* = Registry[Block]
 
-proc initBlock*(graphic: Rectf, isSolid: bool): Block =
+proc initBlock*(graphic: Rectf, isSolid: bool, hardness: float32,
+                drops: ItemDrops): Block =
   ## Creates a new single-graphic block.
-  Block(graphicKind: bgkSingle, graphic: graphic, isSolid: isSolid)
+  Block(
+    graphicKind: bgkSingle,
+    graphic: graphic,
+    isSolid: isSolid,
+    hardness: hardness,
+    drops: drops,
+  )
 
-proc initBlock*(patch: BlockPatch, isSolid: bool): Block =
+proc initBlock*(patch: BlockPatch, isSolid: bool, hardness: float32,
+                drops: ItemDrops): Block =
   ## Creates a new auto-tile block.
-  Block(graphicKind: bgkAutotile, patch: patch, isSolid: isSolid)
+  Block(
+    graphicKind: bgkAutotile,
+    patch: patch,
+    isSolid: isSolid,
+    hardness: hardness,
+    drops: drops,
+  )
 
 
 # tile

@@ -22,7 +22,7 @@ proc canonGenerate(world: var World, r: GameRegistry, args: Arguments) =
     bRock = br.id("Core::rock")
 
   # initialize
-  world = newWorld(width)
+  world = r.newWorld(width)
 
   # generate
   # MapTile tuple order: (background, foreground)

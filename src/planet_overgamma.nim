@@ -151,7 +151,7 @@ proc main() =
   world.entities.add(player)
 
   # run the game loop
-  runGameWhile not g.window.closeRequested:
+  runGameWhile not g.window.closeRequested, updateFreq = 60, body = block:
 
     g.window.pollEvents proc (event: InputEvent) =
       g.input.process(event)
@@ -174,6 +174,7 @@ proc main() =
       world.camera.screenSize = frame.size.vec2f
       world.camera.position = player.renderer.interpolatedPosition(step)
       world.camera.scale = 4.0
+      world.updateChunks(g)
       frame.renderWorld(g, world, step)
 
       frame.finish()

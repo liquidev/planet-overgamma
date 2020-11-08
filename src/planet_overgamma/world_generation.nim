@@ -29,7 +29,7 @@ proc generate*(gen: WorldGenerator, g: Game, r: GameRegistry,
   if result == nil:
     raise newException(WorldGenerationError,
                        "the world generator returned a nil world")
-  result.updateChunks(g, r.blockRegistry)
+  result.updateChunks(g)
 
 proc newWorldGenerator*(params: Parameters,
                         impl: GenerateWorldImpl): WorldGenerator =

@@ -1,5 +1,6 @@
 ## Master object holding all the smaller registries.
 
+import items
 import registry
 import tiles
 import world_generation_base
@@ -11,4 +12,5 @@ type
     ## Registry for all game data.
 
     blockRegistry*: BlockRegistry
+    itemRegistry*: ItemRegistry
     worldGenRegistry*: WorldGeneratorRegistry

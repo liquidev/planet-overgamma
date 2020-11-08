@@ -1,6 +1,8 @@
 ## Everything related to rendering the world - generating the mesh, executing
 ## the appropriate draw calls, etc.
 
+import std/sugar
+
 import aglet
 import rapid/ec
 import rapid/graphics
@@ -10,16 +12,21 @@ import rapid/math/rectangle
 
 import camera
 import common
+import ecext
+import logger
 import registry
 import resources
 import tiles
 import tileset
 import world
 
-proc updateMesh*(world: World, g: Game, br: BlockRegistry,
-                 chunkPosition: Vec2i) =
+proc updateMesh*(world: World, g: Game, chunkPosition: Vec2i) =
   ## Updates a chunk's mesh. This must be called every time a chunk is updated,
   ## otherwise a chunk's actual blocks and graphics will go out of sync.
+
+  # ↓ this can happen when the player clears out an entire chunk
+  if not world.tilemap.hasChunk(chunkPosition):
+    return
 
   var chunk = addr world.tilemap.chunk(chunkPosition)
 
@@ -67,7 +74,7 @@ proc updateMesh*(world: World, g: Game, br: BlockRegistry,
     case tile.kind
     of tkEmpty: discard
     of tkBlock:
-      let desc = br.get(tile.blockId)
+      let desc = world.r.blockRegistry.get(tile.blockId)
       case desc.graphicKind
       of bgkSingle:
         rect(positionRect, desc.graphic, color)
@@ -84,17 +91,30 @@ proc updateMesh*(world: World, g: Game, br: BlockRegistry,
     tile(positionInChunk, tile.background, background = true)
     tile(positionInChunk, tile.foreground, background = false)
 
+  if vertices.len == 0 or indices.len == 0:
+    error "something broke. or as we say in Poland, 'Coś jebło.'"
+    error "in: updateMesh"
+    error "the length of either `vertices` or `indices` was 0."
+    error "here's some extra debug info:"
+    dump chunkPosition
+    dump vertices.len
+    dump indices.len
+    writeStackTrace()
+    error "note: there's probably a zombie mesh lingering around in your VRAM."
+    error "i'd recommend restarting the game, and reporting this either on"
+    error "GitHub or via the GitHub Game Off discord server (i'm @lqdev#8803)"
+    return
+
   mesh.uploadVertices(vertices)
   mesh.uploadIndices(indices)
 
-iterator chunksInViewport(world: World, screenSize: Vec2f): (Vec2i, var Chunk) =
+iterator chunksInViewport(world: World, viewport: Rectf): (Vec2i, var Chunk) =
   ## Yields all chunks in the given viewport rectangle.
 
   template toChunkCoordinates(pos: Vec2f): Vec2i =
     floor(pos / world.camera.scale / world.tilemap.tileSize / ChunkSize).vec2i
 
   let
-    viewport = world.camera.viewport
     topLeftChunk = toChunkCoordinates(viewport.topLeft)
     bottomRightChunk = toChunkCoordinates(viewport.bottomRight)
     worldWidthInChunks = world.width / ChunkSize
@@ -108,7 +128,6 @@ iterator chunksInViewport(world: World, screenSize: Vec2f): (Vec2i, var Chunk) =
       if world.tilemap.hasChunk(wrappedPosition):
         yield (chunkPosition, world.tilemap.chunk(wrappedPosition))
 
-
 proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
   ## Renders the world using the given camera position. The camera looks at the
   ## center of the screen.
@@ -119,9 +138,7 @@ proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
     view = world.camera.matrix
     viewport = world.camera.viewport
 
-  g.graphics.resetShape()
-
-  for position, chunk in world.chunksInViewport(target.size.vec2f):
+  for position, chunk in world.chunksInViewport(viewport):
     let
       offset = vec2f(position * ChunkSize) *
                world.tilemap.tileSize
@@ -137,8 +154,19 @@ proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
       )
     }, g.dpDefault)
 
-  g.graphics.transform(world.camera):
-    world.entities.shape(g.graphics, step)
+  g.graphics.resetShape()
+
+  template inWorlds(xpos: float32): float32 =
+    xpos / (world.tileSize.x * world.width.float32 * world.camera.scale)
+
+  let
+    leftWorlds = floor(viewport.left.inWorlds).int
+    rightWorlds = floor(viewport.right.inWorlds).int
+
+  for x in leftWorlds..rightWorlds:
+    g.graphics.transform(world.camera):
+      g.graphics.translate(x.float32 * world.tileSize.x * world.width.float32, 0)
+      world.entities.shape(g.graphics, world.camera, step)
 
   g.graphics.draw(target)
 

@@ -61,4 +61,4 @@ iterator roll*(drops: ItemDrops): ItemStack =
   for drop in drops:
     yield drop.roll()
 
-{.push inline.}
+{.pop.}

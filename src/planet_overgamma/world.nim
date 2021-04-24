@@ -1,5 +1,6 @@
 ## World type and modification.
 
+import std/math
 import std/options
 import std/random
 import std/sets
@@ -144,10 +145,9 @@ iterator tiles*(world: World): (Vec2i, var MapTile) =
   for position, tile in tiles(world.tilemap):
     yield (position, tile)
 
-proc initSpace(world: World) =
-
-  let unitWidth = float32(world.width) * world.tilemap.tileSize.x
-  world.space.boundsX = some(0f..unitWidth)
+proc unitWidth*(world: World): float32 =
+  ## Returns the width of the world in space units (1 tile = 8 units).
+  world.width.float32 * world.tileSize.x
 
 proc newWorld*(r: GameRegistry, width: int32): World =
   ## Creates a new, blank world.
@@ -158,11 +158,12 @@ proc newWorld*(r: GameRegistry, width: int32): World =
     newUserChunkTilemap[MapTile, ChunkSize, ChunkSize, ChunkData](
       TileSize, emptyMapTile
     )
-  result.space = result.newSpace(gravity = vec2f(0, 0.15))
+  result.space = result.newSpace(gravity = vec2f(0, 1/320),
+                                 spatialHashCellSize = 8)
   result.dirtyChunks.init()
   result.width = width
 
-  result.initSpace()
+  result.space.boundsX = some(0f..result.unitWidth)
 
 proc width*(world: World): int32 =
   ## Returns the width of the world. Note that *only* the width is finite
@@ -199,6 +200,7 @@ proc update*(world: World) =
   world.entitiesSeqInUse = true
 
   world.entities.update(world.camera)
+  world.entities.cleanup()
   world.space.update()
   world.entities.lateUpdate(world.camera)
 
@@ -227,10 +229,12 @@ proc dropItem*(world: World, tilePosition: Vec2i, stack: ItemStack) =
   ## Spawns a new item entity at the given tile position.
 
   let
+    wrappedTilePosition =
+      vec2i(tilePosition.x.floorMod(world.width), tilePosition.y)
     position =
-      tilePosition.vec2f * world.tileSize +
+      wrappedTilePosition.vec2f * world.tileSize +
       world.tileSize / 2 - ItemHitboxSize / 2
-    velocity = rand(180f..360f).degrees.toVector * rand(1f..2f)
+    velocity = rand(180f..360f).Degrees.toVector * rand(1f..2f)
     entity = world.space.newItemEntity(world.r, position, velocity, stack)
   world.spawn(entity)
 
@@ -260,3 +264,18 @@ proc destroyTile*(world: World, position: Vec2i, background: bool) =
     of tkBlock:
       let drops = world.r.blockRegistry.get(tile.blockId).drops
       world.dropItems(position, drops)
+
+
+# x=0 seam helpers
+
+iterator crossSeamDeltas*(world: World, a, b: Vec2f): Vec2f =
+  ## Iterates through all of the bodies' possible delta positions, taking the
+  ## x=0 seam into account. Note that this doesn't do any interpolation, so this
+  ## shouldn't be used in draw procedures.
+
+  template getDelta(xoffset: float32): Vec2f =
+    (b - vec2f(xoffset, 0)) - a
+
+  yield getDelta(-world.unitWidth)
+  yield getDelta(0)
+  yield getDelta(world.unitWidth)

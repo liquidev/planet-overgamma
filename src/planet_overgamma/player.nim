@@ -2,7 +2,9 @@
 ## other stuff.
 
 import std/os
+import std/strformat
 import std/sugar
+import std/tables
 
 import aglet/input as ain
 import rapid/physics/simple
@@ -15,8 +17,13 @@ import camera
 import controls
 import logger
 import ecext
+import items
+import item_entity
+import item_storage
 import registry
+import resources
 import tiles
+import ui
 import world
 
 
@@ -35,9 +42,9 @@ proc loadPlayerSprites*(graphics: Graphics,
   hint "  - fall: ", pathFall
 
   result = (
-    idle: graphics.addSprite(loadPngImage(pathIdle)),
-    walk: graphics.addSprite(loadPngImage(pathWalk)),
-    fall: graphics.addSprite(loadPngImage(pathFall)),
+    idle: graphics.addSprite(loadImage(pathIdle)),
+    walk: graphics.addSprite(loadImage(pathWalk)),
+    fall: graphics.addSprite(loadImage(pathFall)),
   )
 
 proc loadPlayerSprites*(graphics: Graphics, commonPath: string): PlayerSprites =
@@ -55,10 +62,9 @@ proc loadPlayerSprites*(graphics: Graphics, commonPath: string): PlayerSprites =
 # components + entity
 
 type
-  PlayerController* = object of RootComponent
+  PlayerController* = object of ExtComponent
     body: Body
     controls: Controls
-    input: Input
 
   LaserMode* = enum
     lmDig
@@ -67,19 +73,18 @@ type
 
   PlayerLaser* = object of ExtComponent
     body: Body
-    input: Input
     world: World
 
     target: Interpolated[Vec2f]
     charge: Interpolated[float32]
     chargeSpeed, chargeMax: float32
+
     reach: float32
     mode: LaserMode
 
   PlayerRenderer* = object of ExtComponent
     body: Body
     controls: Controls
-    input: Input
 
     sprites: PlayerSprites
 
@@ -87,9 +92,19 @@ type
     walkCycleTick: uint8
     falling: bool
 
-  Player* = ref object of RootEntity
+  PlayerInventory* = object of ExtComponent
+    body: Body
+    world: World
+
+    inventory: ItemStorage
+
+    aw: AccordionWindow
+    grid: ItemGrid
+
+  Player* = ref object of ExtEntity
     body*: Body
     controller*: PlayerController
+    inventory*: PlayerInventory
     renderer*: PlayerRenderer
     laser*: PlayerLaser
 
@@ -112,26 +127,90 @@ proc componentUpdate(pc: var PlayerController) =
     speed = 0.25
     jump = 3.5
 
-  if pc.input.keyIsDown(pc.controls.kLeft):
+  if pc.g.input.keyIsDown(pc.controls.kLeft):
     pc.body.applyForce(vec2f(-speed, 0))
-  if pc.input.keyIsDown(pc.controls.kRight):
+  if pc.g.input.keyIsDown(pc.controls.kRight):
     pc.body.applyForce(vec2f(speed, 0))
 
-  if pc.input.keyJustPressed(pc.controls.kJump) and
+  if pc.g.input.keyJustPressed(pc.controls.kJump) and
      pc.body.collidingWith(rsTop):
     pc.body.applyForce(vec2f(0, -jump))
 
   pc.body.velocity.x *= 0.8
 
 proc init(pc: var PlayerController, body: Body,
-          controls: Controls, input: Input) =
+          controls: Controls) =
   ## Initializes a player's controller component.
 
   pc.body = body
   pc.controls = controls
-  pc.input = input
 
   pc.autoImplement()
+
+
+# component: inventory
+
+proc componentUpdate(pi: var PlayerInventory) =
+
+  for entity in pi.world.entities:
+    if entity of ItemEntity:
+      let
+        item = entity.ItemEntity
+        playerPosition = pi.body.position + pi.body.size / 2
+        itemPosition = item.body.position + item.body.size / 2
+      for direction in pi.world.crossSeamDeltas(itemPosition, playerPosition):
+        let
+          distance = length(direction)
+          strength = pow(max(0, 32 - distance) / 32, 2) * 0.3
+          pull = normalize(direction) * strength
+        item.body.applyForce(pull)
+
+proc componentUiPanel(pi: var PlayerInventory, ui: GameUi, expanded: bool) =
+
+  ui.accordionWindow(pi.aw, contentHeight = 225, blVertical, "Inventory"):
+    ui.spacing = 8
+
+    # grid
+    ui.itemGrid(pi.grid, pi.inventory, columns = 8, height = 192)
+
+    # inventory usage progress bar
+    let
+      filled = pi.inventory.count / pi.inventory.capacity
+      color =
+        if filled >= 0.90: red
+        elif filled >= 0.75: yellow
+        else: green
+      label = block:
+        let
+          count = itemQuantityToString(pi.inventory.count)
+          cap = itemQuantityToString(pi.inventory.capacity)
+          percent = $round(filled * 100).int
+        count & " / " & cap & " (" & percent & "% full)"
+    ui.progressBar(size = vec2f(ui.width, 24), filled, color, label)
+
+proc initBody(pi: ptr PlayerInventory, body: Body) =
+
+  body.onCollideWithBody proc (body, other: Body) =
+    if other of ItemBody:
+      let item = other.ItemBody.user
+      item.stack = pi.inventory.put(item.stack)
+
+converter storage*(pi: var PlayerInventory): var ItemStorage =
+  pi.inventory
+
+proc init(pi: var PlayerInventory, body: Body, world: World) =
+
+  pi.body = body
+  pi.world = world
+
+  pi.inventory = newItemStorage(256_0)
+
+  pi.aw.expanded = true
+
+  initBody(addr pi, body)
+
+  pi.autoImplementExt()
+  pi.onUiPanel componentUiPanel
 
 
 # component: renderer
@@ -150,9 +229,9 @@ proc componentLateUpdate(pr: var PlayerRenderer, camera: var Camera) =
   pr.tickInterpolated()
 
   # sprite directions
-  if pr.input.keyIsDown(pr.controls.kLeft):
+  if pr.g.input.keyIsDown(pr.controls.kLeft):
     pr.flip = true
-  if pr.input.keyIsDown(pr.controls.kRight):
+  if pr.g.input.keyIsDown(pr.controls.kRight):
     pr.flip = false
 
   # walking animation
@@ -167,7 +246,7 @@ proc componentLateUpdate(pr: var PlayerRenderer, camera: var Camera) =
     pr.walkCycleTick = 1
   pr.falling = pr.body.velocity.y > 0
 
-  camera.position = pr.body.position
+  camera.position = pr.body.position + pr.body.size / 2
 
 proc componentShape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
   let
@@ -184,13 +263,11 @@ proc componentShape(pr: var PlayerRenderer, graphics: Graphics, step: float32) =
     graphics.sprite(sprite, -sprite.size.vec2f / 2)
 
 proc init(pr: var PlayerRenderer, body: Body,
-          controls: Controls, input: Input,
-          sprites: PlayerSprites) =
+          controls: Controls, sprites: PlayerSprites) =
   ## Initializes a player's renderer component.
 
   pr.body = body
   pr.controls = controls
-  pr.input = input
   pr.sprites = sprites
 
   pr.autoImplementExt()
@@ -204,11 +281,11 @@ proc tileTarget(pl: PlayerLaser): Vec2i =
   floor(pl.target / pl.world.tileSize).vec2i
 
 proc active(pl: PlayerLaser): bool =
-  pl.input.mouseButtonIsDown(mbLeft) or pl.input.mouseButtonIsDown(mbRight)
+  not pl.g.ui.mouseOverPanel and pl.g.input.mouseButtonIsDown({mbLeft, mbRight})
 
 proc justActivated(pl: PlayerLaser): bool =
-  pl.input.mouseButtonJustPressed(mbLeft) or
-  pl.input.mouseButtonJustPressed(mbRight)
+  not pl.g.ui.mouseOverPanel and
+  pl.g.input.mouseButtonJustPressed({mbLeft, mbRight})
 
 {.pop.}
 
@@ -217,7 +294,7 @@ proc componentLateUpdate(pl: var PlayerLaser, camera: var Camera) =
   pl.tickInterpolated()
 
   let
-    rawTarget = camera.toWorld(pl.input.mousePosition)
+    rawTarget = camera.toWorld(pl.g.input.mousePosition)
     distFromTargetToPlayer =
       distance(rawTarget, pl.body.position + pl.body.size / 2)
     targetDir = (rawTarget - pl.body.position) / distFromTargetToPlayer
@@ -235,7 +312,7 @@ proc componentUpdate(pl: var PlayerLaser) =
   if pl.justActivated or pl.charge > 0:
     let
       mapTile = pl.world[pl.tileTarget]
-      background = pl.input.mouseButtonIsDown(mbRight)
+      background = pl.g.input.mouseButtonIsDown(mbRight)
       tile = mapTile.get(background)
     if pl.justActivated:
       pl.mode = lmDig
@@ -278,20 +355,20 @@ proc componentShape(pl: var PlayerLaser, graphics: Graphics, camera: Camera,
     graphics.circle(target, charge / 2, laserCoreColor)
 
   # guide
-  let
-    target =
-      if pl.charge > 0: pl.target
-      else: camera.toWorld(pl.input.mousePosition)
-    tileTopLeft = floor(target / pl.world.tileSize) * pl.world.tileSize
-    thickness = max(1 / camera.scale, pl.charge / pl.chargeMax)
-  graphics.lineRectangle(tileTopLeft, pl.world.tileSize, thickness,
-                         guideColor)
+  if not pl.g.ui.mouseOverPanel:
+    let
+      target =
+        if pl.charge > 0: pl.target
+        else: camera.toWorld(pl.g.input.mousePosition)
+      tileTopLeft = floor(target / pl.world.tileSize) * pl.world.tileSize
+      thickness = max(1 / camera.scale, pl.charge / pl.chargeMax)
+    graphics.lineRectangle(tileTopLeft, pl.world.tileSize, thickness,
+                           guideColor)
 
-proc init(pl: var PlayerLaser, body: Body, input: Input, world: World) =
+proc init(pl: var PlayerLaser, body: Body, world: World) =
   ## Initializes a player's laser component.
 
   pl.body = body
-  pl.input = input
   pl.world = world
 
   pl.chargeSpeed = 0.05
@@ -304,17 +381,19 @@ proc init(pl: var PlayerLaser, body: Body, input: Input, world: World) =
 
 # entity: player
 
-proc newPlayer*(world: World, position: Vec2f, controls: Controls,
-                input: Input, sprites: PlayerSprites): Player =
+proc newPlayer*(g: Game, world: World, position: Vec2f, controls: Controls,
+                sprites: PlayerSprites): Player =
   ## Creates and initializes a new player.
 
   new result
+  result.initExtEntity(g)
 
-  result.body = newBody(PlayerHitboxSize).addTo(world.space)
+  result.body = newBody(PlayerHitboxSize, density = 1).addTo(world.space)
   result.body.position = position
 
-  result.controller.init(result.body, controls, input)
-  result.renderer.init(result.body, controls, input, sprites)
-  result.laser.init(result.body, input, world)
+  result.controller.init(result.body, controls)
+  result.inventory.init(result.body, world)
+  result.renderer.init(result.body, controls, sprites)
+  result.laser.init(result.body, world)
 
   result.registerComponents()

@@ -91,7 +91,7 @@ proc loadSingle*(tileset: Tileset, name, filename: string): Rectf =
 
   hint "loading single ", name, " from ", filename
 
-  let image = loadPngImage(filename)
+  let image = loadImage(filename)
   result = tileset.atlas.add(image)
   tileset.singles[name] = result
 
@@ -121,7 +121,7 @@ proc loadBlockPatch*(tileset: Tileset, name, filename: string): BlockPatch =
   hint "loading block patch ", name, " from ", filename
 
   let
-    image = loadPngImage(filename)
+    image = loadImage(filename)
     tileSize = vec2i(image.width, image.height) div vec2i(4)
 
   template add(x, y: int): Rectf =

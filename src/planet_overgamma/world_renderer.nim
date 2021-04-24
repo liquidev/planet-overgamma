@@ -2,6 +2,7 @@
 ## the appropriate draw calls, etc.
 
 import std/sugar
+import std/tables
 
 import aglet
 import rapid/ec
@@ -9,6 +10,7 @@ import rapid/graphics
 import rapid/graphics/atlas_texture
 import rapid/graphics/tracers
 import rapid/math/rectangle
+import rapid/physics/simple
 
 import camera
 import common
@@ -91,20 +93,6 @@ proc updateMesh*(world: World, g: Game, chunkPosition: Vec2i) =
     tile(positionInChunk, tile.background, background = true)
     tile(positionInChunk, tile.foreground, background = false)
 
-  if vertices.len == 0 or indices.len == 0:
-    error "something broke. or as we say in Poland, 'Coś jebło.'"
-    error "in: updateMesh"
-    error "the length of either `vertices` or `indices` was 0."
-    error "here's some extra debug info:"
-    dump chunkPosition
-    dump vertices.len
-    dump indices.len
-    writeStackTrace()
-    error "note: there's probably a zombie mesh lingering around in your VRAM."
-    error "i'd recommend restarting the game, and reporting this either on"
-    error "GitHub or via the GitHub Game Off discord server (i'm @lqdev#8803)"
-    return
-
   mesh.uploadVertices(vertices)
   mesh.uploadIndices(indices)
 
@@ -123,7 +111,7 @@ iterator chunksInViewport(world: World, viewport: Rectf): (Vec2i, var Chunk) =
     for x in topLeftChunk.x..bottomRightChunk.x:
       let
         chunkPosition = vec2i(x.int32, y.int32)
-        wrappedX = floorMod(chunkPosition.x.float32, worldWidthInChunks).int32
+        wrappedX = floorMod(chunkPosition.x, worldWidthInChunks.int32)
         wrappedPosition = vec2i(wrappedX, chunkPosition.y)
       if world.tilemap.hasChunk(wrappedPosition):
         yield (chunkPosition, world.tilemap.chunk(wrappedPosition))
@@ -140,8 +128,7 @@ proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
 
   for position, chunk in world.chunksInViewport(viewport):
     let
-      offset = vec2f(position * ChunkSize) *
-               world.tilemap.tileSize
+      offset = vec2f(position * ChunkSize) * world.tileSize
       mesh = chunk.user.mesh
       model = mat4f().translate(vec3f(offset, 0))
     target.draw(g.programPlain, mesh, uniforms {
@@ -161,11 +148,12 @@ proc renderWorld*(target: Target, g: Game, world: World, step: float32) =
 
   let
     leftWorlds = floor(viewport.left.inWorlds).int
-    rightWorlds = floor(viewport.right.inWorlds).int
+    rightWorlds = ceil(viewport.right.inWorlds).int
 
   for x in leftWorlds..rightWorlds:
     g.graphics.transform(world.camera):
-      g.graphics.translate(x.float32 * world.tileSize.x * world.width.float32, 0)
+      let xoffset = x.float32 * world.tileSize.x * world.width.float32
+      g.graphics.translate(xoffset, 0)
       world.entities.shape(g.graphics, world.camera, step)
 
   g.graphics.draw(target)

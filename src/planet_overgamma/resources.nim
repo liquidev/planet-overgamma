@@ -12,6 +12,7 @@ import rapid/input
 import common
 import logger
 import tileset
+import ui
 
 type
   GameState* = enum
@@ -26,9 +27,11 @@ type
     window*: Window
     graphics*: Graphics
     input*: Input
+    ui*: GameUi
 
     # graphics resources
     programPlain*: Program[Vertex]
+      ## Renders shapes with a simple model-view-projection transform.
     dpDefault*: DrawParams
 
     sansRegular*: Font
@@ -74,7 +77,7 @@ proc load*(g: var Game) =
   block:
     let start = getMonoTime()
     g.window = g.aglet.newWindowGlfw(
-      width = 1024, height = 767,
+      width = 1024, height = 768,
       title = "Planet Overgamma 2: Electric Boogaloo",
       hints = winHints(),
     )
@@ -112,8 +115,16 @@ proc load*(g: var Game) =
   g.sansItalic = g.graphics.newFont(sansItalicTtf, height = 14)
   g.sansBoldItalic = g.graphics.newFont(sansBoldItalicTtf, height = 14)
 
+  hint "initializing UI"
+  new g.ui
+  g.ui.init(g.window, g.graphics)
+  g.ui.sansRegular = g.sansRegular
+  g.ui.sansBold = g.sansBold
+  g.ui.sansItalic = g.sansItalic
+  g.ui.sansBoldItalic = g.sansBoldItalic
+
   hint "preparing input"
   g.input = g.window.newInput()
 
 const
-  FiraSansLicense* = slurp("fonts/FiraSans-OFL.txt")
+  FiraSansLicense = slurp("fonts/FiraSans-OFL.txt")

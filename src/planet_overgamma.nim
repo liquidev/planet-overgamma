@@ -28,16 +28,22 @@ import rapid/graphics/tracers
 import rapid/input
 import rapid/physics/simple
 
-import planet_overgamma/controls
-import planet_overgamma/game_registry
-import planet_overgamma/logger
-import planet_overgamma/module
-import planet_overgamma/parameters
-import planet_overgamma/player
-import planet_overgamma/resources
-import planet_overgamma/world
-import planet_overgamma/world_renderer
-import planet_overgamma/world_generation
+import planet_overgamma/[
+  controls,
+  ecext,
+  game_registry,
+  items,
+  item_storage,
+  logger,
+  module,
+  parameters,
+  player,
+  resources,
+  ui,
+  world,
+  world_renderer,
+  world_generation,
+]
 
 import planet_overgamma/core
 
@@ -145,9 +151,9 @@ proc main() =
 
   # temporary until i add game states
   hint "spawning player"
-  player = world.newPlayer(world.playerSpawnPoint * world.tilemap.tileSize +
-                             world.tilemap.tileSize / 2,
-                           controls, g.input, playerSprites)
+
+  player = g.newPlayer(world, world.playerSpawnPoint * world.tilemap.tileSize,
+                       controls, playerSprites)
   world.entities.add(player)
 
   # run the game loop
@@ -155,6 +161,7 @@ proc main() =
 
     g.window.pollEvents proc (event: InputEvent) =
       g.input.process(event)
+      g.ui.processEvent(event)
 
     update:
       # this block runs at a constant rate of 60 Hz
@@ -171,11 +178,30 @@ proc main() =
       var frame = g.window.render()
       frame.clearColor(colBlack)
 
+      # world
       world.camera.screenSize = frame.size.vec2f
-      world.camera.position = player.renderer.interpolatedPosition(step)
+      world.camera.position =
+        player.renderer.interpolatedPosition(step) + player.body.size / 2
       world.camera.scale = 4.0
       world.updateChunks(g)
       frame.renderWorld(g, world, step)
+
+      # UI
+
+      g.ui.begin(frame)
+      g.ui.font = g.sansRegular
+      g.ui.pad(8)
+
+      g.ui.mouseOverPanel = false
+
+      # side panel
+      g.ui.box(size = vec2f(256, g.ui.height), blVertical):
+        g.ui.spacing = 8
+        world.entities.uiPanel(g.ui, expanded = true)
+
+      # for some reason i can't use UFCS here??
+      # this project makes nim have a stroke
+      ui.draw(g.ui, frame)
 
       frame.finish()
 

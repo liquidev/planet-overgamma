@@ -57,7 +57,7 @@ proc resourcePath*(m: Module, path: string): string =
 proc loadSprite*(m: Module, filename: string): Sprite =
   ## Loads a sprite into the game's graphics context. The filename is relative
   ## to the module's root directory.
-  m.g.graphics.addSprite(loadPngImage(m.resourcePath(filename)))
+  m.g.graphics.addSprite(loadImage(m.resourcePath(filename)))
 
 proc loadSingle*(m: Module, name, filename: string): Rectf =
   ## Loads a single into the master tileset. The given name is namespaced

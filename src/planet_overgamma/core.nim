@@ -47,8 +47,8 @@ proc loadCore*(m: var Module, g: Game, r: GameRegistry) =
     }
   let
     blockDrops = {
-      "plants": @[iPlantMatter.drop(1)],
-      "rock": @[iStone.drop(1)]
+      "plants": @[iPlantMatter.drop(1_0)],
+      "rock": @[iStone.drop(1_0)]
     }.toTable
 
   for (name, data) in blocks:

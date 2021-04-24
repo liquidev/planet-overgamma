@@ -4,12 +4,15 @@ import rapid/ec
 import rapid/graphics
 
 import camera
+import resources
+import ui
 
 export ec
 
 type
   ExtComponent* = object of RootComponent
-    ## An extended component with extra, Overgamma-specific callbacks.
+    ## An extended component with extra, Overgamma-specific fields.
+    g*: Game
     extImpl*: ExtComponentImpl
 
   ExtComponentLateUpdate*[C: ExtComponent] =
@@ -25,12 +28,21 @@ type
           step: float32) {.nimcall.}
     ## Extended shape-rendering with a camera.
 
+  ExtComponentUiPanel*[C: ExtComponent] =
+    proc (comp: var C, ui: GameUi, expanded: bool) {.nimcall.}
+    ## UI rendering on the panel.
+
   ExtComponentImpl* = object
     ## An object holding all the extended callbacks a component can implement.
 
     lateUpdate*: ExtComponentLateUpdate[ExtComponent]
     update*: ExtComponentUpdate[ExtComponent]
     shape*: ExtComponentShape[ExtComponent]
+    uiPanel*: ExtComponentUiPanel[ExtComponent]
+
+  ExtEntity* = ref object of RootEntity
+    ## Extended entity with game resource access.
+    g*: Game
 
 
 # callbacks
@@ -46,6 +58,10 @@ proc onUpdate*[T: ExtComponent](comp: var T, impl: ExtComponentUpdate[T]) =
 
 proc onShape*[T: ExtComponent](comp: var T, impl: ExtComponentShape[T]) =
   comp.extImpl.shape = cast[ExtComponentShape[ExtComponent]](impl)
+
+proc onUiPanel*[T: ExtComponent](comp: var T, impl: ExtComponentUiPanel[T]) =
+  comp.extImpl.uiPanel = cast[ExtComponentUiPanel[ExtComponent]](impl)
+
 
 {.pop.}
 
@@ -71,6 +87,9 @@ proc autoImplementExt*[T: ExtComponent](comp: var T) =
   attempt:
     mixin componentShape
     comp.onShape ExtComponentShape[T](componentShape)
+  attempt:
+    mixin componentUiPanel
+    comp.onUiPanel ExtComponentShape[T](componentUiPanel)
 
 
 proc lateUpdate*(entity: RootEntity, camera: var Camera) =
@@ -103,6 +122,16 @@ proc shape*(entity: RootEntity, graphics: Graphics, camera: Camera,
       if extComp.extImpl.shape != nil:
         extComp.extImpl.shape(extComp[], graphics, camera, step)
 
+proc uiPanel*(entity: RootEntity, ui: GameUi, expanded: bool) =
+  ## Renders the side panel UI of all of the entity's components.
+
+  for comp in components(entity):
+    if comp of ExtComponent:
+      var extComp = addr comp.ExtComponent
+      if extComp.extImpl.uiPanel != nil:
+        extComp.extImpl.uiPanel(extComp[], ui, expanded)
+
+
 proc lateUpdate*(entities: seq[RootEntity], camera: var Camera) =
   ## Late-updates all entities in the sequence.
 
@@ -121,3 +150,17 @@ proc shape*(entities: seq[RootEntity], graphics: Graphics, camera: Camera,
 
   for entity in entities:
     entity.shape(graphics, camera, step)
+
+proc uiPanel*(entities: seq[RootEntity], ui: GameUi, expanded: bool) =
+  ## Renders the side panel UI of all entities in the sequence.
+
+  for entity in entities:
+    entity.uiPanel(ui, expanded)
+
+proc initExtEntity*[T: ExtEntity](entity: T, g: Game) =
+  ## Initializes an ExtEntity. The entity must not be nil.
+
+  entity.g = g
+  for component in fields(entity[]):
+    when component is ExtComponent:
+      component.g = g

@@ -11,11 +11,11 @@ Rect.__name = "Rect"
 -- Indexes the rect.
 -- This enables the x, y, width, height fields.
 function Rect:__index(key)
-  if Rect[key] ~= nil then
-    return Rect[key]
+  if rawget(Rect, key) ~= nil then
+    return rawget(Rect, key)
   end
-  if self[key] ~= nil then
-    return self[key]
+  if rawget(self, key) ~= nil then
+    return rawget(self, key)
   end
   if key == "x" then return self.position.x
   elseif key == "y" then return self.position.y

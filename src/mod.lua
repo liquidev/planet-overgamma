@@ -7,21 +7,16 @@
 local fs = love.filesystem
 
 local common = require "common"
+local game = require "game"
 local Object = require "object"
+local tables = require "tables"
+local tiles = require "world.tiles"
 
 ---
 
 local Mod = Object:inherit()
 
--- Initializes a new mod with the provided metadata.
--- The metadata must follow the following structure:
--- {
---   -- required fields:
---   name: string, -- pretty name
---   version: string,
---   author: string,
---   description: string,
--- }
+-- Initializes a new mod with the provided root path and namespace.
 function Mod:init(path, namespace)
   self.path = path
   self.namespace = namespace
@@ -29,6 +24,14 @@ end
 
 -- Initializes a mod's metadata. This must be called by the mod's main file
 -- upon loading.
+-- The metadata table must follow this structure:
+-- {
+--   -- required fields:
+--   name: string, -- pretty name
+--   version: string,
+--   author: string,
+--   description: string,
+-- }
 function Mod:metadata(metadata)
   assert(type(metadata.name) == "string", "mod name must be a string")
   assert(type(metadata.version) == "string", "mod version must be a string")
@@ -41,6 +44,85 @@ function Mod:metadata(metadata)
   self.description = metadata.description
 end
 
+-- Returns a namespaced name, with the namespace of the given mod.
+-- This should be preferred instead of constructing namespaced names directly.
+--
+-- `namespace` may be a Mod or a string.
+-- This function can be called using `:` on a Mod, if that's more convenient.
+function Mod.namespaced(namespace, name)
+  if type(namespace) ~= "string" then
+    namespace = namespace.namespace
+  end
+  return string.format("%s:%s", namespace, name)
+end
+
+-- Loads a new block from an image (file or ImageData).
+-- `kind` specifies the loading mode, and may be either "block" or "4x4".
+-- If omitted, the mode will be guessed based on the image's size
+-- ("block" if < 32x32, "4x4" otherwise). This comparison is done by computing
+-- the surface area of the image and comparing it to the threshold
+-- of 32×32 pixels, so eg. a 48×20 image classifies as a "block", but a
+-- 48×24 image classifies as a "4x4".
+--
+-- "block" specifies that the image represents a single block that doesn't
+-- connect to other blocks.
+-- "4x4" specifies that the block connects to other blocks (it "auto-tiles"),
+-- and the image is a 4x4 block tilemap.
+--
+-- 4x4 block tilemaps are made up of 4x4 individual tile textures, arranged
+-- like this:
+--[[
+  +-- --- --+ +-+
+  |         | | |
+  |         | | |
+
+  |         | | |
+  |         | | |
+  |         | | |
+
+  |         | | |
+  |         | | |
+  +-- --- --+ +-+
+
+  +-- --- --+ +-+
+  |         | | |
+  +-- --- --+ +-+
+]]
+-- The tiles have to be tightly packed into a texture whose size is divisible
+-- by 4, preferably 32x32 (8x8 tiles), to fit the rest of the game.
+--
+-- Returns a tile handle after adding the tile into the global registry.
+function Mod:addBlock(key, image, kind)
+  if type(image) == "string" then
+    local imagePath = self.path..'/'..image
+    image = love.image.newImageData(imagePath)
+  end
+  if kind ~= "block" and kind ~= "4x4" then
+    if image:getWidth() * image:getHeight() < 32 * 32 then
+      kind = "block"
+    else
+      kind = "4x4"
+    end
+  end
+
+  local rects = {}
+  if kind == "4x4" then
+    tiles.packBlock(rects, game.blockAtlas, image)
+  else
+    local rect = game.blockAtlas:pack(image)
+    tables.fill(rects, 16, rect)
+  end
+
+  return game.addBlock(self:namespaced(key), {
+    rects = rects,
+  })
+end
+
+
+--
+-- Mod loader
+--
+
 -- Loads the mod at the given path.
 -- The provided path must be a directory. Otherwise an error is raised.
 function Mod.load(path, namespace)
@@ -48,13 +130,13 @@ function Mod.load(path, namespace)
   assert(info ~= nil, "the provided mod directory does not exist: "..path)
   assert(info.type == "directory",
          "the provided path is not a directory: "..path)
-  local ok, err = fs.load(path .. "/init.lua")
+  local ok, err = fs.load(path.."/init.lua")
   if ok ~= nil then
     local mod = Mod:new(path, namespace)
     ok(mod)
     if mod.name == nil then
       error("mod at "..path.." is not a valid mod\n" ..
-            " - valid mods must specify metadata through Mod:metadata {}")
+            " - mods must specify metadata through Mod:metadata {}")
     end
     print("loaded mod: "..mod.name..' '..mod.version.." by "..mod.author)
     return mod

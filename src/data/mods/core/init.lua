@@ -8,3 +8,11 @@ mod:metadata {
   description = "The core mechanics of the game.",
 }
 
+local blocks = {
+  plants = mod:addBlock("plants", "blocks/plants.png"),
+  rock = mod:addBlock("rock", "blocks/rock.png"),
+}
+
+return {
+  blocks = blocks,
+}

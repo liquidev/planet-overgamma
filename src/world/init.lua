@@ -1,4 +1,4 @@
--- Game world. This handles all tiles, entities, and body physics.
+-- Game world. This handles all blocks, entities, and body physics.
 
 local Object = require "object"
 local tables = require "tables"
@@ -13,7 +13,7 @@ Chunk.size = 8
 
 -- Initializes a new chunk.
 function Chunk:init()
-  self.tiles = tables.fill({}, 0)
+  self.blocks = tables.fill({}, 0)
 end
 
 -- Returns the tile at the given position. The position must be in the chunk's
@@ -21,7 +21,7 @@ end
 function Chunk:tile(position)
   local x, y = position:xy()
   if x >= 0 and x < Chunk.size and y >= 0 and y < Chunk.size then
-    return self.tiles[x + y * Chunk.size]
+    return self.blocks[x + y * Chunk.size]
   end
 end
 

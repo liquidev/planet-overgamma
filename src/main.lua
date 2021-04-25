@@ -10,6 +10,7 @@ local graphics = love.graphics
 local timer = love.timer
 
 local game = require "game" -- initialize game resources before anything else
+local Mod = require "mod"
 
 --
 -- Variables
@@ -35,7 +36,15 @@ function love.run()
   -- frame is, and can be used together with linear interpolation to achieve
   -- silky smooth movement regardless of your refresh rate.
 
+  -- initialize
+
   math.randomseed(os.time())
+
+  local mods, errors = Mod.loadMods({})
+  if #errors > 0 then
+    print("errors occured while loading mods:")
+    print(errors)
+  end
 
   timer.step()
 

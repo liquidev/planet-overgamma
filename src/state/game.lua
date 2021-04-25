@@ -16,7 +16,7 @@ end
 
 -- Updates the game.
 function GameState:update()
-  print(input.mouse, input.previousMouse, input.deltaMouse)
+
 end
 
 -- Renders the game.

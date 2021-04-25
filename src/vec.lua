@@ -55,6 +55,16 @@ end
 local vecMethods = {}
 vecMeta.__index = vecMethods
 
+-- Duplicates the vector.
+function vecMethods:dup()
+  return Vec(self.x, self.y)
+end
+
+-- Returns the x, y coordinates of the vector as two values.
+function vecMethods:xy()
+  return self.x, self.y
+end
+
 -- Returns the dot product of this vector and the other vector.
 function vecMethods:dot(other)
   return self.x * other.x + self.y * other.y

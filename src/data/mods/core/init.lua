@@ -9,8 +9,8 @@ mod:metadata {
 }
 
 local blocks = {
-  plants = mod:addBlock("plants", "blocks/plants.png"),
-  rock = mod:addBlock("rock", "blocks/rock.png"),
+  plants = mod:addBlock("plants", "blocks/plants.png") {},
+  rock = mod:addBlock("rock", "blocks/rock.png") {},
 }
 
 return {

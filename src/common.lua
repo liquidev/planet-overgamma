@@ -19,4 +19,31 @@ function common.try(fn, ...)
   end)
 end
 
+-- Prepends `level` amount of spaces to each line in the given string.
+function common.indent(str, level)
+  local lines = {}
+  for line in str:gmatch("[^\n\r]+") do
+    table.insert(lines, line)
+  end
+  local spaces = string.rep(' ', level)
+  for i, line in pairs(lines) do
+    lines[i] = spaces..line..'\n'
+  end
+  return table.concat(lines)
+end
+
+-- Returns a human-friendly representation of the given value.
+function common.repr(x)
+  if type(x) == "table" then
+    local result = {}
+    for k, v in pairs(x) do
+      k = tostring(k)
+      table.insert(result, common.indent(k.." = "..common.repr(v)..", \n", 2))
+    end
+    return "{\n"..table.concat(result).."}"
+  else
+    return tostring(x)
+  end
+end
+
 return common

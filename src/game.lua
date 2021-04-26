@@ -1,5 +1,7 @@
 -- Generic resources'n'stuff.
 
+local graphics = love.graphics
+
 local Atlas = require "atlas"
 local Input = require "input"
 local Registry = require "registry"
@@ -44,10 +46,20 @@ function game.addBlock(key, block)
   if Registry.hasKey(game.blockIDs, key) then
     error("block '"..key.."' is already registered")
   end
-  block.id = game.blockIDs[key]
-  game.blocks[key] = block
-  print("game: registered block '"..key.."'")
-  return block, block.id
+  local id = game.blockIDs[key]
+  block.id = id
+
+  -- Generate quads, for use by the renderer.
+  -- This should save some allocations later.
+  block.quads = {}
+  for i, rect in ipairs(block.rects) do
+    block.quads[i] = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
+                                      game.blockAtlas.image)
+  end
+
+  game.blocks[id] = block
+  print("game: registered block '"..key.."' -> "..id)
+  return id, block
 end
 
 return game

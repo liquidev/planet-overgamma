@@ -16,6 +16,7 @@ local Atlas = Object:inherit()
 function Atlas:init(size)
   local imageData = image.newImageData(size.x, size.y)
   self.image = graphics.newImage(imageData)
+  self.image:setFilter("nearest", "nearest")
   self.packer = RectPacker:new(size)
 end
 

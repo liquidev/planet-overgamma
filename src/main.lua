@@ -16,7 +16,7 @@ local Mod = require "mod"
 -- Variables
 --
 
-local state = require("state.game"):new()
+local state
 
 --
 -- Game loop
@@ -46,7 +46,10 @@ function love.run()
     print(errors)
   end
 
+
   timer.step()
+
+  state = require("state.game"):new()
 
   local previous = timer.getTime()
   local lag = 0
@@ -79,7 +82,7 @@ function love.run()
     -- rendering
     local alpha = lag / timePerTick
     graphics.origin()
-    graphics.clear(0, 0, 0, 0, 0)
+    graphics.clear(0.1, 0.1, 0.1, 1.0, 0)
     state:draw(alpha)
     graphics.present()
 

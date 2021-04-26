@@ -24,8 +24,6 @@ end
 -- These functions can be implemented by states inheriting from the base
 -- State object.
 
--- To those running luacheck: please ignore the warnings below.
-
 -- Called a constant amount of times per second.
 function State:update() end
 

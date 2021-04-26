@@ -91,7 +91,9 @@ end
 -- The tiles have to be tightly packed into a texture whose size is divisible
 -- by 4, preferably 32x32 (8x8 tiles), to fit the rest of the game.
 --
--- Returns a tile handle after adding the tile into the global registry.
+-- Returns a function that accepts a table of properties that should get merged
+-- into the block before adding it into the tile registry. The function will
+-- return the block ID and final block upon calling.
 function Mod:addBlock(key, image, kind)
   if type(image) == "string" then
     local imagePath = self.path..'/'..image
@@ -113,9 +115,13 @@ function Mod:addBlock(key, image, kind)
     tables.fill(rects, 16, rect)
   end
 
-  return game.addBlock(self:namespaced(key), {
-    rects = rects,
-  })
+  return function (extra)
+    local block = { rects = rects }
+    tables.merge(block, extra)
+    local id = game.addBlock(self:namespaced(key), block)
+    block.tilesWith = { [id] = true }
+    return id, block
+  end
 end
 
 

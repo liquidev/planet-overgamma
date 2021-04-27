@@ -52,6 +52,8 @@ World.Chunk = Chunk
 function World:init(width)
   self.chunks = {}
   self.width = width
+  self.entities = {}
+  self.spawnQueue = {}
 end
 
 -- Ensures a valid chunk row is available.
@@ -120,6 +122,34 @@ function World:block(position, newBlock)
     return chunk:block(World.positionInChunk(position), newBlock)
   end
   return 0
+end
+
+-- Ticks the world: updates all entities and spawns queued ones.
+function World:update()
+  for i, entity in ipairs(self.spawnQueue) do
+    table.insert(self.entities, entity)
+    self.spawnQueue[i] = nil
+  end
+
+  local i = 1
+  local count = #self.entities
+  while i < count do
+    local entity = self.entities[i]
+    entity:update()
+    if entity._doDrop then
+      self.entities[i] = self.entities[count]
+      self.entities[count] = nil
+      count = count - 1
+    else
+      i = i + 1
+    end
+  end
+end
+
+-- Spawns the given entity into the world. Returns the entity.
+function World:spawn(entity)
+  table.insert(self.spawnQueue, entity)
+  return entity
 end
 
 World.draw = require "world.renderer"

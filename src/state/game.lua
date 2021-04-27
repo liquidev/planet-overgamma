@@ -2,6 +2,7 @@
 
 local Camera = require "camera"
 local game = require "game"
+local Player = require "player"
 local State = require "state"
 local World = require "world"
 local Vec = require "vec"
@@ -26,23 +27,15 @@ function GameState:init()
   end
   print("world is ready")
 
+  self.player = Player:new()
+  self.world:spawn(self.player)
+
   self.camera = Camera:new()
 end
 
 -- Updates the game.
 function GameState:update()
-  if input:keyDown('d') then
-    self.camera:applyPan(Vec(1, 0))
-  end
-  if input:keyDown('a') then
-    self.camera:applyPan(Vec(-1, 0))
-  end
-  if input:keyDown('s') then
-    self.camera:applyPan(Vec(0, 1))
-  end
-  if input:keyDown('w') then
-    self.camera:applyPan(Vec(0, -1))
-  end
+  self.world:update()
 end
 
 -- Renders the game.

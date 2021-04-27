@@ -10,6 +10,9 @@ local graphics = love.graphics
 local timer = love.timer
 
 local game = require "game" -- initialize game resources before anything else
+require "game.functions"
+require "game.load"
+
 local Mod = require "mod"
 
 --
@@ -39,16 +42,11 @@ function love.run()
   -- initialize
 
   math.randomseed(os.time())
-
-  local mods, errors = Mod.loadMods({})
-  if #errors > 0 then
-    print("errors occured while loading mods:")
-    print(errors)
-  end
-
+  graphics.setDefaultFilter("nearest", "nearest")
 
   timer.step()
 
+  game.load()
   state = require("state.game"):new()
 
   local previous = timer.getTime()

@@ -1,25 +1,14 @@
--- Generic resources'n'stuff.
+-- Resource handling module. This is split into several modules to prevent
+-- recursive requires and help better organize the code.
 
 local graphics = love.graphics
 
-local Atlas = require "atlas"
-local Input = require "input"
 local Registry = require "registry"
-local Vec = require "vec"
 
 ---
 
-local atlasSize = Vec(256, 256)
-
-local game = {
-  -- globally useful stuff
-  input = Input:new(),
-
-  -- block data
-  blockAtlas = Atlas:new(atlasSize),
-  blockIDs = Registry:new(),
-  blocks = {},
-}
+local game = require "game"
+require "game.load"
 
 -- Adds a new block into the game and returns `block` and its ID.
 -- Raises an error if a block with the given key already exists.

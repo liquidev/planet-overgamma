@@ -58,12 +58,18 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
 end
 
 -- Renders the world. This function is available publicly as World:draw.
-return function (self)
+return function (self, alpha)
+  -- chunks
   for chunkPosition, chunk in self:chunkPairs() do
     rebuildBlockBatch(self, chunkPosition, chunk)
     local blocks = chunk.blockBatch
     if blocks ~= nil then
       graphics.draw(blocks, (chunkPosition * chunk.unitSize):xy())
     end
+  end
+
+  -- entities
+  for _, entity in ipairs(self.entities) do
+    entity:draw(alpha)
   end
 end

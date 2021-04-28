@@ -3,6 +3,10 @@
 
 local ffi = require "ffi"
 
+local common = require "common"
+
+---
+
 ffi.cdef [[
   typedef struct {
     float x, y;
@@ -10,7 +14,7 @@ ffi.cdef [[
 ]]
 
 local vecMeta = {}
-local Vec
+local Vec = ffi.metatype("Vec", vecMeta)
 
 -- Returns the vector with its components negated.
 function vecMeta:__unm()
@@ -65,6 +69,58 @@ function vecMethods:xy()
   return self.x, self.y
 end
 
+-- Adds a vector to the provided vector in place.
+function vecMethods:add(other)
+  self.x = self.x + other.x
+  self.y = self.y + other.y
+end
+
+-- Subtracts a vector from the provided vector in place.
+function vecMethods:sub(other)
+  self.x = self.x - other.x
+  self.y = self.y - other.y
+end
+
+-- Multiplies the vector by a scalar or a vector in place.
+function vecMethods:mul(op)
+  if type(op) == "number" then
+    self.x = self.x * op
+    self.y = self.y * op
+  else
+    self.x = self.x * op.x
+    self.y = self.y * op.y
+  end
+end
+
+-- Divides the vector by a scalar or a vector in place.
+function vecMethods:div(op)
+  if type(op) == "number" then
+    self.x = self.x / op
+    self.y = self.y / op
+  else
+    self.x = self.x / op.x
+    self.y = self.y / op.y
+  end
+end
+
+-- Zeroes the given vector in place.
+function vecMethods:zero()
+  self.x = 0
+  self.y = 0
+end
+
+-- Copies another vector into the vector.
+function vecMethods:copy(other)
+  self.x = other.x
+  self.y = other.y
+end
+
+-- Sets the vector's coordinates in place.
+function vecMethods:set(x, y)
+  self.x = x
+  self.y = y
+end
+
 -- Returns the dot product of this vector and the other vector.
 function vecMethods:dot(other)
   return self.x * other.x + self.y * other.y
@@ -88,7 +144,17 @@ function vecMethods:normalized()
   return self / len, len
 end
 
-Vec = ffi.metatype("Vec", vecMeta)
+-- Linearly interpolates between this vector and the other vector, with
+-- the given interpolation factor.
+local lerp = common.lerp
+function vecMethods:lerp(other, t)
+  -- Doing this per-component allows LuaJIT to optimize this better, as fewer
+  -- metatable accesses are involved.
+  return Vec(
+    lerp(self.x, other.x, t),
+    lerp(self.y, other.y, t)
+  )
+end
 
 return Vec
 

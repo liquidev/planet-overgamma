@@ -1,2 +1,3 @@
 dist_*
 love
+*.log

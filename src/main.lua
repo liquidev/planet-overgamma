@@ -28,6 +28,13 @@ local state
 local tickRate = 60
 local timePerTick = 1 / tickRate
 
+local profiler = require "ext.profiler"
+local profilerEnabled = os.getenv("PO_PROFILER") == "1"
+if profilerEnabled then
+  print(":: profiling is enabled")
+end
+profiler.attachPrintFunction(print)
+
 function love.run()
   -- Planet Overgamma uses a fixed timestep game loop, running at 60 tps for
   -- a smooth experience™.
@@ -52,6 +59,10 @@ function love.run()
   local previous = timer.getTime()
   local lag = 0
 
+  if profilerEnabled then
+    profiler.start()
+  end
+
   return function ()
     local now = timer.getTime()
     local delta = now - previous
@@ -62,6 +73,10 @@ function love.run()
     event.pump()
     for kind, a, b, c, d, e, f in event.poll() do
       if kind == "quit" then
+        if profilerEnabled then
+          profiler.stop()
+          profiler.report("profile.log")
+        end
         return a or 0
       else
         game.input:processEvent { kind = kind, a, b, c, d, e, f }

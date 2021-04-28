@@ -14,8 +14,8 @@ local indexBitsToPosition = {
   -- numeric-indexed tables. This is done to improve performance.
   --             bits: UDLR
   [1]  = Vec(3, 3), -- 0000
-  [2]  = Vec(2, 3), -- 0001
-  [3]  = Vec(0, 3), -- 0010
+  [2]  = Vec(0, 3), -- 0001
+  [3]  = Vec(2, 3), -- 0010
   [4]  = Vec(1, 3), -- 0011
   [5]  = Vec(3, 0), -- 0100
   [6]  = Vec(0, 0), -- 0101

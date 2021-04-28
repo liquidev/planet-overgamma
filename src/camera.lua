@@ -10,7 +10,7 @@ local Vec = require "vec"
 local Camera = Object:inherit()
 
 -- The scaling factor for rendering things with the camera.
-Camera.scale = 3
+Camera.scale = 4
 
 -- Initializes a new camera.
 function Camera:init()
@@ -38,7 +38,7 @@ function Camera:transform(fn, size, ...)
   local pan = self.pan * Camera.scale
   graphics.push()
   graphics.translate(width / 2, height / 2)
-  graphics.translate(math.floor(-pan.x), math.floor(-pan.y))
+  graphics.translate(-pan.x, -pan.y)
   graphics.scale(Camera.scale)
   fn(...)
   graphics.pop()

@@ -33,6 +33,7 @@ function common.indent(str, level)
 end
 
 -- Returns a human-friendly representation of the given value.
+-- This representation may not be valid Lua.
 function common.repr(x)
   if type(x) == "table" then
     local result = {}
@@ -44,6 +45,13 @@ function common.repr(x)
   else
     return tostring(x)
   end
+end
+
+-- Linearly interpolates between the two values.
+function common.lerp(a, b, t)
+  -- This is an "imprecise" method but hopefully it'll give LuaJIT a chance
+  -- to optimize this into a fused multiply-add.
+  return a + t * (b - a)
 end
 
 return common

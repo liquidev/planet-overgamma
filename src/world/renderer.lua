@@ -42,6 +42,7 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
     chunk.blockBatch = graphics.newSpriteBatch(blockAtlas, chunk.size^2)
   end
 
+  chunk.blockBatch:clear()
   for y = 0, chunk.size - 1 do
     for x = 0, chunk.size - 1 do
       local positionInChunk = Vec(x, y)
@@ -55,6 +56,8 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
       end
     end
   end
+
+  chunk.dirty = false
 end
 
 -- Renders the world. This function is available publicly as World:draw.

@@ -48,12 +48,15 @@ end
 local World = Object:inherit()
 World.Chunk = Chunk
 
+require("world.physics")(World)
+
 -- Initializes a new world with the given width.
-function World:init(width)
+function World:init(width, gravity)
   self.chunks = {}
   self.width = width
   self.entities = {}
   self.spawnQueue = {}
+  self:initPhysics(gravity)
 end
 
 -- Ensures a valid chunk row is available.
@@ -107,10 +110,11 @@ function World:chunkPairs()
   end)
 end
 
+
 -- Sets and/or gets the block at the given position.
 -- If newBlock is not nil, sets the block at the given position, creating a new
 -- chunk if necessary.
--- If the position lands out of bounds, 0 (air) is returned.
+-- If the position lands outside of any chunks, 0 (air) is returned.
 function World:block(position, newBlock)
   local chunk
   if newBlock ~= nil then
@@ -124,6 +128,24 @@ function World:block(position, newBlock)
   return 0
 end
 
+-- Returns all blocks in the given area.
+function World:blocksInArea(rect)
+  return coroutine.wrap(function ()
+    for y = rect:top(), rect:bottom() do
+      for x = rect:left(), rect:right() do
+        local position = Vec(x, y)
+        coroutine.yield(position, self:block(position))
+      end
+    end
+  end)
+end
+
+-- Spawns the given entity into the world, returns the entity.
+function World:spawn(entity)
+  table.insert(self.spawnQueue, entity)
+  return entity
+end
+
 -- Ticks the world: updates all entities and spawns queued ones.
 function World:update()
   for i, entity in ipairs(self.spawnQueue) do
@@ -131,9 +153,11 @@ function World:update()
     self.spawnQueue[i] = nil
   end
 
+  self:updatePhysics()
+
   local i = 1
   local count = #self.entities
-  while i < count do
+  while i <= count do
     local entity = self.entities[i]
     entity:update()
     if entity._doDrop then
@@ -144,12 +168,6 @@ function World:update()
       i = i + 1
     end
   end
-end
-
--- Spawns the given entity into the world. Returns the entity.
-function World:spawn(entity)
-  table.insert(self.spawnQueue, entity)
-  return entity
 end
 
 World.draw = require "world.renderer"

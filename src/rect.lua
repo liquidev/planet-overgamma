@@ -1,47 +1,76 @@
 -- Axis-aligned rectangle.
 
-local Vec = require "vec"
+local Object = require "object"
 
 ---
 
-local Rect = {}
-Rect.__index = Rect
+local Rect = Object:inherit()
 Rect.__name = "Rect"
-
--- Indexes the rect.
--- This enables the x, y, width, height fields.
-function Rect:__index(key)
-  if rawget(Rect, key) ~= nil then
-    return rawget(Rect, key)
-  end
-  if rawget(self, key) ~= nil then
-    return rawget(self, key)
-  end
-  if key == "x" then return self.position.x
-  elseif key == "y" then return self.position.y
-  elseif key == "width" then return self.size.x
-  elseif key == "height" then return self.size.y
-  end
-end
 
 -- Creates and initializes a new rectangle with:
 -- a) the provided X, Y position, width, and height - Rect:new(x, y, w, h)
 -- b) the provided position vec and size vec - Rect:new(position, size)
-function Rect:new(x, y, w, h)
-  local r = setmetatable({}, self)
+-- c) the provided sides table - Rect:new { left=l, top=t, right=r, bottom=b }
+function Rect:init(x, y, w, h)
   if w and h then
-    r.position = Vec(x, y)
-    r.size = Vec(w, h)
+    self.x = x
+    self.y = y
+    self.width = w
+    self.height = h
   else
-    r.position = x
-    r.size = y
+    self.x = x.x
+    self.y = x.y
+    self.width = y.x
+    self.height = y.y
   end
-  return r
+end
+
+-- Creates and initializes a new rectangle from left/top/right/bottom sides.
+function Rect.sides(sides)
+  return Rect:new(
+    sides.left,
+    sides.top,
+    sides.right - sides.left,
+    sides.bottom - sides.top
+  )
+end
+
+-- Returns the left side of the rectangle.
+function Rect:left()
+  return self.x
+end
+
+-- Returns the top side of the rectangle.
+function Rect:top()
+  return self.y
+end
+
+-- Returns the right side of the rectangle.
+function Rect:right()
+  return self.x + self.width
+end
+
+-- Returns the bottom side of the rectangle.
+function Rect:bottom()
+  return self.y + self.height
+end
+
+-- Returns whether this rectangle intersects the other rectangle.
+function Rect:intersects(other)
+  return
+    self:left() < other:right() and other:left() < self:right() and
+    self:top() < other:bottom() and other:top() < self:bottom()
 end
 
 -- Returns a string representation of the rectangle.
 function Rect:__tostring()
-  return string.format("Rect(%s, %s)", self.position, self.size)
+  return string.format(
+    "Rect(%.3f, %.3f)[%.1fx%.1f]",
+    self.x,
+    self.y,
+    self.width,
+    self.height
+  )
 end
 
 return Rect

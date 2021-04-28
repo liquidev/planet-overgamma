@@ -17,18 +17,19 @@ local GameState = State:inherit()
 function GameState:init()
   self.super.init(self)
 
-  self.world = World:new(32)
+  self.world = World:new(32, Vec(0, 0.5))
   -- temporary init code until i implement worldgen
   local plants = game.blockIDs["core:plants"]
   for y = 0, 32 do
     for x = 0, 32 do
-      self.world:block(Vec(x, y), plants)
+      if math.random() > 0.5 then
+        self.world:block(Vec(x, y), plants)
+      end
     end
   end
   print("world is ready")
 
-  self.player = Player:new()
-  self.world:spawn(self.player)
+  self.player = self.world:spawn(Player:new(self.world))
 
   self.camera = Camera:new()
 end
@@ -40,7 +41,7 @@ end
 
 -- Renders the game.
 function GameState:draw(alpha)
-  self.camera:transform(World.draw, nil, self.world)
+  self.player:camera(alpha):transform(World.draw, nil, self.world, alpha)
 end
 
 return GameState

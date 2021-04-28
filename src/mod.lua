@@ -120,6 +120,9 @@ function Mod:addBlock(key, image, kind)
     tables.merge(block, extra)
     local id = game.addBlock(self:namespaced(key), block)
     block.tilesWith = { [id] = true }
+    if block.isSolid == nil then
+      block.isSolid = true
+    end
     return id, block
   end
 end

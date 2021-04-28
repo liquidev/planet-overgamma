@@ -16,6 +16,7 @@ local Atlas = Object:inherit()
 function Atlas:init(size)
   local imageData = image.newImageData(size.x, size.y)
   self.image = graphics.newImage(imageData)
+  -- for some reason graphics.setDefaultFilter doesn't affect sprite batches
   self.image:setFilter("nearest", "nearest")
   self.packer = RectPacker:new(size)
 end

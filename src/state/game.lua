@@ -30,6 +30,7 @@ function GameState:init()
   print("world is ready")
 
   self.player = self.world:spawn(Player:new(self.world))
+  self.player.body.position.y = -32
 
   self.camera = Camera:new()
 end

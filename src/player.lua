@@ -133,7 +133,7 @@ end
 
 -- Updates and returns the player's camera.
 function Player:camera(alpha)
-  self._camera.pan = self:interpolatePosition(alpha)
+  self._camera.pan = self:interpolatePosition(alpha) + self.body.size / 2
   return self._camera
 end
 

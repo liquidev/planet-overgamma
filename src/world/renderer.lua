@@ -61,6 +61,14 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   chunk.dirty = false
 end
 
+-- Draws entities from the given table..
+local function drawEntities(entities, alpha)
+  for _, entity in ipairs(entities) do
+    entity:draw(alpha)
+  end
+end
+
+-- Untransformed world rendering.
 local function render(self, alpha, viewport)
   local Chunk = self.Chunk
 
@@ -85,8 +93,20 @@ local function render(self, alpha, viewport)
   end
 
   -- entities
-  for _, entity in ipairs(self.entities) do
-    entity:draw(alpha)
+  local entities = self.entities
+  local unitWidth = self.width * Chunk.tileSize
+  drawEntities(entities, alpha)
+  if left <= 0 then
+    graphics.push()
+    graphics.translate(-unitWidth, 0)
+    drawEntities(entities, alpha)
+    graphics.pop()
+  end
+  if right >= self.width / Chunk.size then
+    graphics.push()
+    graphics.translate(unitWidth, 0)
+    drawEntities(entities, alpha)
+    graphics.pop()
   end
 end
 

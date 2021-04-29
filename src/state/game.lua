@@ -17,11 +17,12 @@ local GameState = State:inherit()
 function GameState:init()
   self.super.init(self)
 
-  self.world = World:new(32, Vec(0, 0.5))
+  self.world = World:new(16, Vec(0, 0.5))
   -- temporary init code until i implement worldgen
   local plants = game.blockIDs["core:plants"]
   for x = 0, 32 do
-    for y = -math.sin(x * math.pi / 16) * 3, 32 do
+    local sy = -math.floor(math.sin(x * math.pi / 16) * 3)
+    for y = sy, 24 do
       self.world:block(Vec(x, y), plants)
     end
   end

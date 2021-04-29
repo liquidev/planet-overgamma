@@ -79,14 +79,19 @@ function World.positionInChunk(v)
 end
 
 -- Wraps the position around the world seam.
-function World:wrapPosition(position)
+local function wrapPosition(self, position)
   return Vec(position.x % self.width, position.y)
+end
+
+local function wrapChunkPosition(self, position)
+  local widthInChunks = self.width / Chunk.size
+  return Vec(position.x % widthInChunks, position.y)
 end
 
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- creates one.
 function World:ensureChunk(position)
-  local x, y = self:wrapPosition(position):xy()
+  local x, y = wrapChunkPosition(self, position):xy()
   ensureChunkRow(self, y)
   if self.chunks[y][x] == nil then
     self.chunks[y][x] = Chunk:new()
@@ -97,7 +102,7 @@ end
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- returns nil.
 function World:chunk(position)
-  local x, y = self:wrapPosition(position):xy()
+  local x, y = wrapChunkPosition(self, position):xy()
   if self.chunks[y] == nil then
     return nil
   end
@@ -110,7 +115,7 @@ end
 -- If the position lands outside of any chunks, 0 (air) is returned.
 function World:block(position, newBlock)
   local chunk
-  position = self:wrapPosition(position)
+  position = wrapPosition(self, position)
   if newBlock ~= nil then
     chunk = self:ensureChunk(World.chunkPosition(position))
   else

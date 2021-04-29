@@ -161,8 +161,23 @@ return function (World)
     end
   end
 
+  -- Returns whether the given block ID is of a solid block.
   local function isSolid(block)
     return block ~= 0 and game.blocks[block].isSolid
+  end
+
+  -- Wraps the unit X position of the body around the world.
+  -- Also updates the body's previous position to prevent jank in interpolation.
+  local function wrapAround(self, body)
+    local x = body.position.x
+    local width = self.width * Chunk.tileSize
+    if x < 0 then
+      body.position.x = x + width
+      body.positionPrev:copy(body.position)
+    elseif x > width then
+      body.position.x = x - width
+      body.positionPrev:copy(body.position)
+    end
   end
 
   -- Resolves collisions between the body and the world.
@@ -170,6 +185,7 @@ return function (World)
     local bodyTiles, bodyRect
 
     body.position.x = body.position.x + body.velocity.x
+    wrapAround(self, body)
     bodyRect = body:rect()
     bodyTiles = body:tiles()
     for y = bodyTiles:top(), bodyTiles:bottom() do

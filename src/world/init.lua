@@ -52,6 +52,8 @@ require("world.physics")(World)
 
 -- Initializes a new world with the given width.
 function World:init(width, gravity)
+  assert(width % Chunk.size == 0,
+         "world width must be divisible by "..Chunk.size)
   self.chunks = {}
   self.width = width
   self.entities = {}
@@ -76,10 +78,15 @@ function World.positionInChunk(v)
   return Vec(math.floor(v.x % Chunk.size), math.floor(v.y % Chunk.size))
 end
 
+-- Wraps the position around the world seam.
+function World:wrapPosition(position)
+  return Vec(position.x % self.width, position.y)
+end
+
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- creates one.
 function World:ensureChunk(position)
-  local x, y = position:xy()
+  local x, y = self:wrapPosition(position):xy()
   ensureChunkRow(self, y)
   if self.chunks[y][x] == nil then
     self.chunks[y][x] = Chunk:new()
@@ -90,26 +97,12 @@ end
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- returns nil.
 function World:chunk(position)
-  local x, y = position:xy()
+  local x, y = self:wrapPosition(position):xy()
   if self.chunks[y] == nil then
     return nil
   end
   return self.chunks[y][x]
 end
-
--- Iterates over all chunks in the world and returns (position, chunk) pairs.
-function World:chunkPairs()
-  -- This can probably be made faster by using the iterator protocol and `next`
-  -- directly, but I'm too dumb to figure that out.
-  return coroutine.wrap(function ()
-    for y, row in pairs(self.chunks) do
-      for x, chunk in pairs(row) do
-        coroutine.yield(Vec(x, y), chunk)
-      end
-    end
-  end)
-end
-
 
 -- Sets and/or gets the block at the given position.
 -- If newBlock is not nil, sets the block at the given position, creating a new
@@ -117,6 +110,7 @@ end
 -- If the position lands outside of any chunks, 0 (air) is returned.
 function World:block(position, newBlock)
   local chunk
+  position = self:wrapPosition(position)
   if newBlock ~= nil then
     chunk = self:ensureChunk(World.chunkPosition(position))
   else
@@ -126,18 +120,6 @@ function World:block(position, newBlock)
     return chunk:block(World.positionInChunk(position), newBlock)
   end
   return 0
-end
-
--- Returns all blocks in the given area.
-function World:blocksInArea(rect)
-  return coroutine.wrap(function ()
-    for y = rect:top(), rect:bottom() do
-      for x = rect:left(), rect:right() do
-        local position = Vec(x, y)
-        coroutine.yield(position, self:block(position))
-      end
-    end
-  end)
 end
 
 -- Spawns the given entity into the world, returns the entity.

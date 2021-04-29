@@ -1,2 +1,2 @@
-std = "lua51c+love"
+std = "luajit+love"
 ignore = {"212"}

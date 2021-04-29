@@ -3,6 +3,7 @@
 local graphics = love.graphics
 
 local game = require "game"
+local Rect = require "rect"
 local Vec = require "vec"
 
 ---
@@ -60,14 +61,26 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   chunk.dirty = false
 end
 
--- Renders the world. This function is available publicly as World:draw.
-return function (self, alpha)
+local function render(self, alpha, viewport)
+  local Chunk = self.Chunk
+
+  local left = math.floor(viewport:left() / Chunk.unitSize)
+  local top = math.floor(viewport:top() / Chunk.unitSize)
+  local right = math.floor(viewport:right() / Chunk.unitSize)
+  local bottom = math.floor(viewport:bottom() / Chunk.unitSize)
+
   -- chunks
-  for chunkPosition, chunk in self:chunkPairs() do
-    rebuildBlockBatch(self, chunkPosition, chunk)
-    local blocks = chunk.blockBatch
-    if blocks ~= nil then
-      graphics.draw(blocks, (chunkPosition * chunk.unitSize):xy())
+  for y = top, bottom do
+    for x = left, right do
+      local chunkPosition = Vec(x, y)
+      local chunk = self:chunk(chunkPosition)
+      if chunk ~= nil then
+        rebuildBlockBatch(self, chunkPosition, chunk)
+        local blocks = chunk.blockBatch
+        if blocks ~= nil then
+          graphics.draw(blocks, (chunkPosition * chunk.unitSize):xy())
+        end
+      end
     end
   end
 
@@ -75,4 +88,9 @@ return function (self, alpha)
   for _, entity in ipairs(self.entities) do
     entity:draw(alpha)
   end
+end
+
+-- Renders the world. This function is available publicly as World:draw.
+return function (self, alpha, camera)
+  camera:transform(render, nil, self, alpha, camera:viewport())
 end

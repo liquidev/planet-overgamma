@@ -20,11 +20,9 @@ function GameState:init()
   self.world = World:new(32, Vec(0, 0.5))
   -- temporary init code until i implement worldgen
   local plants = game.blockIDs["core:plants"]
-  for y = 0, 32 do
-    for x = 0, 32 do
-      if math.random() > 0.5 then
-        self.world:block(Vec(x, y), plants)
-      end
+  for x = 0, 32 do
+    for y = -math.sin(x * math.pi / 16) * 3, 32 do
+      self.world:block(Vec(x, y), plants)
     end
   end
   print("world is ready")
@@ -42,7 +40,7 @@ end
 
 -- Renders the game.
 function GameState:draw(alpha)
-  self.player:camera(alpha):transform(World.draw, nil, self.world, alpha)
+  self.world:draw(alpha, self.player:camera(alpha))
 end
 
 return GameState

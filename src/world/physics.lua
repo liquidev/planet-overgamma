@@ -59,8 +59,8 @@ return function (World)
     return Rect.sides {
       left = math.floor(self.position.x / Chunk.tileSize),
       top = math.floor(self.position.y / Chunk.tileSize),
-      right = math.ceil((self.position.x + self.size.x) / Chunk.tileSize),
-      bottom = math.ceil((self.position.y + self.size.y) / Chunk.tileSize),
+      right = math.floor((self.position.x + self.size.x) / Chunk.tileSize),
+      bottom = math.floor((self.position.y + self.size.y) / Chunk.tileSize),
     }
   end
 
@@ -172,26 +172,35 @@ return function (World)
     body.position.x = body.position.x + body.velocity.x
     bodyRect = body:rect()
     bodyTiles = body:tiles()
-    for position, block in self:blocksInArea(bodyTiles) do
-      if isSolid(block) then
-        resolveBlockX(self, body, bodyRect, position)
+    for y = bodyTiles:top(), bodyTiles:bottom() do
+      for x = bodyTiles:left(), bodyTiles:right() do
+        local position = Vec(x, y)
+        local block = self:block(position)
+        if isSolid(block) then
+          resolveBlockX(self, body, bodyRect, position)
+        end
       end
     end
 
     body.position.y = body.position.y + body.velocity.y
     bodyRect = body:rect()
-    bodyTiles = Rect.sides {
-      left = math.floor(bodyRect:left() / Chunk.tileSize),
-      top = math.floor(bodyRect:top() / Chunk.tileSize),
-      right = math.ceil(bodyRect:right() / Chunk.tileSize),
-      bottom = math.ceil(bodyRect:bottom() / Chunk.tileSize),
-    }
-    for position, block in self:blocksInArea(bodyTiles) do
-      if isSolid(block) then
-        resolveBlockY(self, body, bodyRect, position)
+    bodyTiles = body:tiles()
+    print(bodyTiles)
+    for y = bodyTiles:top(), bodyTiles:bottom() do
+      for x = bodyTiles:left(), bodyTiles:right() do
+        local position = Vec(x, y)
+        local block = self:block(position)
+        if isSolid(block) then
+          resolveBlockY(self, body, bodyRect, position)
+        end
       end
     end
   end
+
+  -- Speeds up collision resolution a bit
+  jit.on(resolveBlockCollision)
+  jit.on(resolveBlockX)
+  jit.on(resolveBlockY)
 
   -- Updates a single physics body.
   local function updateBody(self, body)

@@ -14,13 +14,13 @@ local input = game.input
 local Player = Entity:inherit()
 
 -- The player's walking speed.
-Player.speed = 0.25
+local speed = 0.25
 -- The player's deceleration factor.
-Player.decel = 0.8
+local decel = 0.8
 -- The amount of ticks the player jumps for.
-Player.jumpTicks = 15
+local jumpTicks = 15
 -- The amount of ticks during which the player can start a jump after falling.
-Player.coyoteTime = 10
+local coyoteTime = 10
 
 -- Initializes the player with the given world.
 function Player:init(world)
@@ -71,36 +71,36 @@ function Player:update()
 
   -- sideways movement
   if input:keyDown('a') then
-    self.body:applyForce(Vec(-self.speed, 0))
+    self.body:applyForce(Vec(-speed, 0))
     self.facing = "left"
   end
   if input:keyDown('d') then
-    self.body:applyForce(Vec(self.speed, 0))
+    self.body:applyForce(Vec(speed, 0))
     self.facing = "right"
   end
 
   -- jumping
 
   if self.body.collidingWith.top then
-    self.coyoteTimer = Player.coyoteTime
+    self.coyoteTimer = coyoteTime
   end
   self.coyoteTimer = self.coyoteTimer - 1
 
   if self:canJump() and input:keyJustPressed("space") then
-    self.jumpTimer = Player.jumpTicks
+    self.jumpTimer = jumpTicks
     self.body.velocity.y = 0
   end
   if not input:keyDown("space") then
     self.jumpTimer = 0
   end
   if self.jumpTimer > 0 then
-    local jumpForce = Vec(0, -(self.jumpTimer / Player.jumpTicks)^6 * 1.5)
+    local jumpForce = Vec(0, -(self.jumpTimer / jumpTicks)^6 * 1.5)
     self.jumpTimer = self.jumpTimer - 1
     self.body:applyForce(jumpForce)
   end
 
   -- deceleration
-  self.body.velocity:mul(Vec(self.decel, 1))
+  self.body.velocity:mul(Vec(decel, 1))
 
   --
   -- Animation timers

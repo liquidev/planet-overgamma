@@ -18,7 +18,9 @@ Player.speed = 0.25
 -- The player's deceleration factor.
 Player.decel = 0.8
 -- The amount of ticks the player jumps for.
-Player.jumpTicks = 10
+Player.jumpTicks = 15
+-- The amount of ticks during which the player can start a jump after falling.
+Player.coyoteTime = 10
 
 -- Initializes the player with the given world.
 function Player:init(world)
@@ -35,19 +37,30 @@ function Player:init(world)
   self.walkTimer = 0
 
   self.jumpTimer = 0
+  self.coyoteTimer = 0
+end
+
+-- Returns whether the player is falling.
+function Player:isFalling()
+  return self.body.velocity.y > 0.01
 end
 
 -- Returns the animation state of the player ("idle" | "walk" | "fall")
 function Player:animationState()
   if self.body.velocity.y < -0.01 then
     return "walk"
-  elseif self.body.velocity.y > 0.01 then
+  elseif self:isFalling() then
     return "fall"
   elseif self.walkTimer % 20 > 10 then
     return "walk"
   else
     return "idle"
   end
+end
+
+-- Returns whether the player can jump.
+function Player:canJump()
+  return self.body.collidingWith.top or self.coyoteTimer > 0
 end
 
 -- Ticks the player.
@@ -67,14 +80,21 @@ function Player:update()
   end
 
   -- jumping
-  if self.body.collidingWith.top and input:keyJustPressed("space") then
+
+  if self.body.collidingWith.top then
+    self.coyoteTimer = Player.coyoteTime
+  end
+  self.coyoteTimer = self.coyoteTimer - 1
+
+  if self:canJump() and input:keyJustPressed("space") then
     self.jumpTimer = Player.jumpTicks
+    self.body.velocity.y = 0
   end
   if not input:keyDown("space") then
     self.jumpTimer = 0
   end
   if self.jumpTimer > 0 then
-    local jumpForce = Vec(0, -(self.jumpTimer / Player.jumpTicks)^6 * 2)
+    local jumpForce = Vec(0, -(self.jumpTimer / Player.jumpTicks)^6 * 1.5)
     self.jumpTimer = self.jumpTimer - 1
     self.body:applyForce(jumpForce)
   end

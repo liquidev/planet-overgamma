@@ -95,7 +95,7 @@ function love.run()
     -- rendering
     local alpha = lag / timePerTick
     graphics.origin()
-    graphics.clear(0.1, 0.1, 0.1, 1.0, 0)
+    graphics.clear(0, 0, 0, 1.0, 0)
     state:draw(alpha)
     graphics.present()
 

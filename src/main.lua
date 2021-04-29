@@ -58,11 +58,10 @@ function love.run()
 
   local previous = timer.getTime()
   local lag = 0
-  local updates, updateTime = 0, 0
 
---   if profilerEnabled then
---     profiler.start()
---   end
+  if profilerEnabled then
+    profiler.start()
+  end
 
   return function ()
     local now = timer.getTime()
@@ -77,8 +76,6 @@ function love.run()
         if profilerEnabled then
           profiler.stop()
           profiler.report("profile.log")
-          print(":: profile overview:")
-          print("     avg update: "..updateTime / updates)
         end
         return a or 0
       else
@@ -88,12 +85,7 @@ function love.run()
 
     -- updates
     while lag >= timePerTick do
-      local start = timer.getTime()
-      profiler.start()
       state:update()
-      profiler.stop()
-      updateTime = updateTime + (timer.getTime() - start)
-      updates = updates + 1
       lag = lag - timePerTick
       -- The frame is finished after a single tick, because we don't want
       -- repeated momentary inputs.

@@ -185,7 +185,6 @@ return function (World)
     body.position.y = body.position.y + body.velocity.y
     bodyRect = body:rect()
     bodyTiles = body:tiles()
-    print(bodyTiles)
     for y = bodyTiles:top(), bodyTiles:bottom() do
       for x = bodyTiles:left(), bodyTiles:right() do
         local position = Vec(x, y)

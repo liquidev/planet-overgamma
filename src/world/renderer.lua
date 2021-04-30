@@ -112,5 +112,5 @@ end
 
 -- Renders the world. This function is available publicly as World:draw.
 return function (self, alpha, camera)
-  camera:transform(render, nil, self, alpha, camera:viewport())
+  camera:transform(render, self, alpha, camera:viewport())
 end

@@ -16,6 +16,12 @@ Camera.scale = 4
 -- Initializes a new camera.
 function Camera:init()
   self.pan = Vec(0, 0)
+  self.viewportSize = Vec(graphics.getDimensions())
+end
+
+-- Updates the viewport size of the camera.
+function Camera:updateViewport(size)
+  self.viewportSize = size
 end
 
 -- Adds the specified panning to the camera's panning.
@@ -24,17 +30,8 @@ function Camera:applyPan(pan)
 end
 
 -- Returns a Rect containing the visible area of the camera.
--- `size` specifies the size of the viewport (Vec), and defaults to the window
--- size.
-function Camera:viewport(size)
-  local width, height
-  if size == nil then
-    width, height = graphics.getDimensions()
-  else
-    width, height = size:xy()
-  end
-
-  local halfWidth, halfHeight = width / (2 * Camera.scale), height / (2 * Camera.scale)
+function Camera:viewport()
+  local halfWidth, halfHeight = (self.viewportSize / (2 * Camera.scale)):xy()
   local x, y = self.pan:xy()
   return Rect.sides {
     left = x - halfWidth,
@@ -46,17 +43,9 @@ end
 
 -- Transforms the view to the camera's view, executes fn, and resets the
 -- transform.
--- size (Vec) specifies the size of the viewport, and defaults to the window
--- size.
 -- Any arguments following are passed to the fn.
-function Camera:transform(fn, size, ...)
-  local width, height
-  if size == nil then
-    width, height = graphics.getDimensions()
-  else
-    width, height = size:xy()
-  end
-
+function Camera:transform(fn, ...)
+  local width, height = self.viewportSize:xy()
   local pan = self.pan * Camera.scale
   graphics.push()
   graphics.translate(width / 2, height / 2)
@@ -64,6 +53,11 @@ function Camera:transform(fn, size, ...)
   graphics.scale(Camera.scale)
   fn(...)
   graphics.pop()
+end
+
+-- Converts a point from screen space to world space.
+function Camera:toWorldSpace(point)
+  return (point - self.viewportSize / 2) / Camera.scale + self.pan
 end
 
 return Camera

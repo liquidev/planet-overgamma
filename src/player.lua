@@ -66,10 +66,10 @@ end
 -- Ticks the player.
 function Player:update()
   --
-  -- Controls
+  -- Movement
   --
 
-  -- sideways movement
+  -- walkin'
   if input:keyDown('a') then
     self.body:applyForce(Vec(-speed, 0))
     self.facing = "left"
@@ -110,6 +110,11 @@ function Player:update()
   else
     self.walkTimer = 0
   end
+
+  --
+  -- Laser
+  --
+
 end
 
 -- Interpolates the position of the player.
@@ -129,11 +134,15 @@ function Player:draw(alpha)
     x = x + spriteSize.x
   end
   graphics.draw(self.sprites[self:animationState()], x, y, 0, scale, 1)
+
+  local laserPointer = self._camera:toWorldSpace(input.mouse)
+  graphics.rectangle("fill", laserPointer.x, laserPointer.y, 2, 2)
 end
 
 -- Updates and returns the player's camera.
 function Player:camera(alpha)
   self._camera.pan = self:interpolatePosition(alpha) + self.body.size / 2
+  self._camera:updateViewport(Vec(graphics.getDimensions()))
   return self._camera
 end
 

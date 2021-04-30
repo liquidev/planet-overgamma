@@ -1,5 +1,10 @@
 -- Game world. This handles all blocks, entities, and body physics.
 
+local bit = require "bit"
+
+local band, bor = bit.band, bit.bor
+local shl = bit.lshift
+
 local Object = require "object"
 local tables = require "tables"
 local Vec = require "vec"
@@ -55,6 +60,7 @@ function World:init(width, gravity)
   assert(width % Chunk.size == 0,
          "world width must be divisible by "..Chunk.size)
   self.chunks = {}
+    -- ↑ don't index this directly unless you know what you're doing
   self.width = width
   self.entities = {}
   self.spawnQueue = {}
@@ -68,6 +74,15 @@ local function ensureChunkRow(world, y)
   end
 end
 
+-- Packs a chunk position vector into a number.
+local function packChunkPosition(position)
+  -- This limits chunk coordinates to 16-bit signed integers, but honestly
+  -- I don't think anyone will ever try to generate a world that's 65536 chunks
+  -- (524288 blocks) in size, as walking across that would take you about
+  -- 30 days non-stop.
+  return bor(shl(band(position.x, 0xFFFF), 16), band(position.y, 0xFFFF))
+end
+
 -- Converts the provided vector to a chunk position.
 function World.chunkPosition(v)
   return Vec(math.floor(v.x / Chunk.size), math.floor(v.y / Chunk.size))
@@ -78,35 +93,38 @@ function World.positionInChunk(v)
   return Vec(math.floor(v.x % Chunk.size), math.floor(v.y % Chunk.size))
 end
 
--- Wraps the position around the world seam.
-local function wrapPosition(self, position)
+-- Wraps the given block position around the world seam.
+function World:wrapPosition(position)
   return Vec(position.x % self.width, position.y)
 end
 
-local function wrapChunkPosition(self, position)
+local wrapPosition = World.wrapPosition
+
+-- Wraps the given chunk position around the world seam.
+function World:wrapChunkPosition(position)
   local widthInChunks = self.width / Chunk.size
   return Vec(position.x % widthInChunks, position.y)
 end
 
+local wrapChunkPosition = World.wrapChunkPosition
+
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- creates one.
 function World:ensureChunk(position)
-  local x, y = wrapChunkPosition(self, position):xy()
-  ensureChunkRow(self, y)
-  if self.chunks[y][x] == nil then
-    self.chunks[y][x] = Chunk:new()
+  position = wrapChunkPosition(self, position)
+  local packed = packChunkPosition(position)
+  if self.chunks[packed] == nil then
+    self.chunks[packed] = Chunk:new()
   end
-  return self.chunks[y][x]
+  return self.chunks[packed]
 end
 
 -- Returns the chunk with the given position. If the chunk doesn't exist,
 -- returns nil.
 function World:chunk(position)
-  local x, y = wrapChunkPosition(self, position):xy()
-  if self.chunks[y] == nil then
-    return nil
-  end
-  return self.chunks[y][x]
+  position = wrapChunkPosition(self, position)
+  local packed = packChunkPosition(position)
+  return self.chunks[packed]
 end
 
 -- Sets and/or gets the block at the given position.

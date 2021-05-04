@@ -1,5 +1,9 @@
 -- Utility functions that are used commonly.
 
+local rgba = love.math.colorFromBytes
+
+---
+
 local common = {}
 
 -- Better version of pcall that returns an error with a stack traceback.
@@ -53,5 +57,9 @@ function common.lerp(a, b, t)
   -- to optimize this into a fused multiply-add.
   return a + t * (b - a)
 end
+
+-- Commonly used colors.
+common.white = { rgba(255, 255, 255) }
+common.black = { rgba(0, 0, 0) }
 
 return common

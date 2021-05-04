@@ -49,6 +49,11 @@ return function (World)
     self.force:add(force)
   end
 
+  -- Returns the center point of the body.
+  function Body:center()
+    return self.position + self.size / 2
+  end
+
   -- Returns the bounding box of the body.
   function Body:rect()
     return Rect:new(self.position, self.size)

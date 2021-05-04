@@ -54,6 +54,10 @@ local World = Object:inherit()
 World.Chunk = Chunk
 
 require("world.physics")(World)
+require("world.interaction")(World)
+
+-- The ID of air.
+World.air = 0
 
 -- Initializes a new world with the given width.
 function World:init(width, gravity)
@@ -65,13 +69,6 @@ function World:init(width, gravity)
   self.entities = {}
   self.spawnQueue = {}
   self:initPhysics(gravity)
-end
-
--- Ensures a valid chunk row is available.
-local function ensureChunkRow(world, y)
-  if world.chunks[y] == nil then
-    world.chunks[y] = {}
-  end
 end
 
 -- Packs a chunk position vector into a number.
@@ -127,22 +124,54 @@ function World:chunk(position)
   return self.chunks[packed]
 end
 
+-- Marks the chunk at the given position as dirty, which causes it to rebuild
+-- its sprite batch when it is about to be drawn.
+function World:markDirty(chunkPosition)
+  local chunk = self:chunk(chunkPosition)
+  if chunk ~= nil then
+    chunk.dirty = true
+  end
+end
+
+-- Marks all chunks adjacent to the given position dirty.
+function World:markDirtyChunks(position)
+  local chunkPosition = World.chunkPosition(position)
+  local positionInChunk = World.positionInChunk(position)
+  self:markDirty(chunkPosition)
+  if positionInChunk.x == 0 then
+    self:markDirty(chunkPosition + Vec(-1, 0))
+  end
+  if positionInChunk.x == Chunk.size - 1 then
+    self:markDirty(chunkPosition + Vec(1, 0))
+  end
+  if positionInChunk.y == 0 then
+    self:markDirty(chunkPosition + Vec(0, -1))
+  end
+  if positionInChunk.y == Chunk.size - 1 then
+    self:markDirty(chunkPosition + Vec(0, 1))
+  end
+end
+
 -- Sets and/or gets the block at the given position.
 -- If newBlock is not nil, sets the block at the given position, creating a new
 -- chunk if necessary.
--- If the position lands outside of any chunks, 0 (air) is returned.
+-- If the position lands outside of any chunks, World.air is returned.
 function World:block(position, newBlock)
-  local chunk
   position = wrapPosition(self, position)
+
+  local chunk
   if newBlock ~= nil then
     chunk = self:ensureChunk(World.chunkPosition(position))
   else
     chunk = self:chunk(World.chunkPosition(position))
   end
   if chunk ~= nil then
+    if newBlock ~= nil then
+      self:markDirtyChunks(position)
+    end
     return chunk:block(World.positionInChunk(position), newBlock)
   end
-  return 0
+  return World.air
 end
 
 -- Spawns the given entity into the world, returns the entity.

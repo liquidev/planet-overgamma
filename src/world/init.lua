@@ -187,6 +187,10 @@ function World:update()
     self.spawnQueue[i] = nil
   end
 
+  for _, entity in ipairs(self.entities) do
+    entity:prePhysicsUpdate()
+  end
+
   self:updatePhysics()
 
   local i = 1

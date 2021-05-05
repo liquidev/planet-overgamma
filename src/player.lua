@@ -103,6 +103,7 @@ function Player:update()
 
   if self:canJump() and input:keyJustPressed("space") then
     self.jumpTimer = jumpTicks
+    self.coyoteTimer = 0
     self.body.velocity.y = 0
   end
   if not input:keyDown("space") then
@@ -125,7 +126,9 @@ function Player:update()
   else
     self.walkTimer = 0
   end
+end
 
+function Player:prePhysicsUpdate()
   --
   -- Laser
   --
@@ -143,6 +146,9 @@ function Player:update()
       (self.laserMaxCharge - self.laserCharge) / self.laserMaxCharge *
       laserChargeRate
     self.laserCharge = self.laserCharge + self.laserMaxCharge * coeff
+    -- also, the player should face wherever the laser is pointing
+    local direction = (self:laserPosition() - self.body.position).x
+    self.facing = (direction < 0) and "left" or "right"
   else
     self.laserCharge = self.laserCharge * 0.6
   end
@@ -247,10 +253,11 @@ function Player:draw(alpha)
   )
   if self.laserCharge > 0.01 then
     local color = laserColors[self.laserMode]
-    local thickness = self.laserCharge * 2
+    local thickness = self.laserCharge
+    local glowThickness = (thickness < 1) and (3 * thickness) or (thickness + 2)
     local laserPosition = self:laserPosition()
-    drawLaser(center, laserPosition, thickness, color)
-    drawLaser(center, laserPosition, thickness / 2, laserColors.core)
+    drawLaser(center, laserPosition, glowThickness, color)
+    drawLaser(center, laserPosition, thickness, laserColors.core)
   end
 
   graphics.pop()

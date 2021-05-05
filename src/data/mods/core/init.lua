@@ -9,7 +9,7 @@ mod:metadata {
 }
 
 local blocks = {
-  plants = mod:addBlock("plants", "blocks/plants.png") { hardness = 0.5 },
+  plants = mod:addBlock("plants", "blocks/plants.png") { hardness = 0.75 },
   rock   = mod:addBlock("rock", "blocks/rock.png")     { hardness = 1 },
 }
 

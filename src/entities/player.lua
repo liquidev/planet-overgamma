@@ -7,6 +7,7 @@ local Camera = require "camera"
 local common = require "common"
 local Entity = require "world.entity"
 local game = require "game"
+local Item = require "entities.item"
 local Vec = require "vec"
 local World = require "world"
 
@@ -37,7 +38,10 @@ function Player:init(world)
 
   self._camera = Camera:new()
   self.world = world
-  self.body = world:newBody(Vec(8, 6), 0.0075)
+  self.body = world:newBody(Vec(8, 6), 0.0075, self)
+  function self.body.onCollisionWithBody(body)
+    self:collisionWithBody(body)
+  end
 
   -- For now this is hardcoded to blue, later I might add player color selection
   -- but now is not the time.
@@ -119,12 +123,35 @@ function Player:update()
   self.body.velocity:mul(Vec(decel, 1))
 
   --
-  -- Animation timers
+  -- Animation
   --
+
+  -- timers
   if math.abs(self.body.velocity.x) > 0.01 then
     self.walkTimer = self.walkTimer + 1
   else
     self.walkTimer = 0
+  end
+
+  -- face the player to where the laser is pointed
+  if self.laserEnabled then
+    local direction = (self:laserPosition() - self.body.position).x
+    self.facing = (direction < 0) and "left" or "right"
+  end
+
+  --
+  -- Item magnet
+  --
+
+  local position = self.body.position
+  for _, entity in ipairs(self.world.entities) do
+    if entity:of(Item) then
+      local delta = self.world:shortestDelta(entity.body.position, position)
+      local distance = delta:len()
+      local strength = math.min((math.max(0, 48 - distance) / 48) * 0.3, 4)
+      local pull = delta:normalized() * strength
+      entity.body:applyForce(pull)
+    end
   end
 end
 
@@ -146,9 +173,6 @@ function Player:prePhysicsUpdate()
       (self.laserMaxCharge - self.laserCharge) / self.laserMaxCharge *
       laserChargeRate
     self.laserCharge = self.laserCharge + self.laserMaxCharge * coeff
-    -- also, the player should face wherever the laser is pointing
-    local direction = (self:laserPosition() - self.body.position).x
-    self.facing = (direction < 0) and "left" or "right"
   else
     self.laserCharge = self.laserCharge * 0.6
   end
@@ -164,6 +188,16 @@ function Player:prePhysicsUpdate()
 
   -- sanitize the charge value
   self.laserCharge = math.max(self.laserCharge, 0)
+end
+
+-- Handles collision with another body.
+function Player:collisionWithBody(body)
+  if body.owner == nil or not body.owner:of(Entity) then return end
+
+  local entity = body.owner
+  if entity:of(Item) then
+    entity:take(entity.stack.amount)
+  end
 end
 
 -- Interpolates the position of the player.

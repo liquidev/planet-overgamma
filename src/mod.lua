@@ -56,7 +56,17 @@ function Mod.namespaced(namespace, name)
   return string.format("%s:%s", namespace, name)
 end
 
--- Loads a new block from an image (file or ImageData).
+-- Loads an image if the argument is a string containing a filename, otherwise
+-- returns the argument.
+local function loadImage(mod, image)
+  if type(image) == "string" then
+    local imagePath = mod.path..'/'..image
+    image = love.image.newImageData(imagePath)
+  end
+  return image
+end
+
+-- Adds a new block from an image (filename or ImageData).
 -- `kind` specifies the loading mode, and may be either "block" or "4x4".
 -- If omitted, the mode will be guessed based on the image's size
 -- ("block" if < 32x32, "4x4" otherwise). This comparison is done by computing
@@ -95,10 +105,7 @@ end
 -- into the block before adding it into the tile registry. The function will
 -- return the block ID and final block upon calling.
 function Mod:addBlock(key, image, kind)
-  if type(image) == "string" then
-    local imagePath = self.path..'/'..image
-    image = love.image.newImageData(imagePath)
-  end
+  image = loadImage(self, image)
   if kind ~= "block" and kind ~= "4x4" then
     if image:getWidth() * image:getHeight() < 32 * 32 then
       kind = "block"
@@ -125,6 +132,17 @@ function Mod:addBlock(key, image, kind)
     end
     return id, block
   end
+end
+
+-- Adds a new item from an image (filename or ImageData) and returns its ID and
+-- item data table.
+function Mod:addItem(key, image)
+  image = loadImage(self, image)
+
+  local item = {
+    rect = game.itemAtlas:pack(image)
+  }
+  return game.addItem(self:namespaced(key), item)
 end
 
 

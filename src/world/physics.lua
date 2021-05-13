@@ -1,5 +1,6 @@
 -- Physics engine based on AABB.
 
+local common = require "common"
 local game = require "game"
 local Object = require "object"
 local Rect = require "rect"
@@ -20,11 +21,12 @@ return function (World)
 
   -- Creates and initializes a new physics body with the given size.
   -- Use World:newBody instead of this.
-  function Body:init(world, size, density)
+  function Body:init(world, size, density, owner)
     assert(world:of(World))
     assert(size ~= nil)
     assert(density ~= nil)
 
+    self.owner = owner -- user-specified owner object
     self.world = world
     self.size = size
     self.position = Vec(0, 0)
@@ -32,16 +34,26 @@ return function (World)
     self.velocity = Vec(0, 0)
     self.force = Vec(0, 0)
     self.elasticity = 0
-    self.mass = size.x * size.y * density
+    self:setDensity(density)
     self.collidingWith = {}
+    self.onCollisionWithBody = common.noop
   end
 
   -- Removes the body from its physics world immediately.
   -- Bodies are normally removed from the world as soon as they get garbage
   -- collected, which might not be predictable.
   -- This will remove the body during the next physics tick.
+  --
+  -- This also unsets the `owner` field of the body to ensure that no cycle is
+  -- formed during garbage collection.
   function Body:drop()
     self._doDrop = true
+    self.owner = nil
+  end
+
+  -- Changes the body's mass to use the provided density.
+  function Body:setDensity(density)
+    self.mass = self.size.x * self.size.y * density
   end
 
   -- Applies a force to the body.
@@ -87,8 +99,12 @@ return function (World)
 
   -- Creates a new physics body, adds it to the world, and returns it.
   -- `size` specifies the size of the body, in units.
-  function World:newBody(size, density)
-    local body = Body:new(self, size, density)
+  -- `density` specifies how dense the object should be. The mass of the object
+  -- is calculated based off of this value and the object's volume (or rather,
+  -- area, as we're dealing with 2D here).
+  -- `owner` is a user-specified value that can be accessed via `body.owner`.
+  function World:newBody(size, density, owner)
+    local body = Body:new(self, size, density, owner)
     table.insert(self.bodies, body)
     return body
   end
@@ -217,10 +233,16 @@ return function (World)
     end
   end
 
+  local function resolveBodyCollision(self, bodyA, bodyB)
+    bodyA.onCollisionWithBody(bodyB)
+    bodyB.onCollisionWithBody(bodyA)
+  end
+
   -- Speeds up collision resolution a bit
-  jit.on(resolveBlockCollision)
   jit.on(resolveBlockX)
   jit.on(resolveBlockY)
+  jit.on(resolveBlockCollision)
+  jit.on(resolveBodyCollision)
 
   -- Updates a single physics body.
   local function updateBody(self, body)
@@ -235,6 +257,16 @@ return function (World)
     body.collidingWith.top = false
     body.collidingWith.bottom = false
     resolveBlockCollision(self, body)
+
+    local ownRect = body:rect()
+    for _, other in ipairs(self.bodies) do
+      if body ~= other then
+        local otherRect = other:rect()
+        if ownRect:intersects(otherRect) then
+          resolveBodyCollision(self, body, other)
+        end
+      end
+    end
   end
 
   -- Ticks physics bodies in the world. Called by world:update.
@@ -252,6 +284,22 @@ return function (World)
         i = i + 1
       end
     end
+  end
+
+  -- Returns the shortest delta position between the two points, taking the
+  -- world seam into account. This should be used instead of b - a when dealing
+  -- with entity coordinates, to ensure that distances between entities work
+  -- properly.
+  function World:shortestDelta(a, b)
+    local left = Vec(b.x - self.unitWidth, b.y) - a
+    local middle = b - a
+    local right = Vec(b.x + self.unitWidth, b.y) - a
+    local leftLen, middleLen, rightLen =
+      left:len2(), middle:len2(), right:len2()
+    if middleLen < leftLen and middleLen < rightLen then return middle end
+    if leftLen < middleLen and leftLen < rightLen then return left end
+    if rightLen < leftLen and rightLen < middleLen then return right end
+    return middle -- failsafe!
   end
 
 end

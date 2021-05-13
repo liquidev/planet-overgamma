@@ -6,6 +6,9 @@ local rgba = love.math.colorFromBytes
 
 local common = {}
 
+-- Does nothing.
+function common.noop() end
+
 -- Better version of pcall that returns an error with a stack traceback.
 --
 -- Calls fn in "protected mode" - instead of propagating errors that occur
@@ -56,6 +59,16 @@ function common.lerp(a, b, t)
   -- This is an "imprecise" method but hopefully it'll give LuaJIT a chance
   -- to optimize this into a fused multiply-add.
   return a + t * (b - a)
+end
+
+-- Converts degrees to radians.
+function common.degToRad(deg)
+  return deg / 180 * math.pi
+end
+
+-- Converts radians to degrees.
+function common.radToDeg(rad)
+  return rad / math.pi * 180
 end
 
 -- Commonly used colors.

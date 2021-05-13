@@ -59,13 +59,14 @@ require("world.interaction")(World)
 -- The ID of air.
 World.air = 0
 
--- Initializes a new world with the given width.
+-- Initializes a new world with the given width (in tiles).
 function World:init(width, gravity)
   assert(width % Chunk.size == 0,
          "world width must be divisible by "..Chunk.size)
   self.chunks = {}
     -- ↑ don't index this directly unless you know what you're doing
   self.width = width
+  self.unitWidth = width * Chunk.tileSize
   self.entities = {}
   self.spawnQueue = {}
   self:initPhysics(gravity)
@@ -88,6 +89,19 @@ end
 -- Converts the provided vector to a tile position in a chunk.
 function World.positionInChunk(v)
   return Vec(math.floor(v.x % Chunk.size), math.floor(v.y % Chunk.size))
+end
+
+-- Converts the provided tile position to a unit position with the specified
+-- alignment relative to a tile.
+World.unitPosition = {}
+
+function World.unitPosition.topLeft(position)
+  return position * Chunk.tileSize
+end
+
+function World.unitPosition.center(position)
+  local tileSize = Vec(Chunk.tileSize, Chunk.tileSize)
+  return position * tileSize + tileSize / 2
 end
 
 -- Wraps the given block position around the world seam.

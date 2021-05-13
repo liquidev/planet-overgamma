@@ -4,8 +4,6 @@
 -- modules operate on the `game` table defined in this module directly and are
 -- loaded at the very start of the program.
 
-local graphics = love.graphics
-
 local Atlas = require "atlas"
 local Input = require "input"
 local Registry = require "registry"
@@ -29,6 +27,11 @@ local game = {
   blockAtlas = Atlas:new(atlasSize),
   blockIDs = Registry:new(),
   blocks = {},
+
+  -- item data
+  itemAtlas = Atlas:new(atlasSize),
+  itemIDs = Registry:new(),
+  items = {},
 }
 
 return game

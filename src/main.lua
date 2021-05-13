@@ -14,6 +14,7 @@ require "game.functions"
 require "game.load"
 
 local Mod = require "mod"
+local Scheduler = require "fiber"
 
 --
 -- Variables

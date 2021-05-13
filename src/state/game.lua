@@ -2,7 +2,7 @@
 
 local Camera = require "camera"
 local game = require "game"
-local Player = require "player"
+local Player = require "entities.player"
 local State = require "state"
 local World = require "world"
 local Vec = require "vec"
@@ -17,7 +17,7 @@ local GameState = State:inherit()
 function GameState:init()
   self.super.init(self)
 
-  self.world = World:new(16, Vec(0, 0.5))
+  self.world = World:new(32, Vec(0, 0.5))
   -- temporary init code until i implement worldgen
   local plants = game.blockIDs["core:plants"]
   for x = 0, 32 do

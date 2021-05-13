@@ -10,7 +10,7 @@ local Registry = require "registry"
 local game = require "game"
 require "game.load"
 
--- Adds a new block into the game and returns `block` and its ID.
+-- Adds a new block into the game and returns its ID and `block`.
 -- Raises an error if a block with the given key already exists.
 --
 -- The provided `block` table is modified to also contain the block ID.
@@ -49,6 +49,34 @@ function game.addBlock(key, block)
   game.blocks[id] = block
   print("game: registered block '"..key.."' -> "..id)
   return id, block
+end
+
+-- Adds a new item into the game and returns its ID and `item`.
+-- Raises an error if an item with the given key already exists.
+--
+-- Just like game.addBlock, the item table is modified to also contain the
+-- item's ID, and Mod:addItem should be preferred over this.
+function game.addItem(key, item)
+  -- The item table has to have the following structure:
+  -- {
+  --   -- The game.itemAtlas rect of the item.
+  --   rect: {Rect},
+  -- }
+  -- which is generated automatically by Mod:addItem.
+  if Registry.hasKey(game.itemIDs, key) then
+    error("item '"..key.."' is already registered")
+  end
+  local id = game.itemIDs[key]
+  item.id = id
+
+  -- Generate the item's quad.
+  local rect = item.rect
+  item.quad = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
+                               game.itemAtlas.image)
+
+  game.items[id] = item
+  print("game: registered item '"..key.."' -> "..id)
+  return id, item
 end
 
 return game

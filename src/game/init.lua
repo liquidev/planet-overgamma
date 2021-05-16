@@ -16,6 +16,7 @@ local atlasSize = Vec(256, 256)
 local game = {
   -- globally useful stuff
   input = Input:new(),
+  fonts = {}, -- regular, bold
 
   -- sprites
   playerSprites = {},

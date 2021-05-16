@@ -49,6 +49,8 @@ function love.run()
 
   -- initialize
 
+  os.setlocale("C")
+
   math.randomseed(os.time())
   graphics.setDefaultFilter("nearest", "nearest")
 

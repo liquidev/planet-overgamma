@@ -141,7 +141,11 @@ end
 -- This also returns the length of the vector before normalization.
 function vecMethods:normalized()
   local len = self:len()
-  return self / len, len
+  if len == 0 then
+    return Vec(0, 0)
+  else
+    return self / len, len
+  end
 end
 
 -- Linearly interpolates between this vector and the other vector, with

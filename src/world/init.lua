@@ -212,6 +212,7 @@ function World:update()
   while i <= count do
     local entity = self.entities[i]
     entity:update()
+    print(i, entity)
     if entity._doDrop then
       self.entities[i] = self.entities[count]
       self.entities[count] = nil

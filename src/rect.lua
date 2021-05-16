@@ -1,6 +1,7 @@
 -- Axis-aligned rectangle.
 
 local Object = require "object"
+local Vec = require "vec"
 
 ---
 
@@ -33,6 +34,11 @@ function Rect.sides(sides)
     sides.right - sides.left,
     sides.bottom - sides.top
   )
+end
+
+-- Returns the position of the rectangle as a vector.
+function Rect:position()
+  return Vec(self.x, self.y)
 end
 
 -- Returns the left side of the rectangle.

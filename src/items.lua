@@ -66,4 +66,10 @@ function items.draw(drops)
   end
 end
 
+-- Formats an item amount by adding a decimal separator, if it's not a multiple
+-- of 10.
+function items.quantity(amount)
+  return ("%.1f"):format(amount / 10)
+end
+
 return items

@@ -1,6 +1,8 @@
 -- Player controls, world interaction, etc.
 
 local graphics = love.graphics
+local timer = love.timer
+
 local rgba = love.math.colorFromBytes
 
 local Camera = require "camera"
@@ -8,6 +10,8 @@ local common = require "common"
 local Entity = require "world.entity"
 local game = require "game"
 local Item = require "entities.item"
+local items = require "items"
+local ItemStorage = require "item-storage"
 local Vec = require "vec"
 local World = require "world"
 
@@ -15,6 +19,7 @@ local input = game.input
 local Chunk = World.Chunk
 
 local mbLeft = input.mbLeft
+local quantity = items.quantity
 local white = common.white
 
 ---
@@ -57,6 +62,9 @@ function Player:init(world)
   self.laserCharge = 0
   self.laserMaxCharge = 2
   self.laserRange = 5 * Chunk.tileSize
+
+  self.inventory = ItemStorage:new { size = 160 }
+  self.showStacks = {}
 end
 
 -- Returns whether the player is falling.
@@ -143,10 +151,11 @@ function Player:update()
   -- Item magnet
   --
 
-  local position = self.body.position
+  local position = self.body.position + self.body.size / 2
   for _, entity in ipairs(self.world.entities) do
     if entity:of(Item) then
-      local delta = self.world:shortestDelta(entity.body.position, position)
+      local target = position - entity.body.size / 2
+      local delta = self.world:shortestDelta(entity.body.position, target)
       local distance = delta:len()
       local strength = math.min((math.max(0, 48 - distance) / 48) * 0.3, 4)
       local pull = delta:normalized() * strength
@@ -196,8 +205,19 @@ function Player:collisionWithBody(body)
 
   local entity = body.owner
   if entity:of(Item) then
-    entity:take(entity.stack.amount)
+    entity:take(self:takeItem(entity.stack))
   end
+end
+
+-- Attempts to take items from an item stack into the player's inventory,
+-- according to the rules in ItemStorage:take.
+-- Returns the actual amount of items taken.
+function Player:takeItem(idOrStack, amount)
+  local id
+  if type(idOrStack) == "table" then id = idOrStack.id
+  else id = idOrStack end
+  self.showStacks[id] = timer.getTime() + 3
+  return self.inventory:put(idOrStack, amount)
 end
 
 -- Interpolates the position of the player.
@@ -220,7 +240,7 @@ function Player:laserPosition()
 end
 
 -- Returns the block the laser is targeting.
-local unboundedTarget = true -- constant for better readability
+local unboundedTarget = true -- constant used as an argument to laserTarget
 function Player:laserTarget(unbounded)
   local tile
   if unbounded then
@@ -302,6 +322,48 @@ function Player:camera(alpha)
   self._camera.pan = self:interpolatePosition(alpha) + self.body.size / 2
   self._camera:updateViewport(Vec(graphics.getDimensions()))
   return self._camera
+end
+
+local usageBarColors = {
+  green  = { rgba(127, 236, 82) },
+  yellow = { rgba(255, 195, 31) },
+  red    = { rgba(251, 78, 78) },
+}
+
+-- Draws the player's HUD.
+function Player:ui()
+  local sx, sy = 16, 16
+
+  local ix, iy = sx, sy + 20
+  local y = 0
+  local shownItems = false
+  for id, time in pairs(self.showStacks) do
+    if timer.getTime() < time then
+      local amount = self.inventory:get(id)
+      local quad = game.items[id].quad
+      local _, _, _, height = quad:getViewport()
+      graphics.draw(game.itemAtlas.image, quad, ix, iy + y, 0, 3)
+
+      local qty = quantity(amount)
+      graphics.print(qty, ix + 32, iy + y)
+
+      shownItems = true
+      y = y + height + 24
+    end
+  end
+
+  if shownItems then
+    local barw = 256
+    local full = self.inventory:occupied() / self.inventory.size
+    graphics.setColor(rgba(255, 255, 255, 32))
+    graphics.rectangle("fill", sx, sy, barw, 4)
+    local color = usageBarColors.green
+    if full > 0.60 then color = usageBarColors.yellow end
+    if full > 0.80 then color = usageBarColors.red end
+    graphics.setColor(color)
+    graphics.rectangle("fill", sx, sy, barw * full, 4)
+    graphics.setColor(white)
+  end
 end
 
 return Player

@@ -32,7 +32,7 @@ function GameState:init()
 
   self.player = self.world:spawn(Player:new(self.world))
   self.player.body.position.y = -32
-  self.player.inventory:put(game.itemIDs["core:plantMatter"], 160)
+--   self.player.inventory:put(game.itemIDs["core:plantMatter"], 160)
 
   self.camera = Camera:new()
 end

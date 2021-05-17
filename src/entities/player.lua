@@ -63,7 +63,7 @@ function Player:init(world)
   self.laserMaxCharge = 2
   self.laserRange = 5 * Chunk.tileSize
 
-  self.inventory = ItemStorage:new { size = 160 }
+  self.inventory = ItemStorage:new { size = 2560 }
   self.showStacks = {}
 end
 

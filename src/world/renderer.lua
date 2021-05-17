@@ -1,10 +1,14 @@
 -- The world renderer. Imported as World:draw by world.lua.
 
 local graphics = love.graphics
+local lmath = love.math
 
+local common = require "common"
 local game = require "game"
 local Rect = require "rect"
 local Vec = require "vec"
+
+local lerp = common.lerp
 
 ---
 
@@ -36,6 +40,7 @@ end
 -- Rebuilds chunk's sprite batch, if necessary.
 local function rebuildBlockBatch(self, chunkPosition, chunk)
   if not chunk.dirty then return end
+  chunkPosition = self:wrapChunkPosition(chunkPosition)
 
   local blockAtlas = game.blockAtlas.image
 
@@ -51,8 +56,19 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
       local blockID = chunk:block(positionInChunk)
       if blockID ~= 0 then
         local block = game.blocks[blockID]
-        local index = bitwiseTilingIndex(self, positionInWorld, blockID)
-        local quad = block.quads[index]
+        local tileIndex = bitwiseTilingIndex(self, positionInWorld, blockID)
+        local quad
+        if #block.variantQuads > 1 then
+          local config = block.variants or {}
+          local density, bias = config.density or 1, config.bias or 1
+          local noisePosition = positionInWorld * density + Vec(0.01, 0.01)
+          local noise = lmath.noise(noisePosition.x, noisePosition.y) ^ bias
+          local variantIndex =
+            math.floor(lerp(1, #block.variantQuads, noise) + 0.5)
+          quad = block.variantQuads[variantIndex][tileIndex]
+        else
+          quad = block.variantQuads[1][tileIndex]
+        end
         chunk.blockBatch:add(quad, (positionInChunk * chunk.tileSize):xy())
       end
     end

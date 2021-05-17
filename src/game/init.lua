@@ -1,6 +1,6 @@
 -- Generic resources'n'stuff.
 -- This module is split into several other modules to better organize code.
--- Usually it's only necessary to only require this directly, as all the other
+-- Usually it's necessary to require only this directly, as all the other
 -- modules operate on the `game` table defined in this module directly and are
 -- loaded at the very start of the program.
 
@@ -33,6 +33,9 @@ local game = {
   itemAtlas = Atlas:new(atlasSize),
   itemIDs = Registry:new(),
   items = {},
+
+  -- recipe data
+  recipes = {},
 }
 
 return game

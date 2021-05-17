@@ -32,20 +32,27 @@ local indexBitsToPosition = {
 }
 
 -- Disassembles the imageData into 16 distinct tiles, as described in mod.lua,
--- and packs them into the provided atlas, filling the provided `rects` table
--- with rectangles packed into the atlas.
--- Returns the modified `rects` table.
-function tiles.packBlock(rects, atlas, imageData)
+-- and packs them into the provided atlas, filling the provided `variants` table
+-- with tables of rectangles packed into the atlas.
+-- Returns the modified `variants` table.
+function tiles.packBlock(variants, atlas, imageData)
   local imageWidth, imageHeight = imageData:getDimensions()
-  local tileWidth, tileHeight = imageWidth / 4, imageHeight / 4
-  for indexBits, position in ipairs(indexBitsToPosition) do
-    local tile = image.newImageData(tileWidth, tileHeight)
-    position = position * Vec(tileWidth, tileHeight)
-    tile:paste(imageData, 0, 0, position.x, position.y, tileWidth, tileHeight)
-    local rect = atlas:pack(tile)
-    rects[indexBits] = rect
+  local variantCount = imageWidth / imageHeight
+  local tileSize = imageHeight / 4
+  for i = 1, variantCount do
+    local rects = {}
+    for indexBits, position in ipairs(indexBitsToPosition) do
+      local tile = image.newImageData(tileSize, tileSize)
+      position = position:dup()
+      position:add(Vec((i - 1) * 4, 0))
+      position:mul(tileSize)
+      tile:paste(imageData, 0, 0, position.x, position.y, tileSize, tileSize)
+      local rect = atlas:pack(tile)
+      rects[indexBits] = rect
+    end
+    variants[i] = rects
   end
-  return rects
+  return variants
 end
 
 return tiles

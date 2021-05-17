@@ -32,7 +32,23 @@ addItem "plantMatter"
 addItem "stone"
 
 addBlock "plants" { hardness = 0.75, drops = items.drop(i.plantMatter) }
-addBlock "rock"   { hardness = 1, drops = items.drop(i.stone) }
+addBlock "rock"   { hardness = 1, drops = items.drop(i.stone),
+                    variants = { density = 0.3, bias = 2 } }
+
+mod:addRecipes {
+  ["portAssembler:1"] = {
+    {
+      name = "block.plants",
+      ingredients = { items.stack(i.plantMatter, 10) },
+      result = b.plants,
+    },
+    {
+      name = "block.rock",
+      ingredients = { items.stack(i.rock, 10) },
+      result = b.rock,
+    },
+  },
+}
 
 return {
   items = i,

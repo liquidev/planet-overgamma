@@ -114,16 +114,17 @@ function Mod:addBlock(key, image, kind)
     end
   end
 
-  local rects = {}
+  local variantRects = {}
   if kind == "4x4" then
-    tiles.packBlock(rects, game.blockAtlas, image)
+    tiles.packBlock(variantRects, game.blockAtlas, image)
   else
     local rect = game.blockAtlas:pack(image)
-    tables.fill(rects, 16, rect)
+    variantRects[1] = {}
+    tables.fill(variantRects[1], 16, rect)
   end
 
   return function (extra)
-    local block = { rects = rects }
+    local block = { variantRects = variantRects }
     tables.merge(block, extra)
     local id = game.addBlock(self:namespaced(key), block)
     block.tilesWith = { [id] = true }
@@ -143,6 +144,39 @@ function Mod:addItem(key, image)
     rect = game.itemAtlas:pack(image)
   }
   return game.addItem(self:namespaced(key), item)
+end
+
+-- Adds a new recipe for the given target.
+--
+-- target can be any arbitrary string used to uniquely identify the usage
+-- of the recipe, but there are a few well-defined targets the core of
+-- the game uses:
+--  · "portAssembler:<tier>" - recipes for the player's portAssembler, where
+--    <tier> is an integer specifying which portAssembler tier the recipe is
+--    usable with.
+--
+-- recipe is a table with the following fields:
+--  · name: string | nil - a name for debugging purposes,
+--    namespaced automatically. defaults to "unnamed"
+--  · ingredients: {{ items.stack }} - the items used to construct the result
+--  · result: any - target-specific result
+function Mod:addRecipe(target, recipe)
+  recipe.name = self:namespaced(recipe.name or "unnamed")
+  return game.addRecipe(target, recipe)
+end
+
+-- Adds multiple recipes for multiple targets.
+-- The recipes table must have the following structure:
+-- {
+--   target = {{…}, {…}, …},
+--   …
+-- }
+function Mod:addRecipes(recipes)
+  for target, targetRecipes in pairs(recipes) do
+    for _, recipe in ipairs(targetRecipes) do
+      self:addRecipe(target, recipe)
+    end
+  end
 end
 
 

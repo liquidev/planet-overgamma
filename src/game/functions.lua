@@ -40,10 +40,14 @@ function game.addBlock(key, block)
 
   -- Generate quads, for use by the renderer.
   -- This should save some allocations later.
-  block.quads = {}
-  for i, rect in ipairs(block.rects) do
-    block.quads[i] = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
-                                      game.blockAtlas.image)
+  block.variantQuads = {}
+  for i, rects in ipairs(block.variantRects) do
+    local quads = {}
+    for j, rect in ipairs(rects) do
+      quads[j] = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
+                                  game.blockAtlas.image)
+    end
+    block.variantQuads[i] = quads
   end
 
   game.blocks[id] = block
@@ -77,6 +81,42 @@ function game.addItem(key, item)
   game.items[id] = item
   print("game: registered item '"..key.."' -> "..id)
   return id, item
+end
+
+-- Adds a new recipe into the game.
+-- Since recipes do not have unique names or IDs, this doesn't return anything.
+--
+-- An extra field `target`, containing the target parameter's value, is added to
+-- the recipe table after successful registration.
+--
+-- Just like the other functions, prefer Mod:addRecipe over this.
+function game.addRecipe(target, recipe)
+  -- The recipe table has to have the following structure:
+  -- {
+  --   -- A name for the recipe. This is only really used for debugging
+  --   -- purposes, and defaults to "unnamed" if left out.
+  --   name: string | nil,
+  --   -- A table of item stacks. These are the ingredients required to use
+  --   -- this recipe, and are consumed upon usage.
+  --   ingredients: {{ id: number, amount: number }},
+  --   -- The result of the recipe. This is interpreted by the recipe target
+  --   -- and does not have a well-defined meaning.
+  --   result: any,
+  -- }
+
+  if game.recipes[target] == nil then
+    game.recipes[target] = {}
+  end
+  recipe.name = recipe.name or "unnamed"
+  recipe.target = target
+  table.insert(game.recipes[target], recipe)
+  print("game: registered recipe '"..recipe.name.."'")
+end
+
+-- Gets the list of available recipes for the given target.
+-- Returns an empty table if no recipes were ever registered for the target.
+function game.getRecipes(target)
+  return game.recipes[target] or {}
 end
 
 return game

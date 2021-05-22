@@ -36,19 +36,21 @@ addBlock "rock"   { hardness = 1, drops = items.drop(i.stone),
                     variants = { density = 0.3, bias = 2 } }
 
 mod:addRecipes {
-  ["portAssembler:1"] = {
+  ["portAssembler.1"] = {
     {
       name = "block.plants",
-      ingredients = { items.stack(i.plantMatter, 10) },
+      ingredients = { items.stack(i.plantMatter) },
       result = b.plants,
     },
     {
       name = "block.rock",
-      ingredients = { items.stack(i.rock, 10) },
+      ingredients = { items.stack(i.stone) },
       result = b.rock,
     },
   },
 }
+
+mod:addTranslations()
 
 return {
   items = i,

@@ -53,4 +53,17 @@ return function (World)
     end
   end
 
+  -- Places a tile at the provided position.
+  -- tile can currently only be a block ID, but this will be expanded in the
+  -- future.
+  -- Returns whether the tile was successfully placed.
+  function World:placeTile(position, tile)
+    if not self:isEmpty(position) then return false end
+
+    if type(tile) == "number" then
+      self:block(position, tile)
+    end
+    return true
+  end
+
 end

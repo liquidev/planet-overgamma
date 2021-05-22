@@ -188,6 +188,11 @@ function World:block(position, newBlock)
   return World.air
 end
 
+-- Returns whether the tile at the given position is an empty (air) tile.
+function World:isEmpty(position)
+  return self:block(position) == World.air
+end
+
 -- Spawns the given entity into the world, returns the entity.
 function World:spawn(entity)
   table.insert(self.spawnQueue, entity)

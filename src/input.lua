@@ -24,6 +24,7 @@ function Input:init()
   self.mouse = Vec(0, 0)
   self.previousMouse = Vec(0, 0)
   self.deltaMouse = Vec(0, 0)
+  self.deltaScroll = Vec(0, 0)
 
   -- mouse buttons
   self.mouseButtonsDown = {}
@@ -43,6 +44,12 @@ function Input:processEvent(event)
     local x, y = unpack(event)
     self.mouse = Vec(x, y)
     self.deltaMouse = self.mouse - self.previousMouse
+  end
+
+  -- scroll wheel
+  if event.kind == "wheelmoved" then
+    local x, y = unpack(event)
+    self.deltaScroll:add(Vec(x, y))
   end
 
   -- mouse button events
@@ -76,6 +83,7 @@ end
 function Input:finishFrame()
   -- mouse position
   self.previousMouse = self.mouse
+  self.deltaScroll:zero()
 
   -- reset momentary mouse events
   self.mouseButtonsJustPressed = {}

@@ -11,7 +11,7 @@ ie. look at the existing code to decide, or ask when contributing code via PRs.
 - 2 spaces for indentation
 - max 80 columns (linted by luacheck)
 - no spaces before prefix operators: `-a`, `#"hello"`
-- put spaces around all infix operators: `a + b`, `local a = b`
+- put spaces around infix operators: `a + b`, `local a = b`
   - exception: `^` can be used without spaces: `a^2`
   - exception: `..` should always be used without spaces: `"example"..x`
 - do not put spaces around dot `a.b` and colon `a:b()` operators
@@ -84,7 +84,8 @@ in a specific module.
 
 ## Strings
 
-- use apostrophes only on single-character strings: `'a'`
+- use apostrophes for single-character strings: `'a'`
+- use apostrophes for strings that contain quotes: `'example "hello"'`
 - use long strings for… well, long strings:
     ```lua
     local text = [[
@@ -97,7 +98,7 @@ in a specific module.
 ## Function calls
 
 - if a function accepts a single table parameter, use `func {}` syntax
-- if a function is not a gield and accepts a single string parameter, use
+- if a function is not a field and accepts a single string parameter, use
   `func "a"` syntax. do not use this syntax methods and namespaced functions,
   eg. `lib.func "a"`
 - use the normal function call syntax everywhere else: `lib.func("a")`

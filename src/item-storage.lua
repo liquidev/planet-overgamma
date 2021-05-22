@@ -23,6 +23,13 @@ function ItemStorage:init(limits)
   self.stacks = {}
   self._occupied = 0
   self._stackCount = 0
+
+  -- Called when items are added or removed from the storage.
+  --
+  -- id is the item ID.
+  -- amount is the amount of items after the change.
+  -- previousAmount is the amount of items before the change.
+  function self.onChanged(id, amount, previousAmount) end
 end
 
 -- Returns the amount of storage that is occupied.
@@ -66,8 +73,10 @@ function ItemStorage:put(idOrStack, amount)
   amount = math.min(amount, self:free())
   local stack = getStack(self, id)
   if stack ~= nil then
+    local previousAmount = stack.amount
     stack.amount = stack.amount + amount
     self._occupied = self._occupied + amount
+    self.onChanged(id, stack.amount, previousAmount)
     return amount
   end
   return 0
@@ -86,7 +95,12 @@ function ItemStorage:take(id, amount)
   local stack = self.stacks[id]
   if stack == nil then return 0 end
   amount = math.min(amount, stack.amount)
+  local previousAmount = stack.amount
   stack.amount = stack.amount - amount
+  self._occupied = self._occupied - amount
+  if amount > 0 then
+    self.onChanged(id, stack.amount, previousAmount)
+  end
   collectStack(self, id)
   return amount
 end

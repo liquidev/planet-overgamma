@@ -49,9 +49,17 @@ function common.repr(x)
       table.insert(result, common.indent(k.." = "..common.repr(v)..", \n", 2))
     end
     return "{\n"..table.concat(result).."}"
+  elseif type(x) == "string" then
+    return ("%q"):format(x)
   else
     return tostring(x)
   end
+end
+
+-- Rounds the given number towards zero.
+function common.round(x)
+  if x >= 0 then return math.floor(x + 0.5)
+  else return math.ceil(x - 0.5) end
 end
 
 -- Linearly interpolates between the two values.
@@ -74,5 +82,6 @@ end
 -- Commonly used colors.
 common.white = { rgba(255, 255, 255) }
 common.black = { rgba(0, 0, 0) }
+common.transparent = { rgba(0, 0, 0, 0) }
 
 return common

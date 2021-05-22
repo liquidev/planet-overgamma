@@ -31,8 +31,9 @@ function Object:inherit()
 end
 
 -- Returns whether this object inherits from the object type T.
-function Object.of(self, T)
-  local mt = getmetatable(self)
+function Object.of(obj, T)
+  if type(obj) ~= "table" then return false end
+  local mt = getmetatable(obj)
   while mt ~= nil do
     if mt == T then
       return true

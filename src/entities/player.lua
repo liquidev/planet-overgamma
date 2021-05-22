@@ -12,15 +12,20 @@ local game = require "game"
 local Item = require "entities.item"
 local items = require "items"
 local ItemStorage = require "item-storage"
+local recipes = require "recipes"
+local Registry = require "registry"
+local tr = require("i18n").tr
 local Vec = require "vec"
 local World = require "world"
 
 local input = game.input
-local Chunk = World.Chunk
+local mbLeft, mbRight = input.mbLeft, input.mbRight
 
-local mbLeft = input.mbLeft
 local quantity = items.quantity
+
 local white = common.white
+
+local Chunk = World.Chunk
 
 ---
 
@@ -35,7 +40,7 @@ local jumpTicks = 15
 -- The amount of ticks during which the player can start a jump after falling.
 local coyoteTime = 10
 -- The speed at which the laser charges up.
-local laserChargeRate = 0.03
+local laserChargeRate = { destroy = 0.03, construct = 0.075 }
 
 -- Initializes the player with the given world.
 function Player:init(world)
@@ -62,8 +67,23 @@ function Player:init(world)
   self.laserCharge = 0
   self.laserMaxCharge = 2
   self.laserRange = 5 * Chunk.tileSize
+  self.recipes = {}
+  self.recipeTargets = { "portAssembler.1" }
+  self.selectedRecipe = 1
+  self.portAssemblerTier = 1
+  self.recipeDetailTimeout = -100
 
   self.inventory = ItemStorage:new { size = 2560 }
+    -- Remember to update this along self.portAssemblerTier!!!
+  function self.inventory.onChanged(id, _, _)
+    self.showStacks[id] = timer.getTime() + 3
+
+    local previousRecipeCount = #self.recipes
+    self:updateRecipes()
+    if previousRecipeCount == 0 and #self.recipes > 0 then
+      self.recipeDetailTimeout = timer.getTime() + 3
+    end
+  end
   self.showStacks = {}
 end
 
@@ -88,6 +108,16 @@ end
 -- Returns whether the player can jump.
 function Player:canJump()
   return self.body.collidingWith.top or self.coyoteTimer > 0
+end
+
+-- Returns the current selected portAssembler recipe, or nil if there aren't
+-- enough materials to build anything.
+function Player:recipe()
+  if #self.recipes > 0 then
+    return self.recipes[self.selectedRecipe]
+  else
+    return nil
+  end
 end
 
 -- Ticks the player.
@@ -162,8 +192,28 @@ function Player:update()
       entity.body:applyForce(pull)
     end
   end
+
+  --
+  -- Recipe selection
+  --
+
+  if math.abs(input.deltaScroll.y) > 0.1 and #self.recipes > 0 then
+    local d = common.round(input.deltaScroll.y)
+    self.selectedRecipe = self.selectedRecipe + d
+    self.selectedRecipe = (self.selectedRecipe - 1) % #self.recipes + 1
+
+    local recipe = self:recipe()
+    self.showStacks = {}
+    for _, stack in ipairs(recipe.ingredients) do
+      self.showStacks[stack.id] = timer.getTime() + 3
+    end
+    self.recipeDetailTimeout = timer.getTime() + 3
+  end
 end
 
+-- Ticks the player before physics.
+-- This is used to prevent the laser from teleporting weirdly when the player
+-- passes across the world seam.
 function Player:prePhysicsUpdate()
   --
   -- Laser
@@ -174,24 +224,40 @@ function Player:prePhysicsUpdate()
   if input:mouseDown(mbLeft) then
     self.laserMode = "destroy"
     self.laserEnabled = true
+  elseif input:mouseDown(mbRight) then
+    self.laserMode = "construct"
+    self.laserEnabled = self:recipe() ~= nil
   end
 
   -- charging
   if self.laserEnabled then
     local coeff =
       (self.laserMaxCharge - self.laserCharge) / self.laserMaxCharge *
-      laserChargeRate
+      laserChargeRate[self.laserMode]
     self.laserCharge = self.laserCharge + self.laserMaxCharge * coeff
   else
     self.laserCharge = self.laserCharge * 0.6
   end
 
-  -- destruction laser
-  if self.laserMode == "destroy" then
+  if self.laserEnabled then
     local target = self:laserTarget()
-    local block = self.world:breakBlock(target, self.laserCharge)
-    if block ~= nil then
-      self.laserCharge = self.laserCharge - block.hardness * 2
+
+    -- destruction laser
+    if self.laserMode == "destroy" then
+      local block = self.world:breakBlock(target, self.laserCharge)
+      if block ~= nil then
+        self.laserCharge = self.laserCharge - block.hardness * 2
+      end
+    end
+
+    -- construction laser
+    local recipe = self:recipe()
+    if self.laserMode == "construct" then
+      if self.laserCharge > self.laserMaxCharge - 0.5 and
+         self.world:placeTile(target, recipe.result) then
+        recipes.consume(recipe, self.inventory)
+        self.laserCharge = 0
+      end
     end
   end
 
@@ -213,11 +279,15 @@ end
 -- according to the rules in ItemStorage:take.
 -- Returns the actual amount of items taken.
 function Player:takeItem(idOrStack, amount)
-  local id
-  if type(idOrStack) == "table" then id = idOrStack.id
-  else id = idOrStack end
-  self.showStacks[id] = timer.getTime() + 3
   return self.inventory:put(idOrStack, amount)
+end
+
+-- Updates the list of available portAssembler recipes.
+function Player:updateRecipes()
+  self.recipes = recipes.filter(self.inventory, unpack(self.recipeTargets))
+  if self.selectedRecipe > #self.recipes then
+    self.selectedRecipe = #self.recipes
+  end
 end
 
 -- Interpolates the position of the player.
@@ -330,8 +400,8 @@ local usageBarColors = {
   red    = { rgba(251, 78, 78) },
 }
 
--- Draws the player's HUD.
-function Player:ui()
+-- Draws the player's inventory usage HUD.
+local function inventoryHUD(self)
   local sx, sy = 16, 16
 
   local ix, iy = sx, sy + 20
@@ -341,14 +411,13 @@ function Player:ui()
     if timer.getTime() < time then
       local amount = self.inventory:get(id)
       local quad = game.items[id].quad
-      local _, _, _, height = quad:getViewport()
       graphics.draw(game.itemAtlas.image, quad, ix, iy + y, 0, 3)
 
       local qty = quantity(amount)
       graphics.print(qty, ix + 32, iy + y)
 
       shownItems = true
-      y = y + height + 24
+      y = y + 32
     end
   end
 
@@ -364,6 +433,54 @@ function Player:ui()
     graphics.rectangle("fill", sx, sy, barw * full, 4)
     graphics.setColor(white)
   end
+end
+
+-- Translates a recipe's result.
+local function trRecipe(recipe)
+  if type(recipe.result) == "number" then
+    return tr("block/"..Registry.key(game.blockIDs, recipe.result))
+  end
+end
+
+-- Draws the player's portAssembler selection HUD.
+local function portAssemblerHUD(self)
+  local w, h = graphics.getDimensions()
+  local x = w - 40
+
+  local by = h / 2 - (self.selectedRecipe - 1) * 40 - 12
+  for i, recipe in ipairs(self.recipes) do
+    local quad
+    if type(recipe.result) == "number" then
+      quad = game.blocks[recipe.result].variantQuads[1][1]
+    end
+    if self.selectedRecipe == i then
+      local _, _, width, height = quad:getViewport()
+      width, height = width * 3, height * 3
+      graphics.rectangle("line", x - 8.5, by - 8.5, width + 16, height + 16)
+    end
+    graphics.draw(game.blockAtlas.image, quad, x, by, 0, 3)
+    by = by + 40
+  end
+
+  local recipe = self:recipe()
+  if recipe ~= nil and timer.getTime() < self.recipeDetailTimeout then
+    local ix = x - 80
+    local iy = h / 2
+    graphics.printf(trRecipe(recipe), game.fonts.bold, x - 32 - 256, iy - 32,
+                    256, "right")
+    for _, stack in ipairs(recipe.ingredients) do
+      local quad = game.items[stack.id].quad
+      graphics.draw(game.itemAtlas.image, quad, ix, iy, 0, 3)
+      graphics.print(quantity(stack.amount), ix + 32, iy)
+      iy = iy + 32
+    end
+  end
+end
+
+-- Draws the player's HUD.
+function Player:ui()
+  inventoryHUD(self)
+  portAssemblerHUD(self)
 end
 
 return Player

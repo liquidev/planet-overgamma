@@ -25,4 +25,19 @@ function tables.merge(out, ...)
   return out
 end
 
+-- Recursively merges the two tables together.
+-- The following rules are executed per key/value pair in `b`:
+--  · if the value in `a` is a table and the value in `b` is a table,
+--    the two tables are merged using this function
+--  · otherwise, the value in `a` is overwritten with the value in `b`
+function tables.mergeRec(a, b)
+  for key, value in pairs(b) do
+    if type(a[key]) == "table" and type(value) == "table" then
+      tables.mergeRec(a[key], value)
+    else
+      a[key] = value
+    end
+  end
+end
+
 return tables

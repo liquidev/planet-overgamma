@@ -2,6 +2,7 @@
 
 local graphics = love.graphics
 
+local i18n = require "i18n"
 local Mod = require "mod"
 
 ---
@@ -48,4 +49,7 @@ function game.load()
     print("errors occured while loading mods:")
     print(errors)
   end
+
+  -- language
+  i18n.loadLanguage("eng")
 end

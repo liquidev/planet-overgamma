@@ -12,6 +12,7 @@ local items = {}
 -- Returns an item stack with the given item ID and amount of items.
 -- By default, amount = 10.
 function items.stack(id, amount)
+  assert(type(id) == "number", "item ID must be numeric")
   return { id = id, amount = amount or 10 }
 end
 

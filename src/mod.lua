@@ -8,6 +8,7 @@ local fs = love.filesystem
 
 local common = require "common"
 local game = require "game"
+local i18n = require "i18n"
 local Object = require "object"
 local tables = require "tables"
 local tiles = require "world.tiles"
@@ -151,7 +152,7 @@ end
 -- target can be any arbitrary string used to uniquely identify the usage
 -- of the recipe, but there are a few well-defined targets the core of
 -- the game uses:
---  · "portAssembler:<tier>" - recipes for the player's portAssembler, where
+--  · "portAssembler.<tier>" - recipes for the player's portAssembler, where
 --    <tier> is an integer specifying which portAssembler tier the recipe is
 --    usable with.
 --
@@ -177,6 +178,13 @@ function Mod:addRecipes(recipes)
       self:addRecipe(target, recipe)
     end
   end
+end
+
+-- Adds a translations module from the mod.
+-- module defaults to "tr".
+function Mod:addTranslations(module)
+  module = module or "tr"
+  return i18n.addModule("mods."..self.namespace..'.'..module)
 end
 
 
@@ -209,7 +217,10 @@ end
 -- Contains all the available search paths for mods.
 -- This should never be modified, as these search paths are scanned only
 -- once by the mod loader.
-Mod.searchPaths = {"data/mods"}
+--
+-- Note that each search path must be the _parent_ directory of a `mods`
+-- directory, for require to work properly.
+Mod.searchPaths = {"data"}
 
 -- Appends the appropriate require paths to the global require search path.
 -- This only has an effect once.
@@ -236,6 +247,7 @@ function Mod.loadMods(modTable)
   local errors = {}
   for _, searchPath in ipairs(Mod.searchPaths) do
     print("loading mods from "..searchPath)
+    searchPath = searchPath.."/mods"
     for _, namespace in ipairs(fs.getDirectoryItems(searchPath)) do
       local path = searchPath..'/'..namespace
       local ok, result = common.try(Mod.load, path, namespace)

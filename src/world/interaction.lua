@@ -2,16 +2,60 @@
 -- dropping items, and other neat things that are a result of the player doing
 -- stuff.
 
+local bit = require "bit"
+
+local band, bor = bit.band, bit.bor
+local shl = bit.lshift
+
 local common = require "common"
 local game = require "game"
 local Item = require "entities.item"
 local items = require "items"
+local Vec = require "vec"
 
 local deg = common.degToRad
 
 ---
 
 return function (World)
+
+  -- A bitfield for specifying which faces a block is attached to.
+  -- If a block receives an update and any of the specified faces is not solid,
+  -- the block is broken.
+  -- Faces can be combined using the + operator, eg.
+  -- World.bottomFace + World.leftFace.
+  World.topFace = 0x1
+  World.bottomFace = 0x2
+  World.leftFace = 0x4
+  World.rightFace = 0x8
+
+  -- Returns a bitfield of solid faces at the given position.
+  local isSolid = World.isSolid
+  function World:solidFaces(position)
+    return
+      bor(
+        isSolid(self, position + Vec(0, -1)) and 0x1 or 0,
+        isSolid(self, position + Vec(0,  1)) and 0x2 or 0,
+        isSolid(self, position + Vec(-1, 0)) and 0x4 or 0,
+        isSolid(self, position + Vec( 1, 0)) and 0x8 or 0
+      )
+  end
+
+  -- Performs a block update at the specified position.
+  -- Block updates can cause certain blocks to pop off. Blocks that pop off do
+  -- not cause subsequent block updates.
+  function World:updateBlock(position)
+    local blockID = self:block(position)
+    if blockID ~= World.air then
+      local block = game.blocks[blockID]
+      local solidFaces = self:solidFaces(position)
+      local attachments = block.attachedTo or 0x0
+      local connectedFaces = band(solidFaces, attachments)
+      if connectedFaces ~= attachments then
+        self:breakBlock(position, math.huge, false)
+      end
+    end
+  end
 
   -- Drops items centered at the given position according to the provided
   -- drop table.
@@ -34,10 +78,14 @@ return function (World)
   -- block's metadata.
   -- By default, charge = math.huge.
   --
+  -- updateBlocks can be set to destroy blocks without causing surrounding
+  -- blocks to update.
+  --
   -- If the destroyed block does not have a hardness value set explicitly,
   -- it is assumed to be 1.
-  function World:breakBlock(position, charge)
+  function World:breakBlock(position, charge, updateBlocks)
     charge = charge or math.huge
+    if updateBlocks == nil then updateBlocks = true end
 
     local blockID = self:block(position)
     if blockID == World.air then return end
@@ -48,6 +96,12 @@ return function (World)
       self:block(position, World.air)
       if block.drops ~= nil then
         self:dropItem(self.unitPosition.center(position), block.drops)
+      end
+      if updateBlocks then
+        self:updateBlock(position + Vec(0, -1))
+        self:updateBlock(position + Vec(0, 1))
+        self:updateBlock(position + Vec(-1, 0))
+        self:updateBlock(position + Vec(1, 0))
       end
       return block
     end
@@ -62,6 +116,10 @@ return function (World)
 
     if type(tile) == "number" then
       self:block(position, tile)
+      self:updateBlock(position + Vec(0, -1))
+      self:updateBlock(position + Vec(0, 1))
+      self:updateBlock(position + Vec(-1, 0))
+      self:updateBlock(position + Vec(1, 0))
     end
     return true
   end

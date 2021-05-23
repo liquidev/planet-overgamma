@@ -1,5 +1,7 @@
 -- World generators.
 
+local timer = love.timer
+
 local common = require "common"
 local Object = require "object"
 local tables = require "tables"
@@ -66,6 +68,8 @@ end
 --    Progress report that a new stage has just started.
 --  · "progress", progress: number[0..1]
 --    Progress report about how much of the current stage is finished.
+--  · "time", time: number
+--    The amount of time the previous stage took.
 --  · "done", world: World, ...
 --    Progress report that the world generation has finished.
 --    The extra return values are generator specific, and are a result of the
@@ -79,14 +83,22 @@ function WorldGenerator:generate(config)
   config = tables.merge({}, self.defaultConfig, config)
   local world = World:new(config.width, config.gravity or Vec(0, 0.5))
   return coroutine.wrap(function ()
-    local passthrough = {}
-    for i, stage in ipairs(self._stages) do
-      coroutine.yield("stage", i, stage.name)
-      inStage = true
-      passthrough = { stage[1](self, world, config, unpack(passthrough)) }
-      inStage = false
+    local ok, err = common.try(function ()
+      local passthrough = {}
+      for i, stage in ipairs(self._stages) do
+        coroutine.yield("stage", i, stage.name)
+        local start = timer.getTime()
+        inStage = true
+        passthrough = { stage[1](self, world, config, unpack(passthrough)) }
+        inStage = false
+        local fin = timer.getTime()
+        coroutine.yield("time", fin - start)
+      end
+      coroutine.yield("done", world, unpack(passthrough))
+    end)
+    if not ok then
+      coroutine.yield("error", err)
     end
-    coroutine.yield("done", world, unpack(passthrough))
   end)
 end
 
@@ -136,6 +148,19 @@ function WorldGenerator.convolve(t, ...)
     tables.icopy(bufferB, bufferA)
   end
   return bufferA
+end
+
+-- Finds the highest solid Y position at the given X coordinate, starting from
+-- y = low up to y = high. If low < high, the values are swapped.
+-- If there are no solid blocks in the given area, returns nil.
+function World:findHighestSolidY(x, low, high)
+  if low < high then low, high = high, low end
+
+  for y = high, low do
+    if self:isSolid(Vec(x, y)) then
+      return y
+    end
+  end
 end
 
 return WorldGenerator

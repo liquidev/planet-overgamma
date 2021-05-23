@@ -1,6 +1,7 @@
 -- The core mod.
 
 local items = require "items"
+local World = require "world"
 
 ---
 
@@ -32,6 +33,11 @@ addItem "plantMatter"
 addItem "stone"
 
 addBlock "plants" { hardness = 0.75, drops = items.drop(i.plantMatter) }
+addBlock "weeds"  { isSolid = false,
+                    hardness = 0.5,
+                    drops = items.drop(i.plantMatter, 2, 5),
+                    attachedTo = World.bottomFace,
+                    variants = { density = 1, bias = 1.5 } }
 addBlock "rock"   { hardness = 1, drops = items.drop(i.stone),
                     variants = { density = 0.3, bias = 2 } }
 

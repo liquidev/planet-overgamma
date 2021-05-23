@@ -21,14 +21,32 @@ function game.addBlock(key, block)
   -- block follows this data structure:
   -- {
   --   -- This is the set of atlas rects for this block.
-  --   -- They are arranged in "bitwise" ordering, that is, each bit in the
-  --   -- numeric key represents a connection between this block the blocks
+  --   -- Every table inside the outer table is a single variant.
+  --   -- Tiles inside are arranged in "bitwise" ordering, that is, each bit in
+  --   -- the numeric key represents a connection between this block the blocks
   --   -- surrounding it.
   --   -- The bits are ordered like: Up, Down, Left, Right,
   --   -- from most significant to least significant.
   --   -- If a block doesn't connect to any other blocks, this may simply be
   --   -- filled with the same value repeated 16 times.
-  --   rects: {Rect},
+  --   variantRects: {{Rect}},
+  --   -- Specifies whether the block has collision.
+  --   isSolid: boolean,
+  --   -- How much laser power the block requires to be broken.
+  --   hardness: number,
+  --   -- A list of item drops that drop when the block is broken.
+  --   drops: {{ id, min, max: number }}
+  --   -- Terrain renderer variant config.
+  --   -- density specifies how dense the noise used to sample variants
+  --   -- should be.
+  --   -- bias specifies the power to which the sampled noise value should be
+  --   -- raised, in order to make it more (or less) likely that lower variants
+  --   -- are picked.
+  --   variants: { density, bias: number },
+  --   -- Specifies which solid faces a block is attached to.
+  --   -- If any of the faces become non-solid and the block gets updated,
+  --   -- the block will be broken.
+  --   attachedTo: number,
   -- }
   -- This data structure is generated automatically when using Mod:addBlock.
 

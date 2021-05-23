@@ -22,19 +22,24 @@ canon.defaultConfig = {
   gravity = Vec(0, 0.5),
 
   -- The seed to use with random generation.
-  seed = os.time(),
+  seed = nil,
 
   -- The layers of the world.
-  surfaceBottom = 0,
+  surfaceBottom = 8,
   surfaceTop = -16,
-  rockOffset = 8,
+  rockTop = 8,
+  rockBottom = 128,
 
   -- Heightmap configuration.
-  noiseRadius = 3, -- aka noise density
+  heightNoiseRadius = 3, -- aka noise density
+
+  -- Plant configuration.
+  weedNoiseRadius = 5,
 
   -- Tiles.
   surfaceTile = "core:plants",
   rockTile = "core:rock",
+  weedsTile = "core:weeds",
 }
 
 -- Computes fractal noise with the given number of octaves, at the given
@@ -60,7 +65,7 @@ local function terrainLayer(name)
     name = "layers."..name,
     function (gen, world, config, s, heightmaps)
       local surface = game.blockIDs[config[name.."Tile"]]
-      local bottom = config.surfaceBottom + (config[name.."Offset"] or 0)
+      local bottom = config[name.."Bottom"] or 0
       gen:fillHeightmap(world, heightmaps[name], bottom, surface)
       return s, heightmaps
     end
@@ -79,16 +84,23 @@ local function permuteHeightmap(heightmap, offset, ...)
   )
 end
 
+-- Returns coordinates for sampling noise in a circle around s.noiseOrigin.
+local function noiseCircle(s, t, radius)
+  local angle = t * 2 * pi
+  local offset = Vec(sin(angle) * radius, cos(angle) * radius)
+  return s.noiseOrigin + offset + Vec(0.5, 0.5)
+end
+
 canon:stages {
   {
     -- Prep work before we begin generating the world. This sets up
     -- shared state used across different states.
     name = "state.prep",
     function (_, _, config)
-      local rng = lmath.newRandomGenerator(config.seed)
-      local nr = config.noiseRadius
-      local noiseOrigin =
-        Vec(rng:random(nr, 100000), rng:random(nr, 100000))
+      local seed = config.seed or os.time()
+      print("seed: "..seed)
+      local rng = lmath.newRandomGenerator(seed)
+      local noiseOrigin = Vec(rng:random(100, 100000), rng:random(100, 100000))
       return { rng = rng, noiseOrigin = noiseOrigin }
     end
   },
@@ -97,13 +109,11 @@ canon:stages {
     name = "heightmap.init",
     function (gen, world, config, s)
       local heightmap = {}
-      local r = config.noiseRadius
+      local r = config.heightNoiseRadius
       local low, high = config.surfaceBottom, config.surfaceTop
       for x = 1, config.width do
-        local t = x / config.width
-        local angle = t * 2 * pi
-        local offset = Vec(sin(angle) * r, cos(angle) * r)
-        local p = s.noiseOrigin + offset + Vec(0.5, 0.5)
+        local t = x / world.width
+        local p = noiseCircle(s, t, r)
         local noise = lerp(low, high, fractalNoise(5, p.x, p.y, 1))
         heightmap[x] = noise
         gen:progress(t)
@@ -126,7 +136,7 @@ canon:stages {
       return s, {
         surface = heightmap,
         rock = permuteHeightmap(
-          heightmap, config.rockOffset,
+          heightmap, config.rockTop,
           { 0.5, 0, 0.5, 0, 0 }, boxBlur5
         ),
       }
@@ -135,6 +145,24 @@ canon:stages {
   -- We take our generated heightmaps and fill all the individual layers.
   terrainLayer "surface",
   terrainLayer "rock",
+  {
+    -- Generate weeds on the surface.
+    name = "decoration.weeds",
+    function (gen, world, config, s, heightmaps)
+      local r = config.weedNoiseRadius
+      local weeds = game.blockIDs[config.weedsTile]
+      for x = 1, world.width do
+        local t = x / world.width
+        local p = noiseCircle(s, t, r)
+        local noise = lmath.noise(p.x, p.y, 3)
+        if s.rng:random() < noise then
+          local y = common.round(heightmaps.surface[x]) - 1
+          world:block(Vec(x, y), weeds)
+        end
+        gen:progress(t)
+      end
+    end
+  },
 }
 
 return canon

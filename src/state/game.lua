@@ -22,6 +22,10 @@ function GameState:init()
       print("stage "..a..": "..b)
     elseif kind == "done" then
       self.world = a
+    elseif kind == "time" then
+      print(" - "..a * 1000 .. " ms")
+    elseif kind == "error" then
+      error("in world generator: "..a)
     end
   end
   print("world is ready")

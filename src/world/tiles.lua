@@ -2,6 +2,7 @@
 
 local image = love.image
 
+local tables = require "tables"
 local Vec = require "vec"
 
 ---
@@ -31,14 +32,40 @@ local indexBitsToPosition = {
   [16] = Vec(1, 1), -- 1111
 }
 
--- Disassembles the imageData into 16 distinct tiles, as described in mod.lua,
+-- Disassembles the single block image into separate block variants
 -- and packs them into the provided atlas, filling the provided `variants` table
 -- with tables of rectangles packed into the atlas.
 -- Returns the modified `variants` table.
 function tiles.packBlock(variants, atlas, imageData)
   local imageWidth, imageHeight = imageData:getDimensions()
   local variantCount = imageWidth / imageHeight
+
+  imageData:encode("png", "test.png")
+  if variantCount == 1 then
+    local rect = atlas:pack(imageData)
+    variants[1] = tables.fill({}, 16, rect)
+  else
+    for i = 1, variantCount do
+      local tile = image.newImageData(imageHeight, imageHeight)
+      tile:paste(imageData, 0, 0,
+                 (i - 1) * imageHeight, 0, imageHeight, imageHeight)
+      tile:encode("png", "variant"..tostring(i)..".png")
+      variants[i] = tables.fill({}, 16, atlas:pack(tile))
+    end
+  end
+
+  return variants
+end
+
+-- Disassembles the imageData into 16 distinct tiles, as described in mod.lua,
+-- and packs them into the provided atlas, filling the provided `variants` table
+-- with tables of rectangles packed into the atlas.
+-- Returns the modified `variants` table.
+function tiles.pack4x4(variants, atlas, imageData)
+  local imageWidth, imageHeight = imageData:getDimensions()
+  local variantCount = imageWidth / imageHeight
   local tileSize = imageHeight / 4
+
   for i = 1, variantCount do
     local rects = {}
     for indexBits, position in ipairs(indexBitsToPosition) do
@@ -52,7 +79,9 @@ function tiles.packBlock(variants, atlas, imageData)
     end
     variants[i] = rects
   end
+
   return variants
 end
+
 
 return tiles

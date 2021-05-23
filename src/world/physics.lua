@@ -183,8 +183,15 @@ return function (World)
   end
 
   -- Returns whether the given block ID is of a solid block.
-  local function isSolid(block)
-    return game.blocks[block] ~= nil and game.blocks[block].isSolid
+  local function isSolid(blockID)
+    return game.blocks[blockID] ~= nil and game.blocks[blockID].isSolid
+  end
+
+  World.isIDSolid = isSolid
+
+  -- Returns whether the block at the given position is solid.
+  function World:isSolid(position)
+    return isSolid(self:block(position))
   end
 
   -- Wraps the unit X position of the body around the world.

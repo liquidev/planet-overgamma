@@ -81,6 +81,7 @@ function Player:init(world)
     local previousRecipeCount = #self.recipes
     self:updateRecipes()
     if previousRecipeCount == 0 and #self.recipes > 0 then
+      self.selectedRecipe = 1
       self.recipeDetailTimeout = timer.getTime() + 3
     end
   end

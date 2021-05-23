@@ -117,11 +117,9 @@ function Mod:addBlock(key, image, kind)
 
   local variantRects = {}
   if kind == "4x4" then
-    tiles.packBlock(variantRects, game.blockAtlas, image)
+    tiles.pack4x4(variantRects, game.blockAtlas, image)
   else
-    local rect = game.blockAtlas:pack(image)
-    variantRects[1] = {}
-    tables.fill(variantRects[1], 16, rect)
+    tiles.packBlock(variantRects, game.blockAtlas, image)
   end
 
   return function (extra)

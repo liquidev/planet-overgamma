@@ -36,6 +36,9 @@ local game = {
 
   -- recipe data
   recipes = {},
+
+  -- world generators
+  worldGenerators = {},
 }
 
 return game

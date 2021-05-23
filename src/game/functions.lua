@@ -119,4 +119,18 @@ function game.getRecipes(target)
   return game.recipes[target] or {}
 end
 
+-- Adds a world generator to the game.
+-- Errors out if another world generator with the generator's name
+-- already exists.
+--
+-- Note that the names of generators added by Mod:addWorldGenerator get
+-- namespaced, so conflicts between two mods with a generator with the same name
+-- will not occur.
+function game.addWorldGenerator(generator)
+  assert(game.worldGenerators[generator.name] == nil,
+         "world generator '"..generator.name.."' is already registered")
+  game.worldGenerators[generator.name] = generator
+  print("game: registered world generator '"..generator.name.."'")
+end
+
 return game

@@ -50,6 +50,8 @@ mod:addRecipes {
   },
 }
 
+mod:addWorldGenerator(require "mods.core.canon")
+
 mod:addTranslations()
 
 return {

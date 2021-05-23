@@ -180,6 +180,15 @@ function Mod:addRecipes(recipes)
   end
 end
 
+-- Adds a world generator.
+--
+-- The generator's name is modified so that it's prefixed with the mod's
+-- namespace.
+function Mod:addWorldGenerator(generator)
+  generator.name = self:namespaced(generator.name)
+  game.addWorldGenerator(generator)
+end
+
 -- Adds a translations module from the mod.
 -- module defaults to "tr".
 function Mod:addTranslations(module)

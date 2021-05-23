@@ -57,9 +57,10 @@ function common.repr(x)
 end
 
 -- Rounds the given number towards zero.
+local floor, ceil = math.floor, math.ceil
 function common.round(x)
-  if x >= 0 then return math.floor(x + 0.5)
-  else return math.ceil(x - 0.5) end
+  if x >= 0 then return floor(x + 0.5)
+  else return ceil(x - 0.5) end
 end
 
 -- Linearly interpolates between the two values.
@@ -69,14 +70,24 @@ function common.lerp(a, b, t)
   return a + t * (b - a)
 end
 
+-- Clamps x between a and b. a is the lower bound, and b is the upper bound.
+-- Note that using a as the upper bound or b as the lower bound will result in
+-- undefined behavior.
+local min, max = math.min, math.max
+function common.clamp(x, a, b)
+  return max(min(x, b), a)
+end
+
+local pi = math.pi
+
 -- Converts degrees to radians.
 function common.degToRad(deg)
-  return deg / 180 * math.pi
+  return deg / 180 * pi
 end
 
 -- Converts radians to degrees.
 function common.radToDeg(rad)
-  return rad / math.pi * 180
+  return rad / pi * 180
 end
 
 -- Commonly used colors.

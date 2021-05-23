@@ -7,4 +7,12 @@ return {
     ["core:plants"] = "Plants",
     ["core:rock"] = "Rock",
   },
+  worldGenerator = {
+    ["core:canon"] = {
+      name = "Canon",
+      stage = {
+
+      },
+    },
+  }
 }

@@ -8,14 +8,16 @@ end
 
 -- Fills a table with `len` `element`s. This doesn't clear anything past
 -- `len` elements.
-function tables.fill(table, len, element)
+function tables.fill(t, len, element)
   for i = 1, len do
-    table[i] = element
+    t[i] = element
   end
-  return table
+  return t
 end
 
 -- Appends pairs from all arguments (tables) to `out` and returns `out`.
+-- Pairs occuring in later arguments override pairs coming from earlier
+-- arguments.
 function tables.merge(out, ...)
   for _, table in ipairs {...} do
     for key, value in pairs(table) do
@@ -38,6 +40,28 @@ function tables.mergeRec(a, b)
       a[key] = value
     end
   end
+end
+
+-- Performs an in-place copy of the array part of src into dest, and
+-- returns dest.
+-- dest defaults to a new, empty table ({}).
+function tables.icopy(src, dest)
+  dest = dest or {}
+  for i = 1, #src do
+    dest[i] = src[i]
+  end
+  return dest
+end
+
+-- In-place map operation. Passes each element in the table through the function
+-- and replaces the element with the result of that function.
+-- This function only operates on the array part of the table.
+-- Returns the modified table.
+function tables.imap(t, func)
+  for i = 1, #t do
+    t[i] = func(t[i])
+  end
+  return t
 end
 
 return tables

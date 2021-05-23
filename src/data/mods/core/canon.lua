@@ -157,7 +157,7 @@ canon:stages {
         local noise = lmath.noise(p.x, p.y, 3)
         if s.rng:random() < noise then
           local y = common.round(heightmaps.surface[x]) - 1
-          world:block(Vec(x, y), weeds)
+          world:setBlock(Vec(x, y), weeds)
         end
         gen:progress(t)
       end

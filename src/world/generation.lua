@@ -113,7 +113,7 @@ end
 function WorldGenerator:fillHeightmap(world, heightmap, bottom, block)
   for x, maxY in ipairs(heightmap) do
     for y = round(maxY), bottom do
-      world:block(Vec(x, y), block)
+      world:setBlock(Vec(x, y), block)
       self:progress(x / #heightmap)
     end
   end

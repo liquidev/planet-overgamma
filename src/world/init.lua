@@ -30,19 +30,24 @@ function Chunk:init()
   self.blocks = tables.fill({}, Chunk.size^2, 0)
 end
 
--- Sets and/or gets the block ID at the given position. The position must be in
+-- Gets the block ID at the given position. The position must be in
 -- the chunk's boundaries, otherwise behavior is undefined for
 -- better performance.
--- If newBlock is not nil, sets the block at that position and returns the
--- previous block.
 function Chunk:block(position, newBlock)
   local x, y = position:xy()
   local i = 1 + x + y * Chunk.size
+  return self.blocks[i]
+end
+
+-- Sets the block ID at the given position. Again, the position must be in
+-- the chunk's boundaries, otherwise behavior is undefined.
+-- Returns the old block.
+function Chunk:setBlock(position, newBlock)
+  local x, y = position:xy()
+  local i = 1 + x + y * Chunk.size
   local old = self.blocks[i]
-  if newBlock ~= nil then
-    self.blocks[i] = newBlock
-    self.dirty = true
-  end
+  self.blocks[i] = newBlock
+  self.dirty = true
   return old
 end
 
@@ -166,26 +171,25 @@ function World:markDirtyChunks(position)
   end
 end
 
--- Sets and/or gets the block at the given position.
--- If newBlock is not nil, sets the block at the given position, creating a new
--- chunk if necessary.
+-- Gets the block at the given position.
 -- If the position lands outside of any chunks, World.air is returned.
 function World:block(position, newBlock)
   position = wrapPosition(self, position)
 
-  local chunk
-  if newBlock ~= nil then
-    chunk = self:ensureChunk(World.chunkPosition(position))
-  else
-    chunk = self:chunk(World.chunkPosition(position))
-  end
+  local chunk = self:chunk(World.chunkPosition(position))
   if chunk ~= nil then
-    if newBlock ~= nil then
-      self:markDirtyChunks(position)
-    end
-    return chunk:block(World.positionInChunk(position), newBlock)
+    return chunk:block(World.positionInChunk(position))
+  else
+    return World.air
   end
-  return World.air
+end
+
+-- Sets the block at the given position, creating a new chunk if necessary.
+-- Returns the old block.
+function World:setBlock(position, newBlock)
+  local chunk = self:ensureChunk(World.chunkPosition(position))
+  self:markDirtyChunks(position)
+  return chunk:setBlock(World.positionInChunk(position), newBlock)
 end
 
 -- Returns whether the tile at the given position is an empty (air) tile.

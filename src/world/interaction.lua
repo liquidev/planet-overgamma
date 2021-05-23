@@ -93,7 +93,7 @@ return function (World)
     local block = game.blocks[blockID]
     local hardness = block.hardness or 1
     if hardness <= charge then
-      self:block(position, World.air)
+      self:setBlock(position, World.air)
       if block.drops ~= nil then
         self:dropItem(self.unitPosition.center(position), block.drops)
       end
@@ -115,7 +115,7 @@ return function (World)
     if not self:isEmpty(position) then return false end
 
     if type(tile) == "number" then
-      self:block(position, tile)
+      self:setBlock(position, tile)
       self:updateBlock(position + Vec(0, -1))
       self:updateBlock(position + Vec(0, 1))
       self:updateBlock(position + Vec(-1, 0))

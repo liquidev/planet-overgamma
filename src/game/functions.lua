@@ -63,7 +63,7 @@ function game.addBlock(key, block)
     local quads = {}
     for j, rect in ipairs(rects) do
       quads[j] = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
-                                  game.blockAtlas.image)
+                                  game.terrainAtlas.image)
     end
     block.variantQuads[i] = quads
   end
@@ -71,6 +71,41 @@ function game.addBlock(key, block)
   game.blocks[id] = block
   print("game: registered block '"..key.."' -> "..id)
   return id, block
+end
+
+-- Adds a new ore into the game and returns its ID and `ore`.
+-- Raises an error if an ore with the given key already exists.
+--
+-- The provided ore table is modified to also contain its ID.
+--
+-- This shouldn't be used directly by mods. Instead, use Mod:addOre.
+function game.addOre(key, ore)
+  -- ore follows the following data structure:
+  -- {
+  --   -- The rects to be used for ore sprites.
+  --   -- The actual sprite is chosen depending on how much ore is stored in
+  --   -- a tile. Refer to saturatedAt for more info.
+  --   rects: {Rect},
+  --   -- The amount of ore needed in a single block for the renderer to display
+  --   -- the last sprite from rects.
+  --   saturatedAt: number,
+  -- }
+
+  if Registry.hasKey(game.oreIDs, key) then
+    error("ore '"..key.."' is already registered")
+  end
+  local id = game.oreIDs[key]
+  ore.id = id
+
+  ore.quads = {}
+  for i, rect in ipairs(ore.rects) do
+    ore.quads[i] = graphics.newQuad(rect.x, rect.y, rect.width, rect.height,
+                                    game.terrainAtlas.image)
+  end
+
+  game.ores[id] = ore
+  print("game: registered ore '"..key.."' -> "..id)
+  return id, ore
 end
 
 -- Adds a new item into the game and returns its ID and `item`.

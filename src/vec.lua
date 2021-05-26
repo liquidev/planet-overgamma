@@ -142,10 +142,25 @@ end
 function vecMethods:normalized()
   local len = self:len()
   if len == 0 then
-    return Vec(0, 0)
+    return Vec(0, 0), len
   else
     return self / len, len
   end
+end
+
+-- Returns a copy of the vector with its components floored.
+function vecMethods:floor()
+  return Vec(math.floor(self.x), math.floor(self.y))
+end
+
+-- Returns a copy of the vector with its components ceil'd.
+function vecMethods:ceil()
+  return Vec(math.ceil(self.x), math.ceil(self.y))
+end
+
+-- Returns a copy of the vector with its components rounded.
+function vecMethods:round()
+  return Vec(common.round(self.x), common.round(self.y))
 end
 
 -- Linearly interpolates between this vector and the other vector, with
@@ -158,6 +173,11 @@ function vecMethods:lerp(other, t)
     lerp(self.x, other.x, t),
     lerp(self.y, other.y, t)
   )
+end
+
+-- Creates a vector from an angle.
+function vecMethods.fromAngle(angle)
+  return Vec(math.cos(angle), math.sin(angle))
 end
 
 return Vec

@@ -40,7 +40,6 @@ function tiles.packBlock(variants, atlas, imageData)
   local imageWidth, imageHeight = imageData:getDimensions()
   local variantCount = imageWidth / imageHeight
 
-  imageData:encode("png", "test.png")
   if variantCount == 1 then
     local rect = atlas:pack(imageData)
     variants[1] = tables.fill({}, 16, rect)
@@ -49,7 +48,6 @@ function tiles.packBlock(variants, atlas, imageData)
       local tile = image.newImageData(imageHeight, imageHeight)
       tile:paste(imageData, 0, 0,
                  (i - 1) * imageHeight, 0, imageHeight, imageHeight)
-      tile:encode("png", "variant"..tostring(i)..".png")
       variants[i] = tables.fill({}, 16, atlas:pack(tile))
     end
   end
@@ -83,5 +81,23 @@ function tiles.pack4x4(variants, atlas, imageData)
   return variants
 end
 
+-- Disassembles the imageData containing a horizontal strip of ore tiles into
+-- a set of ore sprites, and packs them into the provided atlas, filling the
+-- `rects` table with rectangles packed into the atlas.
+-- Returns the modified `rects` table.
+function tiles.packOre(rects, atlas, imageData)
+  local imageWidth, imageHeight = imageData:getDimensions()
+  local saturationCount = imageWidth / imageHeight
+
+  for i = 1, saturationCount do
+    local tile = image.newImageData(imageHeight, imageHeight)
+    tile:paste(imageData, 0, 0,
+               (i - 1) * imageHeight, 0, imageHeight, imageHeight)
+    tile:encode("png", "saturation"..i..".png")
+    rects[i] = atlas:pack(tile)
+  end
+
+  return rects
+end
 
 return tiles

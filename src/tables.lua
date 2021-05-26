@@ -64,4 +64,16 @@ function tables.imap(t, func)
   return t
 end
 
+-- Key map operation. Similar to imap, but operates on keys in the hash part of
+-- the table and is out-place.
+-- func receives the key as an argument, and must return the mapped key.
+-- Returns the modified table.
+function tables.kmap(t, func)
+  local result = {}
+  for key, value in pairs(t) do
+    result[func(key)] = value
+  end
+  return result
+end
+
 return tables

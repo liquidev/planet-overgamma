@@ -20,14 +20,18 @@ local game = {
 
   -- sprites
   playerSprites = {},
+  terrainAtlas = Atlas:new(atlasSize),
 
   -- mods
   mods = {},
 
   -- block data
-  blockAtlas = Atlas:new(atlasSize),
   blockIDs = Registry:new(),
   blocks = {},
+
+  -- ore data
+  oreIDs = Registry:new(),
+  ores = {},
 
   -- item data
   itemAtlas = Atlas:new(atlasSize),

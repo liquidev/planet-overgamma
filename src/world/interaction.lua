@@ -93,9 +93,17 @@ return function (World)
     local block = game.blocks[blockID]
     local hardness = block.hardness or 1
     if hardness <= charge then
-      self:setBlock(position, World.air)
-      if block.drops ~= nil then
-        self:dropItem(self.unitPosition.center(position), block.drops)
+      local oreID = self:ore(position)
+      local dropPosition = self.unitPosition.center(position)
+      if oreID == World.noOre then
+        self:setBlock(position, World.air)
+        if block.drops ~= nil then
+          self:dropItem(dropPosition, block.drops)
+        end
+      else
+        local ore = game.ores[oreID]
+        local _, minedAmount = self:removeOre(position, ore.item.amount)
+        self:dropItem(dropPosition, items.drop(ore.item.id, minedAmount))
       end
       if updateBlocks then
         self:updateBlock(position + Vec(0, -1))

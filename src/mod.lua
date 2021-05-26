@@ -103,7 +103,7 @@ end
 -- by 4, preferably 32x32 (8x8 tiles), to fit the rest of the game.
 --
 -- Returns a function that accepts a table of properties that should get merged
--- into the block before adding it into the tile registry. The function will
+-- into the block before adding it into the block registry. The function will
 -- return the block ID and final block upon calling.
 function Mod:addBlock(key, image, kind)
   image = loadImage(self, image)
@@ -115,22 +115,40 @@ function Mod:addBlock(key, image, kind)
     end
   end
 
-  local variantRects = {}
-  if kind == "4x4" then
-    tiles.pack4x4(variantRects, game.blockAtlas, image)
-  else
-    tiles.packBlock(variantRects, game.blockAtlas, image)
-  end
-
   return function (extra)
-    local block = { variantRects = variantRects }
-    tables.merge(block, extra)
+    local variantRects = {}
+    if kind == "4x4" then
+      tiles.pack4x4(variantRects, game.terrainAtlas, image)
+    else
+      tiles.packBlock(variantRects, game.terrainAtlas, image)
+    end
+
+    local block = tables.merge({
+      variantRects = variantRects,
+      isSolid = true,
+    }, extra)
     local id = game.addBlock(self:namespaced(key), block)
     block.tilesWith = { [id] = true }
-    if block.isSolid == nil then
-      block.isSolid = true
-    end
+
     return id, block
+  end
+end
+
+-- Adds a new ore from an image (filename or ImageData).
+-- Returns a function that accepts a table of properties that should get merged
+-- into the ore before adding it into the ore registry. The function will return
+-- the ore ID and final ore table upon calling.
+function Mod:addOre(key, image)
+  image = loadImage(self, image)
+
+  return function (extra)
+    local rects = tiles.packOre({}, game.terrainAtlas, image)
+    local ore = tables.merge({
+      rects = rects,
+      saturatedAt = #rects * 10,
+    }, extra)
+    local id = game.addOre(self:namespaced(key), ore)
+    return id, ore
   end
 end
 

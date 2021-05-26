@@ -2,16 +2,23 @@
 
 local lmath = love.math
 
+local floor = math.floor
+local sqrt = math.sqrt
 local sin, cos = math.sin, math.cos
 local pi = math.pi
 
 local common = require "common"
 local game = require "game"
+local Registry = require "registry"
 local tables = require "tables"
 local Vec = require "vec"
 local WorldGenerator = require "world.generation"
+local World = require "world"
 
+local deg = common.degToRad
 local lerp = common.lerp
+
+local Chunk = World.Chunk
 
 ---
 
@@ -40,6 +47,26 @@ canon.defaultConfig = {
   surfaceTile = "core:plants",
   rockTile = "core:rock",
   weedsTile = "core:weeds",
+
+  -- Ores.
+  ores = {
+    {
+      -- The named ID of the ore.
+      ore = "core:coal",
+      -- The layers between which the ore can spawn.
+      -- These are rounded down to multiples of 8.
+      high = 0, low = 64,
+      -- Number of spawn attempts per chunk, and the chance for each attempt
+      -- to succeed.
+      attemptCount = 1, spawnChance = 0.2,
+      -- The length (amount of brush steps) of each vein,
+      -- amount of ore per brush step, brush radius, and maximum amount
+      -- for each tile.
+      veinLength = 10, veinAmount = 5, veinRadius = 1,
+      -- The set of blocks this ore is allowed to spawn on.
+      allowOn = { ["core:rock"] = true },
+    },
+  },
 }
 
 -- Computes fractal noise with the given number of octaves, at the given
@@ -59,19 +86,6 @@ end
 local boxBlur3 = { 1/3, 1/3, 1/3 }
 local boxBlur5 = { 1/5, 1/5, 1/5, 1/5, 1/5 }
 
--- Creates a generation stage for a terrain layer.
-local function terrainLayer(name)
-  return {
-    name = "layers."..name,
-    function (gen, world, config, s, heightmaps)
-      local surface = game.blockIDs[config[name.."Tile"]]
-      local bottom = config[name.."Bottom"] or 0
-      gen:fillHeightmap(world, heightmaps[name], bottom, surface)
-      return s, heightmaps
-    end
-  }
-end
-
 -- Permutes the heightmap through an offset and a set of kernels specified
 -- in varargs.
 local function permuteHeightmap(heightmap, offset, ...)
@@ -89,6 +103,19 @@ local function noiseCircle(s, t, radius)
   local angle = t * 2 * pi
   local offset = Vec(sin(angle) * radius, cos(angle) * radius)
   return s.noiseOrigin + offset + Vec(0.5, 0.5)
+end
+
+-- Creates a generation stage for a terrain layer.
+local function terrainLayer(name)
+  return {
+    name = "layers."..name,
+    function (gen, world, config, s, heightmaps)
+      local surface = game.blockIDs[config[name.."Tile"]]
+      local bottom = config[name.."Bottom"] or 0
+      gen:fillHeightmap(world, heightmaps[name], bottom, surface)
+      return s, heightmaps
+    end
+  }
 end
 
 canon:stages {
@@ -142,7 +169,7 @@ canon:stages {
       }
     end
   },
-  -- We take our generated heightmaps and fill all the individual layers.
+  -- We take our generated heightmaps and fill in all the layers.
   terrainLayer "surface",
   terrainLayer "rock",
   {
@@ -161,8 +188,92 @@ canon:stages {
         end
         gen:progress(t)
       end
+
+      return s
     end
   },
+  {
+    -- Generate positions where ores can spawn.
+    name = "ores.positions",
+    function (gen, world, config, s)
+      local positionsPerOre = {}
+      local widthInChunks = floor(world.width / Chunk.size)
+      local count = 0
+
+      for i, spec in ipairs(config.ores) do
+        local positions = {}
+        local high, low =
+          floor(spec.high / Chunk.size), floor(spec.low / Chunk.size)
+        for chunkX = 0, widthInChunks do
+          for chunkY = high, low do
+            for _ = 1, spec.attemptCount do
+              if s.rng:random() < spec.spawnChance then
+                local cx, cy = chunkX * Chunk.size, chunkY * Chunk.size
+                local ox = s.rng:random(0, Chunk.size - 1)
+                local oy = s.rng:random(0, Chunk.size - 1)
+                local x, y = cx + ox, cy + oy
+                table.insert(positions, Vec(x, y))
+                count = count + 1
+              end
+            end
+          end
+        end
+        positionsPerOre[i] = positions
+        gen:progress(i / #config.ores)
+      end
+
+      return s, positionsPerOre, count
+    end
+  },
+  {
+    -- Generate ore veins.
+    name = "ores.veins",
+    function (gen, world, config, s, positionsPerOre, positionCount)
+      local noiseZ = s.rng:random(1, 10000) + 0.5
+      local positionIndex = 1
+
+      for i, positions in ipairs(positionsPerOre) do
+        local spec = config.ores[i]
+        local oreID = game.oreIDs[spec.ore]
+        local ore = game.ores[oreID]
+        local radius = spec.veinRadius
+        local radius2 = radius * radius
+        local amount = spec.veinAmount
+        local limit = ore.saturatedAt
+        local allowOn = tables.kmap(
+          spec.allowOn,
+          function (k) return game.blockIDs[k] end
+        )
+        for _, position in ipairs(positions) do
+          local angle = s.rng:random() * 2 * pi
+          for step = 1, spec.veinLength do
+            -- Fill the ores.
+            for ox = -radius, radius - 1 do
+              local height = sqrt(radius2 - ox * ox)
+              for oy = -height, height - 1 do
+                local origin = position:round()
+                local point = origin + Vec(ox, oy)
+                if allowOn[world:block(point)] then
+                  world:addOre(point, oreID, amount, limit)
+                end
+              end
+            end
+            -- Step the position.
+            position:add(Vec.fromAngle(angle))
+            -- Increment angle by a random amount.
+            local nposition =
+              noiseCircle(s, step / spec.veinLength * 0.25, 5)
+            local angleIncrement =
+              lmath.noise(nposition.x, nposition.y, noiseZ) * 2 - 1
+            angle = angle + deg(angleIncrement * 22.5)
+          end
+          noiseZ = noiseZ + 1
+          positionIndex = positionIndex + 1
+          gen:progress(positionIndex / positionCount)
+        end
+      end
+    end
+  }
 }
 
 return canon

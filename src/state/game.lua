@@ -1,11 +1,14 @@
 -- The game state.
 
+local graphics = love.graphics
+
 local Camera = require "camera"
 local game = require "game"
 local Player = require "entities.player"
 local State = require "state"
 local World = require "world"
-local Vec = require "vec"
+
+local input = game.input
 
 ---
 
@@ -23,7 +26,7 @@ function GameState:init()
     elseif kind == "done" then
       self.world = a
     elseif kind == "time" then
-      print(" - "..a * 1000 .. " ms")
+      print((" - stage took %.1f ms"):format(a * 1000))
     elseif kind == "error" then
       error("in world generator: "..a)
     end
@@ -32,20 +35,36 @@ function GameState:init()
 
   self.player = self.world:spawn(Player:new(self.world))
   self.player.body.position.y = -128
---   self.player.inventory:put(game.itemIDs["core:plantMatter"], 160)
 
   self.camera = Camera:new()
+
+  self.debugMode = true
 end
 
 -- Updates the game.
 function GameState:update()
   self.world:update()
+
+  if input:keyJustPressed('/') then
+    self.debugMode = not self.debugMode
+  end
 end
 
 -- Renders the game.
 function GameState:draw(alpha)
   self.world:draw(alpha, self.player:camera(alpha))
   self.player:ui()
+
+  if self.debugMode then
+    local w, h = graphics.getDimensions()
+    local position = self.player.body.position
+    local x, y = math.floor(position.x), math.floor(position.y)
+    local text =
+      "Unit\nX: "..x.."\nY: "..y..
+      "\n\nBlock\nX: "..math.floor(x / World.Chunk.size)..
+      "\nY: "..math.floor(y / World.Chunk.size)
+    graphics.printf(text, w - 256 - 8, 8, 256, "right")
+  end
 end
 
 return GameState

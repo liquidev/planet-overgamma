@@ -27,15 +27,22 @@ Chunk.unitSize = Chunk.size * Chunk.tileSize
 -- Initializes a new chunk.
 -- All blocks in the chunk will be 0, ie. air.
 function Chunk:init()
-  self.blocks = tables.fill({}, Chunk.size^2, 0)
+  local tileCount = Chunk.size ^ 2
+  self.blocks = tables.fill({}, tileCount, 0)
+  self.ores = tables.fill({}, tileCount, 0)
+  self.oreAmounts = tables.fill({}, tileCount, 0)
+end
+
+local function indexInChunk(vec)
+  local x, y = vec:xy()
+  return 1 + x + y * Chunk.size
 end
 
 -- Gets the block ID at the given position. The position must be in
 -- the chunk's boundaries, otherwise behavior is undefined for
 -- better performance.
 function Chunk:block(position, newBlock)
-  local x, y = position:xy()
-  local i = 1 + x + y * Chunk.size
+  local i = indexInChunk(position)
   return self.blocks[i]
 end
 
@@ -43,13 +50,64 @@ end
 -- the chunk's boundaries, otherwise behavior is undefined.
 -- Returns the old block.
 function Chunk:setBlock(position, newBlock)
-  local x, y = position:xy()
-  local i = 1 + x + y * Chunk.size
+  local i = indexInChunk(position)
   local old = self.blocks[i]
   self.blocks[i] = newBlock
   self.dirty = true
   return old
 end
+
+-- Returns the ID and amount of ore at the given position.
+-- Out of bounds access is undefined behavior.
+function Chunk:ore(position)
+  local i = indexInChunk(position)
+  return self.ores[i], self.oreAmounts[i]
+end
+
+-- Sets the ore ID and amount at the given position.
+-- Out of bounds access is undefined behavior.
+-- Returns the old ID and amount.
+function Chunk:setOre(position, id, amount)
+  local i = indexInChunk(position)
+  local oldID, oldAmount = self.ores[i], self.oreAmounts[i]
+  if amount == 0 then id = 0 end
+  self.ores[i], self.oreAmounts[i] = id, amount
+  self.dirty = true
+  return oldID, oldAmount
+end
+
+-- Adds the given amount of ore with the given ID to the given position.
+-- If limit is not nil, it is used to limit how much ore can be present at that
+-- tile. By default, the limit is math.huge.
+function Chunk:addOre(position, id, amount, limit)
+  limit = limit or math.huge
+  local i = indexInChunk(position)
+  local oreID = self.ores[i]
+  if oreID == 0 then
+    self.ores[i] = id
+  elseif oreID ~= id then
+    return
+  end
+  self.oreAmounts[i] = math.min(self.oreAmounts[i] + amount, limit)
+  self.dirty = true
+end
+
+-- Tries to remove the given amount of ore from the tile at the given position.
+-- Returns the ID and actual amount that could be retrieved.
+-- If there is no ore left, sets the ID at the given position to no ore (0).
+-- Out of bounds access is undefined.
+function Chunk:removeOre(position, amount)
+  local i = indexInChunk(position)
+  local id, amountInOre = self.ores[i], self.oreAmounts[i]
+  amount = math.min(amount, amountInOre)
+  self.oreAmounts[i] = self.oreAmounts[i] - amount
+  if self.oreAmounts[i] == 0 then
+    self.ores[i] = 0
+  end
+  self.dirty = true
+  return id, amount
+end
+
 
 --
 -- World
@@ -63,6 +121,8 @@ require("world.interaction")(World)
 
 -- The ID of air.
 World.air = 0
+-- The ID of no ore.
+World.noOre = 0
 
 -- Initializes a new world with the given width (in tiles).
 function World:init(width, gravity)
@@ -152,22 +212,25 @@ function World:markDirty(chunkPosition)
   end
 end
 
+local chunkPosition = World.chunkPosition
+local positionInChunk = World.positionInChunk
+
 -- Marks all chunks adjacent to the given position dirty.
 function World:markDirtyChunks(position)
-  local chunkPosition = World.chunkPosition(position)
-  local positionInChunk = World.positionInChunk(position)
-  self:markDirty(chunkPosition)
-  if positionInChunk.x == 0 then
-    self:markDirty(chunkPosition + Vec(-1, 0))
+  local chp = chunkPosition(position)
+  local pic = positionInChunk(position)
+  self:markDirty(chp)
+  if pic.x == 0 then
+    self:markDirty(chp + Vec(-1, 0))
   end
-  if positionInChunk.x == Chunk.size - 1 then
-    self:markDirty(chunkPosition + Vec(1, 0))
+  if pic.x == Chunk.size - 1 then
+    self:markDirty(chp + Vec(1, 0))
   end
-  if positionInChunk.y == 0 then
-    self:markDirty(chunkPosition + Vec(0, -1))
+  if pic.y == 0 then
+    self:markDirty(chp + Vec(0, -1))
   end
-  if positionInChunk.y == Chunk.size - 1 then
-    self:markDirty(chunkPosition + Vec(0, 1))
+  if pic.y == Chunk.size - 1 then
+    self:markDirty(chp + Vec(0, 1))
   end
 end
 
@@ -176,9 +239,9 @@ end
 function World:block(position, newBlock)
   position = wrapPosition(self, position)
 
-  local chunk = self:chunk(World.chunkPosition(position))
+  local chunk = self:chunk(chunkPosition(position))
   if chunk ~= nil then
-    return chunk:block(World.positionInChunk(position))
+    return chunk:block(positionInChunk(position))
   else
     return World.air
   end
@@ -187,9 +250,67 @@ end
 -- Sets the block at the given position, creating a new chunk if necessary.
 -- Returns the old block.
 function World:setBlock(position, newBlock)
-  local chunk = self:ensureChunk(World.chunkPosition(position))
+  position = wrapPosition(self, position)
+
+  local chunk = self:ensureChunk(chunkPosition(position))
   self:markDirtyChunks(position)
-  return chunk:setBlock(World.positionInChunk(position), newBlock)
+  return chunk:setBlock(positionInChunk(position), newBlock)
+end
+
+-- Returns the ID and amount of ore at the given position.
+-- If the position lands outside of any chunks, (World.noOre, 0) is returned.
+function World:ore(position)
+  position = wrapPosition(self, position)
+
+  local chunk = self:chunk(chunkPosition(position))
+  if chunk ~= nil then
+    return chunk:ore(positionInChunk(position))
+  else
+    return World.noOre, 0
+  end
+end
+
+local function cannotHaveOre(chunk, position)
+  return chunk == nil or chunk:block(positionInChunk(position)) == World.air
+end
+
+-- Sets the ID and amount of ore at the given position.
+-- Returns the old ID and amount of ore.
+-- If the block at the given position is air, no ore is set and
+-- (World.noOre, 0) is returned.
+function World:setOre(position, id, amount)
+  position = wrapPosition(self, position)
+  local chunk = self:chunk(chunkPosition(position))
+  if cannotHaveOre(chunk, position) then
+    return World.noOre, 0
+  end
+
+  return chunk:ore(positionInChunk(position))
+end
+
+-- Adds an amount of ore to the tile at the given position.
+-- Does not override ores with an ID different than the one provided.
+-- If limit is specified, the amount of ore will be clamped to that limit.
+function World:addOre(position, id, amount, limit)
+  position = wrapPosition(self, position)
+  local chunk = self:chunk(chunkPosition(position))
+  if cannotHaveOre(chunk, position) then
+    return
+  end
+
+  return chunk:addOre(positionInChunk(position), id, amount, limit)
+end
+
+-- Tries to remove the given amount of ore from the tile at the given position.
+-- Returns the ID of the ore, and the actual amount removed.
+function World:removeOre(position, amount)
+  position = wrapPosition(self, position)
+  local chunk = self:chunk(chunkPosition(position))
+  if cannotHaveOre(chunk, position) then
+    return World.noOre, 0
+  end
+
+  return chunk:removeOre(positionInChunk(position), amount)
 end
 
 -- Returns whether the tile at the given position is an empty (air) tile.

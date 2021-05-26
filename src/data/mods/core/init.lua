@@ -29,8 +29,27 @@ local function addBlock(name)
   end
 end
 
+local function addOre(name)
+  local callback = mod:addOre(name, "ores/"..name..".png")
+  return function (properties)
+    callback(properties)
+  end
+end
+
+--
+-- Items
+--
+
+-- Terrain
 addItem "plantMatter"
 addItem "stone"
+
+-- Raw materials
+addItem "coal"
+
+--
+-- Blocks
+--
 
 addBlock "plants" { hardness = 0.75, drops = items.drop(i.plantMatter) }
 addBlock "weeds"  { isSolid = false,
@@ -40,6 +59,16 @@ addBlock "weeds"  { isSolid = false,
                     variants = { density = 1, bias = 1.5 } }
 addBlock "rock"   { hardness = 1, drops = items.drop(i.stone),
                     variants = { density = 0.3, bias = 2 } }
+
+--
+-- Ores
+--
+
+addOre "coal" { saturatedAt = 10, item = items.stack(i.coal, 5) }
+
+--
+-- Recipes
+--
 
 mod:addRecipes {
   ["portAssembler.1"] = {

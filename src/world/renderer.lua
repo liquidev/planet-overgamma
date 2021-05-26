@@ -42,18 +42,23 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   if not chunk.dirty then return end
   chunkPosition = self:wrapChunkPosition(chunkPosition)
 
-  local blockAtlas = game.blockAtlas.image
+  local terrainAtlas = game.terrainAtlas.image
 
-  if chunk.blockBatch == nil then
-    chunk.blockBatch = graphics.newSpriteBatch(blockAtlas, chunk.size^2)
+  if chunk.terrainBatch == nil then
+    chunk.terrainBatch = graphics.newSpriteBatch(terrainAtlas, chunk.size^2)
   end
 
-  chunk.blockBatch:clear()
+  chunk.terrainBatch:clear()
   for y = 0, chunk.size - 1 do
     for x = 0, chunk.size - 1 do
       local positionInChunk = Vec(x, y)
       local positionInWorld = chunkPosition * chunk.size + positionInChunk
+      local unitX, unitY = (positionInChunk * chunk.tileSize):xy()
+
       local blockID = chunk:block(positionInChunk)
+      local oreID, oreAmount = chunk:ore(positionInChunk)
+
+      -- blocks
       if blockID ~= 0 then
         local block = game.blocks[blockID]
         local tileIndex = bitwiseTilingIndex(self, positionInWorld, blockID)
@@ -62,14 +67,28 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
           local config = block.variants or {}
           local density, bias = config.density or 1, config.bias or 1
           local noisePosition = positionInWorld * density + Vec(0.01, 0.01)
-          local noise = lmath.noise(noisePosition.x, noisePosition.y) ^ bias
-          local variantIndex =
-            math.floor(lerp(1, #block.variantQuads, noise) + 0.5)
+          local variantIndex
+          if oreID == 0 then
+            local noise = lmath.noise(noisePosition.x, noisePosition.y) ^ bias
+            variantIndex = math.floor(lerp(1, #block.variantQuads, noise) + 0.5)
+          else
+            variantIndex = 1
+          end
           quad = block.variantQuads[variantIndex][tileIndex]
         else
           quad = block.variantQuads[1][tileIndex]
         end
-        chunk.blockBatch:add(quad, (positionInChunk * chunk.tileSize):xy())
+        chunk.terrainBatch:add(quad, unitX, unitY)
+      end
+
+      -- ores
+      if oreID ~= 0 then
+        local ore = game.ores[oreID]
+        local saturation =
+          common.clamp((oreAmount - 10) / (ore.saturatedAt - 10), 0, 1)
+        local quadIndex = math.ceil(saturation * (#ore.quads - 1)) + 1
+        local quad = ore.quads[quadIndex]
+        chunk.terrainBatch:add(quad, unitX, unitY)
       end
     end
   end
@@ -77,7 +96,7 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   chunk.dirty = false
 end
 
--- Draws entities from the given table..
+-- Draws entities from the given table.
 local function drawEntities(entities, alpha)
   for _, entity in ipairs(entities) do
     entity:draw(alpha)
@@ -100,9 +119,9 @@ local function render(self, alpha, viewport)
       local chunk = self:chunk(chunkPosition)
       if chunk ~= nil then
         rebuildBlockBatch(self, chunkPosition, chunk)
-        local blocks = chunk.blockBatch
-        if blocks ~= nil then
-          graphics.draw(blocks, (chunkPosition * chunk.unitSize):xy())
+        local terrain = chunk.terrainBatch
+        if terrain ~= nil then
+          graphics.draw(terrain, (chunkPosition * chunk.unitSize):xy())
         end
       end
     end
@@ -110,17 +129,16 @@ local function render(self, alpha, viewport)
 
   -- entities
   local entities = self.entities
-  local unitWidth = self.width * Chunk.tileSize
   drawEntities(entities, alpha)
   if left <= 0 then
     graphics.push()
-    graphics.translate(-unitWidth, 0)
+    graphics.translate(-self.unitWidth, 0)
     drawEntities(entities, alpha)
     graphics.pop()
   end
   if right >= self.width / Chunk.size then
     graphics.push()
-    graphics.translate(unitWidth, 0)
+    graphics.translate(self.unitWidth, 0)
     drawEntities(entities, alpha)
     graphics.pop()
   end

@@ -459,7 +459,7 @@ local function portAssemblerHUD(self)
       width, height = width * 3, height * 3
       graphics.rectangle("line", x - 8.5, by - 8.5, width + 16, height + 16)
     end
-    graphics.draw(game.blockAtlas.image, quad, x, by, 0, 3)
+    graphics.draw(game.terrainAtlas.image, quad, x, by, 0, 3)
     by = by + 40
   end
 

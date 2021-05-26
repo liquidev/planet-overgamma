@@ -72,6 +72,8 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
             local noise = lmath.noise(noisePosition.x, noisePosition.y) ^ bias
             variantIndex = math.floor(lerp(1, #block.variantQuads, noise) + 0.5)
           else
+            -- If there's an ore on this tile, the variant chosen is always the
+            -- first one.
             variantIndex = 1
           end
           quad = block.variantQuads[variantIndex][tileIndex]

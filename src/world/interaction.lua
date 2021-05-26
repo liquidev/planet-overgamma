@@ -19,6 +19,8 @@ local deg = common.degToRad
 
 return function (World)
 
+  local Chunk = World.Chunk
+
   -- A bitfield for specifying which faces a block is attached to.
   -- If a block receives an update and any of the specified faces is not solid,
   -- the block is broken.
@@ -57,9 +59,35 @@ return function (World)
     end
   end
 
+  -- Finds a free position for spawning an item.
+  local searchRadius = 7
+  local function findFreeSpawnPosition(self, position)
+    local tilePosition = (position / Chunk.tileSize):floor()
+
+    -- kind of sucks
+    if self:isSolid(tilePosition) then
+      for r = 1, searchRadius do
+        for oy = -r, r do
+          for ox = -r, r do
+            local free = tilePosition + Vec(ox, oy)
+            if not self:isSolid(free) then
+              position = self.unitPosition.center(free)
+              return position
+            end
+          end
+        end
+      end
+    end
+
+    return position
+  end
+
   -- Drops items centered at the given position according to the provided
   -- drop table.
+  -- If the position is occupied, looks for free positions around the given
+  -- position and spawns the item there.
   function World:dropItem(position, drop)
+    position = findFreeSpawnPosition(self, position)
     for _, stack in items.draw(drop) do
       local item = self:spawn(Item:new(self, stack))
         :randomizeVelocity(1, 1.25, deg(180+45), deg(270+45))

@@ -36,6 +36,13 @@ function GameState:init()
   self.player = self.world:spawn(Player:new(self.world))
   self.player.body.position.y = -128
 
+  if os.getenv("GIVE_ME_ALL_THE_GOOD_STUFF") == "YES" then
+    self.player.inventory.size = math.huge
+    for id, _ in pairs(game.items) do
+      self.player.inventory:put(id, 10240)
+    end
+  end
+
   self.camera = Camera:new()
 
   self.debugMode = true
@@ -56,7 +63,7 @@ function GameState:draw(alpha)
   self.player:ui()
 
   if self.debugMode then
-    local w, h = graphics.getDimensions()
+    local w, _ = graphics.getDimensions()
     local position = self.player.body.position
     local x, y = math.floor(position.x), math.floor(position.y)
     local text =

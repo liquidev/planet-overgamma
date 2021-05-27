@@ -1,3 +1,4 @@
 dist_*
 love
 *.log
+*.trace

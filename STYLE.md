@@ -14,6 +14,8 @@ ie. look at the existing code to decide, or ask when contributing code via PRs.
 - put spaces around infix operators: `a + b`, `local a = b`
   - exception: `^` can be used without spaces: `a^2`
   - exception: `..` should always be used without spaces: `"example"..x`
+    - exception: sometimes that's impossible next to number literals, eg.
+      `x * 1000 .. " ms"`, then use spaces
 - do not put spaces around dot `a.b` and colon `a:b()` operators
 - no spaces before arguments in function definitions and calls:
   `function a(x, y) end`, `a(1, 2)`

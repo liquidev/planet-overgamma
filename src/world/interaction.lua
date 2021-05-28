@@ -120,7 +120,7 @@ return function (World)
 
     local block = game.blocks[blockID]
     local hardness = block.hardness or 1
-    if hardness <= charge then
+    if hardness < charge then
       local oreID = self:ore(position)
       local dropPosition = self.unitPosition.center(position)
       if oreID == World.noOre then

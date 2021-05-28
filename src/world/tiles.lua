@@ -1,5 +1,6 @@
 -- Things, queries, and utilities related to tiles.
 
+local graphics = love.graphics
 local image = love.image
 
 local tables = require "tables"
@@ -93,11 +94,26 @@ function tiles.packOre(rects, atlas, imageData)
     local tile = image.newImageData(imageHeight, imageHeight)
     tile:paste(imageData, 0, 0,
                (i - 1) * imageHeight, 0, imageHeight, imageHeight)
-    tile:encode("png", "saturation"..i..".png")
     rects[i] = atlas:pack(tile)
   end
 
   return rects
+end
+
+-- Extracts machine sprites from the given imageData into the images table.
+-- Returns the modified images table.
+function tiles.extractMachineSprites(sprites, imageData)
+  local imageWidth, imageHeight = imageData:getDimensions()
+  local spriteCount = imageWidth / imageHeight
+
+  for i = 1, spriteCount do
+    local tile = image.newImageData(imageHeight, imageHeight)
+    tile:paste(imageData, 0, 0,
+               (i - 1) * imageHeight, 0, imageHeight, imageHeight)
+    sprites[i] = graphics.newImage(tile)
+  end
+
+  return sprites
 end
 
 return tiles

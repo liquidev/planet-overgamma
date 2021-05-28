@@ -55,10 +55,10 @@ canon.defaultConfig = {
       ore = "core:coal",
       -- The layers between which the ore can spawn.
       -- These are rounded down to multiples of 8.
-      high = 0, low = 64,
+      high = 0, low = 48,
       -- Number of spawn attempts per chunk, and the chance for each attempt
       -- to succeed.
-      attemptCount = 1, spawnChance = 0.2,
+      attemptCount = 1, spawnChance = 0.1,
       -- The length (amount of brush steps) of each vein,
       -- amount of ore per brush step, brush radius, and maximum amount
       -- for each tile.
@@ -66,6 +66,20 @@ canon.defaultConfig = {
       -- The set of blocks this ore is allowed to spawn on.
       allowOn = { ["core:rock"] = true },
     },
+    {
+      ore = "core:tin",
+      high = 32, low = 128,
+      attemptCount = 1, spawnChance = 0.075,
+      veinLength = 2, veinAmount = 3, veinRadius = 2,
+      allowOn = { ["core:rock"] = true },
+    },
+    {
+      ore = "core:copper",
+      high = 32, low = 128,
+      attemptCount = 1, spawnChance = 0.05,
+      veinLength = 3, veinAmount = 3, veinRadius = 2,
+      allowOn = { ["core:rock"] = true },
+    }
   },
 }
 
@@ -246,7 +260,9 @@ canon:stages {
         )
         for _, position in ipairs(positions) do
           local angle = s.rng:random() * 2 * pi
-          for step = 1, spec.veinLength do
+          position = position:round()
+          local length = s.rng:random(1, spec.veinLength)
+          for step = 1, length do
             -- Fill the ores.
             for ox = -radius, radius - 1 do
               local height = sqrt(radius2 - ox * ox)

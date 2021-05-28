@@ -54,10 +54,10 @@ function love.run()
   math.randomseed(os.time())
   graphics.setDefaultFilter("nearest", "nearest")
 
-  timer.step()
-
   game.load()
   state = require("state.game"):new()
+
+  timer.step()
 
   local previous = timer.getTime()
   local lag = 0
@@ -71,6 +71,7 @@ function love.run()
     local delta = now - previous
     previous = now
     lag = lag + delta
+    lag = math.min(lag, timePerTick * 3)
 
     -- events
     event.pump()

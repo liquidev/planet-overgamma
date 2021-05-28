@@ -134,7 +134,8 @@ function Mod:addBlock(key, image, kind)
   end
 end
 
--- Adds a new ore from an image (filename or ImageData).
+-- Adds a new ore from an image (filename or ImageData). The image must be a
+-- horizontal strip of sprites, representing different ore saturation levels.
 -- Returns a function that accepts a table of properties that should get merged
 -- into the ore before adding it into the ore registry. The function will return
 -- the ore ID and final ore table upon calling.
@@ -161,6 +162,21 @@ function Mod:addItem(key, image)
     rect = game.itemAtlas:pack(image)
   }
   return game.addItem(self:namespaced(key), item)
+end
+
+-- Adds a new machine into the game. M is the machine object, which must
+-- inherit from Machine. The image (filename or ImageData) must be a horizontal
+-- strip of sprites.
+-- M's __name field is modified to be prefixed with the mod's namespace.
+function Mod:addMachine(M, image)
+  image = loadImage(self, image)
+
+  M.__name = self:namespaced(M.__name)
+  local machine = {
+    Object = M,
+    sprites = tiles.extractMachineSprites({}, image)
+  }
+  return game.addMachine(machine)
 end
 
 -- Adds a new recipe for the given target.

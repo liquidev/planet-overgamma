@@ -199,7 +199,7 @@ function Player:update()
   --
 
   if math.abs(input.deltaScroll.y) > 0.1 and #self.recipes > 0 then
-    local d = common.round(input.deltaScroll.y)
+    local d = -common.round(input.deltaScroll.y)
     self.selectedRecipe = self.selectedRecipe + d
     self.selectedRecipe = (self.selectedRecipe - 1) % #self.recipes + 1
 
@@ -241,7 +241,7 @@ function Player:prePhysicsUpdate()
   end
 
   if self.laserEnabled then
-    local target = self:laserTarget()
+    local target, laserPosition = self:laserTarget()
 
     -- destruction laser
     if self.laserMode == "destroy" then
@@ -254,10 +254,19 @@ function Player:prePhysicsUpdate()
     -- construction laser
     local recipe = self:recipe()
     if self.laserMode == "construct" then
-      if self.laserCharge > self.laserMaxCharge - 0.5 and
-         self.world:placeTile(target, recipe.result) then
-        recipes.consume(recipe, self.inventory)
-        self.laserCharge = 0
+      if self.laserCharge > self.laserMaxCharge - 0.5 then
+        local item = recipe.result.item
+        local success =
+          (recipe.result.block ~= nil and
+          self.world:placeTile(target, recipe.result.block))
+            or
+          (item ~= nil and
+          (self.world:dropItem(laserPosition,
+                               items.drop(item.id, item.amount)) or true))
+        if success then
+          recipes.consume(recipe, self.inventory)
+          self.laserCharge = 0
+        end
       end
     end
   end
@@ -313,16 +322,16 @@ end
 -- Returns the block the laser is targeting.
 local unboundedTarget = true -- constant used as an argument to laserTarget
 function Player:laserTarget(unbounded)
-  local tile
+  local position
   if unbounded then
-    tile = self:mousePosition()
+    position = self:mousePosition()
   else
-    tile = self:laserPosition()
+    position = self:laserPosition()
   end
-  tile = tile / Chunk.size
+  local tile = position / Chunk.size
   tile.x = math.floor(tile.x)
   tile.y = math.floor(tile.y)
-  return tile
+  return tile, position
 end
 
 -- The colors of the laser core and glows.
@@ -363,8 +372,8 @@ function Player:draw(alpha)
   graphics.draw(self.sprites[self:animationState()], x, y, 0, scale, 1)
 
   -- laser
-  local laserTarget = self:laserTarget() * Chunk.tileSize
-  local unbLaserTarget = self:laserTarget(unboundedTarget) * Chunk.tileSize
+  local laserTarget = (self:laserTarget()) * Chunk.tileSize
+  local unbLaserTarget = (self:laserTarget(unboundedTarget)) * Chunk.tileSize
   graphics.rectangle(
     "line",
     laserTarget.x, laserTarget.y,
@@ -438,8 +447,33 @@ end
 
 -- Translates a recipe's result.
 local function trRecipe(recipe)
-  if type(recipe.result) == "number" then
-    return tr("block/"..Registry.key(game.blockIDs, recipe.result))
+  local result = recipe.result
+  if result.block ~= nil then
+    return tr("block/"..Registry.key(game.blockIDs, result.block))
+  elseif result.item ~= nil then
+    return tr("item/"..Registry.key(game.itemIDs, result.item.id))
+  end
+  return recipe.name
+end
+
+-- Draws a recipe result at the given position.
+local function drawRecipe(x, y, recipe, scale)
+  -- sprite
+  local result = recipe.result
+  local atlas, quad
+  if result.block ~= nil then
+    atlas = game.terrainAtlas
+    quad = game.blocks[result.block].variantQuads[1][1]
+  elseif result.item ~= nil then
+    atlas = game.itemAtlas
+    quad = game.items[result.item.id].quad
+  end
+  graphics.draw(atlas.image, quad, x, y, 0, scale)
+
+  -- item: amount
+  if result.item ~= nil then
+    graphics.printf(quantity(result.item.amount), x - 8, y + 24 - 10,
+                    24, "center")
   end
 end
 
@@ -450,16 +484,11 @@ local function portAssemblerHUD(self)
 
   local by = h / 2 - (self.selectedRecipe - 1) * 40 - 12
   for i, recipe in ipairs(self.recipes) do
-    local quad
-    if type(recipe.result) == "number" then
-      quad = game.blocks[recipe.result].variantQuads[1][1]
-    end
     if self.selectedRecipe == i then
-      local _, _, width, height = quad:getViewport()
-      width, height = width * 3, height * 3
+      local width, height = 24, 24
       graphics.rectangle("line", x - 8.5, by - 8.5, width + 16, height + 16)
     end
-    graphics.draw(game.terrainAtlas.image, quad, x, by, 0, 3)
+    drawRecipe(x, by, recipe, 3)
     by = by + 40
   end
 

@@ -18,22 +18,34 @@ mod:metadata {
 local i = {} -- items
 local b = {} -- blocks
 
+-- paths
+local pAssets = "assets"
+local pItemAssets = pAssets.."/items"
+local pBlockAssets = pAssets.."/blocks"
+local pOreAssets = pAssets.."/ores"
+local pMachineAssets = pAssets.."/machines"
+
 local function addItem(name)
-  i[name] = mod:addItem(name, "items/"..name..".png")
+  i[name] = mod:addItem(name, pItemAssets..'/'..name..".png")
 end
 
 local function addBlock(name)
-  local callback = mod:addBlock(name, "blocks/"..name..".png")
+  local callback = mod:addBlock(name, pBlockAssets..'/'..name..".png")
   return function (properties)
     b[name] = callback(properties)
   end
 end
 
 local function addOre(name)
-  local callback = mod:addOre(name, "ores/"..name..".png")
+  local callback = mod:addOre(name, pOreAssets..'/'..name..".png")
   return function (properties)
     callback(properties)
   end
+end
+
+local function addMachine(name)
+  local M = require("mods.core.machines."..name)
+  mod:addMachine(M, pMachineAssets..'/'..M.__name..".png")
 end
 
 --
@@ -46,6 +58,13 @@ addItem "stone"
 
 -- Raw materials
 addItem "coal"
+addItem "rawCopper"
+addItem "copper"
+addItem "rawTin"
+addItem "tin"
+
+-- Chassis
+addItem "stoneChassis"
 
 --
 -- Blocks
@@ -64,30 +83,72 @@ addBlock "rock"   { hardness = 1, drops = items.drop(i.stone),
 -- Ores
 --
 
-addOre "coal" { saturatedAt = 10, item = items.stack(i.coal, 5) }
+addOre "coal"   { saturatedAt = 10, item = items.stack(i.coal, 5) }
+addOre "copper" { saturatedAt = 9, item = items.stack(i.rawCopper, 3) }
+addOre "tin"    { saturatedAt = 9, item = items.stack(i.rawTin, 3) }
+
+--
+-- Machines
+--
+
+addMachine "stone-furnace"
 
 --
 -- Recipes
 --
 
+-- blocks
 mod:addRecipes {
   ["portAssembler.1"] = {
     {
       name = "block.plants",
       ingredients = { items.stack(i.plantMatter) },
-      result = b.plants,
+      result = { block = b.plants },
     },
     {
       name = "block.rock",
       ingredients = { items.stack(i.stone) },
-      result = b.rock,
+      result = { block = b.rock },
     },
   },
 }
 
+-- items
+mod:addRecipes {
+  ["portAssembler.1"] = {
+    -- inefficient refining
+    {
+      name = "item.copper",
+      ingredients = { items.stack(i.rawCopper, 1) },
+      result = { item = items.stack(i.copper, 1) },
+    },
+    {
+      name = "item.tin",
+      ingredients = { items.stack(i.rawTin, 1) },
+      result = { item = items.stack(i.tin, 1) },
+    },
+    -- chassis
+    {
+      name = "item.stoneChassis",
+      ingredients = { items.stack(i.stone, 3) },
+      result = { item = items.stack(i.stoneChassis) }
+    },
+  },
+}
+
+--
+-- World generation
+--
+
 mod:addWorldGenerator(require "mods.core.canon")
 
+--
+-- Translations
+--
+
 mod:addTranslations()
+
+---
 
 return {
   items = i,

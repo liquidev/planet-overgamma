@@ -2,6 +2,10 @@ return {
   item = {
     ["core:plantMatter"] = "Plant Matter",
     ["core:stone"] = "Stone",
+    ["core:rawCopper"] = "Raw Copper",
+    ["core:copper"] = "Copper",
+    ["core:rawTin"] = "Raw Tin",
+    ["core:tin"] = "Tin",
   },
   block = {
     ["core:plants"] = "Plants",

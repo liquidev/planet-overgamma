@@ -136,6 +136,35 @@ function game.addItem(key, item)
   return id, item
 end
 
+-- Adds a new machine into the game.
+-- The key for the machine is inferred from machine.Object.__name.
+-- Returns the machine table, unmodified.
+-- Errors out if a machine with the same name is already registered.
+--
+-- As usual, prefer Mod:addMachine over this.
+function game.addMachine(machine)
+  -- The machine table has to have the following structure:
+  -- {
+  --   -- The machine object. Used to construct the machine.
+  --   Object: Machine,
+  --   -- A list of Images that make up the different sprites the machine
+  --   -- can have.
+  --   -- Note that machines do not use a sprite atlas, as given how they're
+  --   -- rendered (and how few of them are rendered compared to items
+  --   -- or terrain), it wouldn't make much sense to have one.
+  --   sprites: {Image},
+  -- }
+
+  local key = machine.Object.__name
+  if game.machines[key] ~= nil then
+    error("machine '"..key.."' is already registered")
+  end
+
+  game.machines[key] = machine
+  print("game: registered machine '"..key.."'")
+  return machine
+end
+
 -- Adds a new recipe into the game.
 -- Since recipes do not have unique names or IDs, this doesn't return anything.
 --

@@ -87,7 +87,7 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
       if oreID ~= 0 then
         local ore = game.ores[oreID]
         local saturation =
-          common.clamp((oreAmount - 10) / (ore.saturatedAt - 10), 0, 1)
+          common.clamp(oreAmount / ore.saturatedAt, 0, 1)
         local quadIndex = math.ceil(saturation * (#ore.quads - 1)) + 1
         local quad = ore.quads[quadIndex]
         chunk.terrainBatch:add(quad, unitX, unitY)

@@ -38,6 +38,9 @@ local game = {
   itemIDs = Registry:new(),
   items = {},
 
+  -- machine data
+  machines = {},
+
   -- recipe data
   recipes = {},
 

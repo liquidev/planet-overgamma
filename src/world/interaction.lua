@@ -11,6 +11,8 @@ local common = require "common"
 local game = require "game"
 local Item = require "entities.item"
 local items = require "items"
+local Machine = require "world.machine"
+local Object = require "object"
 local Vec = require "vec"
 
 local deg = common.degToRad
@@ -116,17 +118,29 @@ return function (World)
     if updateBlocks == nil then updateBlocks = true end
 
     local blockID = self:block(position)
-    if blockID == World.air then return end
+    local machine = self:machine(position)
+    if blockID == World.air and machine == nil then return end
 
-    local block = game.blocks[blockID]
-    local hardness = block.hardness or 1
+    local subject = game.blocks[blockID] or machine
+    local hardness = subject.hardness or 1
     if hardness < charge then
       local oreID = self:ore(position)
       local dropPosition = self.unitPosition.center(position)
       if oreID == World.noOre then
-        self:setBlock(position, World.air)
-        if block.drops ~= nil then
-          self:dropItem(dropPosition, block.drops)
+        if blockID ~= World.air then
+          self:setBlock(position, World.air)
+          if subject.drops ~= nil then
+            self:dropItem(dropPosition, subject.drops)
+          end
+        elseif machine ~= nil then
+          self:setMachine(position, nil)
+          if machine.recipe ~= nil then
+            local drops = {}
+            for _, stack in ipairs(machine.recipe.ingredients) do
+              table.insert(drops, items.drop(stack.id, stack.amount))
+            end
+            self:dropItem(dropPosition, drops)
+          end
         end
       else
         local ore = game.ores[oreID]
@@ -139,23 +153,27 @@ return function (World)
         self:updateBlock(position + Vec(-1, 0))
         self:updateBlock(position + Vec(1, 0))
       end
-      return block
+      return subject
     end
   end
 
   -- Places a tile at the provided position.
-  -- tile can currently only be a block ID, but this will be expanded in the
-  -- future.
+  -- recipe is the recipe to use for the final result.
   -- Returns whether the tile was successfully placed.
-  function World:placeTile(position, tile)
+  function World:placeTile(position, recipe)
     if not self:isEmpty(position) then return false end
 
-    if type(tile) == "number" then
-      self:setBlock(position, tile)
+    local result = recipe.result
+    if result.block ~= nil then
+      self:setBlock(position, result.block)
       self:updateBlock(position + Vec(0, -1))
       self:updateBlock(position + Vec(0, 1))
       self:updateBlock(position + Vec(-1, 0))
       self:updateBlock(position + Vec(1, 0))
+    elseif result.machine ~= nil then
+      local machine = result.machine:new(self, position)
+      machine.recipe = recipe
+      self:setMachine(position, machine)
     end
     return true
   end

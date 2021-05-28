@@ -17,6 +17,7 @@ mod:metadata {
 -- for convenience as typing `item.plantMatter` gets old pretty quick.
 local i = {} -- items
 local b = {} -- blocks
+local m = {} -- machines
 
 -- paths
 local pAssets = "assets"
@@ -45,6 +46,7 @@ end
 
 local function addMachine(name)
   local M = require("mods.core.machines."..name)
+  m[M.__name] = M
   mod:addMachine(M, pMachineAssets..'/'..M.__name..".png")
 end
 
@@ -65,6 +67,9 @@ addItem "tin"
 
 -- Chassis
 addItem "stoneChassis"
+
+-- Connections
+addItem "copperHeatPipe"
 
 --
 -- Blocks
@@ -92,6 +97,7 @@ addOre "tin"    { saturatedAt = 9, item = items.stack(i.rawTin, 3) }
 --
 
 addMachine "stone-furnace"
+addMachine "stone-refiner"
 
 --
 -- Recipes
@@ -130,10 +136,28 @@ mod:addRecipes {
     -- chassis
     {
       name = "item.stoneChassis",
-      ingredients = { items.stack(i.stone, 3) },
-      result = { item = items.stack(i.stoneChassis) }
+      ingredients = { items.stack(i.stone, 20) },
+      result = { item = items.stack(i.stoneChassis) },
+    },
+    -- connections
+    {
+      name = "item.copperHeatPipe",
+      ingredients = { items.stack(i.copper, 2) },
+      result = { item = items.stack(i.copperHeatPipe) },
     },
   },
+}
+
+-- machines
+mod:addRecipes {
+  ["portAssembler.1"] = {
+    {
+      name = "machine.stoneFurnace",
+      ingredients = { items.stack(i.stoneChassis), items.stack(i.copper),
+                      items.stack(i.copperHeatPipe) },
+      result = { machine = m.stoneFurnace },
+    },
+  }
 }
 
 --

@@ -6,10 +6,16 @@ return {
     ["core:copper"] = "Copper",
     ["core:rawTin"] = "Raw Tin",
     ["core:tin"] = "Tin",
+    ["core:stoneChassis"] = "Stone Chassis",
+    ["core:copperHeatPipe"] = "Copper Heat Pipe",
   },
   block = {
     ["core:plants"] = "Plants",
     ["core:rock"] = "Rock",
+  },
+  machine = {
+    ["core:stoneFurnace"] = "Stone Furnace",
+    ["core:stoneRefiner"] = "Stone Refiner",
   },
   worldGenerator = {
     ["core:canon"] = {

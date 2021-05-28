@@ -255,10 +255,11 @@ function Player:prePhysicsUpdate()
     local recipe = self:recipe()
     if self.laserMode == "construct" then
       if self.laserCharge > self.laserMaxCharge - 0.5 then
-        local item = recipe.result.item
+        local result = recipe.result
+        local item = result.item
         local success =
-          (recipe.result.block ~= nil and
-          self.world:placeTile(target, recipe.result.block))
+          ((result.block ~= nil or result.machine ~= nil) and
+          self.world:placeTile(target, recipe))
             or
           (item ~= nil and
           (self.world:dropItem(laserPosition,
@@ -452,6 +453,8 @@ local function trRecipe(recipe)
     return tr("block/"..Registry.key(game.blockIDs, result.block))
   elseif result.item ~= nil then
     return tr("item/"..Registry.key(game.itemIDs, result.item.id))
+  elseif result.machine ~= nil then
+    return tr("machine/"..result.machine.__name)
   end
   return recipe.name
 end
@@ -467,6 +470,10 @@ local function drawRecipe(x, y, recipe, scale)
   elseif result.item ~= nil then
     atlas = game.itemAtlas
     quad = game.items[result.item.id].quad
+  elseif result.machine ~= nil then
+    local sprite = game.machines[result.machine.__name].sprites[1]
+    graphics.draw(sprite, x, y, 0, scale)
+    return
   end
   graphics.draw(atlas.image, quad, x, y, 0, scale)
 

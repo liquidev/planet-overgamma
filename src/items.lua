@@ -46,7 +46,7 @@ end
 -- Draws items from a drop pool.
 local function drawMultipleItems(pool, index)
   while true do
-    if index > #pool then
+    if index >= #pool then
       return nil
     end
     local drop = pool[index + 1]

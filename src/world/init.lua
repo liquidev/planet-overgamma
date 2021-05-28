@@ -6,6 +6,7 @@ local band, bor = bit.band, bit.bor
 local shl = bit.lshift
 
 local Object = require "object"
+local SparseSet = require "sparse-set"
 local tables = require "tables"
 local Vec = require "vec"
 
@@ -31,6 +32,16 @@ function Chunk:init()
   self.blocks = tables.fill({}, tileCount, 0)
   self.ores = tables.fill({}, tileCount, 0)
   self.oreAmounts = tables.fill({}, tileCount, 0)
+  -- The machines table simply stores machine IDs that are then indexed in the
+  -- world itself. This is used to enable better culling and serialization
+  -- support: the less pointers you have in your data, the easier it is to
+  -- serialize later.
+  -- A machine with ID 0 does not exist, as all IDs count up from 1 - ID 0 is
+  -- used as "no machine".
+  self.machines = tables.fill({}, tileCount, 0)
+  -- This table is a set of machine IDs present in the given chunk.
+  -- This is used when rendering.
+  self.machinesPresent = {}
 end
 
 local function indexInChunk(vec)
@@ -42,8 +53,7 @@ end
 -- the chunk's boundaries, otherwise behavior is undefined for
 -- better performance.
 function Chunk:block(position, newBlock)
-  local i = indexInChunk(position)
-  return self.blocks[i]
+  return self.blocks[indexInChunk(position)]
 end
 
 -- Sets the block ID at the given position. Again, the position must be in
@@ -108,6 +118,28 @@ function Chunk:removeOre(position, amount)
   return id, amount
 end
 
+-- Returns the ID of the machine at the given position.
+-- Out of bounds access is undefined.
+function Chunk:machineID(position)
+  return self.machines[indexInChunk(position)]
+end
+
+-- Sets the ID of the machine at the given position.
+-- Returns the ID of the old machine.
+-- Out of bounds access is undefined.
+function Chunk:setMachineID(position, id)
+  -- Placing a machine in a chunk does not mark the chunk as dirty, as machines
+  -- are not rendered by the chunk renderer directly.
+  local i = indexInChunk(position)
+  local old = self.machines[i]
+  self.machines[i] = id
+  self.machinesPresent[old] = nil
+  if id ~= 0 then
+    self.machinesPresent[id] = true
+  end
+  return old
+end
+
 
 --
 -- World
@@ -128,12 +160,21 @@ World.noOre = 0
 function World:init(width, gravity)
   assert(width % Chunk.size == 0,
          "world width must be divisible by "..Chunk.size)
-  self.chunks = {}
-    -- ↑ don't index this directly unless you know what you're doing
+
+  -- size
   self.width = width
   self.unitWidth = width * Chunk.tileSize
+
+  self.chunks = {}
+    -- ↑ don't index this directly unless you know what you're doing
+
+  -- entities
   self.entities = {}
   self.spawnQueue = {}
+
+  -- machines
+  self.machines = SparseSet:new()
+
   self:initPhysics(gravity)
 end
 
@@ -313,9 +354,49 @@ function World:removeOre(position, amount)
   return chunk:removeOre(positionInChunk(position), amount)
 end
 
--- Returns whether the tile at the given position is an empty (air) tile.
+-- Returns the machine ID at the given position. Only use this if you know
+-- what you're doing.
+function World:machineID(position)
+  position = wrapPosition(self, position)
+  local chunk = self:chunk(chunkPosition(position))
+  if chunk ~= nil then
+    return chunk:machineID(positionInChunk(position))
+  end
+  return 0
+end
+
+-- Returns the machine at the given position, or nil if there is no machine
+-- there.
+function World:machine(position)
+  return self.machines:get(self:machineID(position))
+end
+
+-- Sets the machine at the given position. If machine is nil, removes the
+-- machine at the given position.
+-- Returns the old machine at the given position, or nil if there was no machine
+-- in the first place.
+function World:setMachine(position, machine)
+  position = wrapPosition(self, position)
+
+  local chunk = self:ensureChunk(chunkPosition(position))
+  local newID = 0
+  if machine ~= nil then
+    newID = self.machines:insert(machine)
+  end
+  local oldID = chunk:setMachineID(positionInChunk(position), newID)
+  local oldMachine = nil
+  if oldID ~= 0 then
+    oldMachine = self.machines:remove(oldID)
+  end
+  return oldMachine
+end
+
+-- Returns whether the tile at the given position is an empty (air) tile
+-- unoccupied by any machines.
 function World:isEmpty(position)
-  return self:block(position) == World.air
+  return
+    self:block(position) == World.air and
+    self:machineID(position) == 0
 end
 
 -- Spawns the given entity into the world, returns the entity.

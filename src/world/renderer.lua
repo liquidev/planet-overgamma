@@ -98,6 +98,27 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   chunk.dirty = false
 end
 
+-- Draws all blocks and machines in a chunk.
+local function drawChunk(self, chunkPosition, chunk, alpha)
+  rebuildBlockBatch(self, chunkPosition, chunk)
+  local terrain = chunk.terrainBatch
+
+  graphics.push()
+  graphics.translate((chunkPosition * chunk.unitSize):xy())
+  if terrain ~= nil then
+    graphics.draw(terrain)
+  end
+  for id, _ in pairs(chunk.machinesPresent) do
+    local machine = self.machines:get(id)
+    local position = self.positionInChunk(machine.position)
+    graphics.push()
+    graphics.translate((position * chunk.tileSize):xy())
+    machine:draw(alpha)
+    graphics.pop()
+  end
+  graphics.pop()
+end
+
 -- Draws entities from the given table.
 local function drawEntities(entities, alpha)
   for _, entity in ipairs(entities) do
@@ -120,11 +141,7 @@ local function render(self, alpha, viewport)
       local chunkPosition = Vec(x, y)
       local chunk = self:chunk(chunkPosition)
       if chunk ~= nil then
-        rebuildBlockBatch(self, chunkPosition, chunk)
-        local terrain = chunk.terrainBatch
-        if terrain ~= nil then
-          graphics.draw(terrain, (chunkPosition * chunk.unitSize):xy())
-        end
+        drawChunk(self, chunkPosition, chunk, alpha)
       end
     end
   end

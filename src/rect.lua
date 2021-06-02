@@ -61,6 +61,18 @@ function Rect:bottom()
   return self.y + self.height
 end
 
+-- Returns the x, y, width, and height of the rectangle, in that order.
+function Rect:xywh()
+  return self.x, self.y, self.width, self.height
+end
+
+-- Returns whether the rectangle contains the given point.
+function Rect:hasPoint(point)
+  return
+    point.x >= self.x and point.y >= self.y and
+    point.x <= self.x + self.width and point.y <= self.y + self.height
+end
+
 -- Returns whether this rectangle intersects the other rectangle.
 function Rect:intersects(other)
   return

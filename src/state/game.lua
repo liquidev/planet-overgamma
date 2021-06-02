@@ -2,6 +2,9 @@
 
 local graphics = love.graphics
 
+local rgba = love.math.colorFromBytes
+
+local common = require "common"
 local Camera = require "camera"
 local game = require "game"
 local Player = require "entities.player"
@@ -9,6 +12,8 @@ local State = require "state"
 local World = require "world"
 
 local input = game.input
+
+local white = common.white
 
 ---
 
@@ -61,6 +66,11 @@ end
 function GameState:draw(alpha)
   self.world:draw(alpha, self.player:camera(alpha))
   self.player:ui()
+
+  game.ui:begin("freeform")
+  game.ui:pad(16)
+  game.ui:beginPanel("freeform", 100, 100) do
+  end game.ui:endPanel()
 
   if self.debugMode then
     local w, _ = graphics.getDimensions()

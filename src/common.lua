@@ -95,4 +95,35 @@ common.white = { rgba(255, 255, 255) }
 common.black = { rgba(0, 0, 0) }
 common.transparent = { rgba(0, 0, 0, 0) }
 
+-- Helper for common.hex, extends a single-character string to a
+-- double-character string.
+local function hexExtend(hex)
+  if #hex == 1 then return hex..hex
+  else return hex end
+end
+
+-- Converts an RGB hex color to normalized 0..1 RGBA values.
+function common.hex(color)
+  if color:sub(1, 1) == '#' then
+    color = color:sub(2)
+  end
+  local r, g, b
+  local a = 255
+
+  local rs, gs, bs, as = color:match("^(%x%x?)(%x%x?)(%x%x?)(%x?%x?)$")
+  assert(bs ~= nil, "invalid color")
+  rs = hexExtend(rs)
+  gs = hexExtend(gs)
+  bs = hexExtend(bs)
+  r = tonumber(rs, 16)
+  g = tonumber(gs, 16)
+  b = tonumber(bs, 16)
+  if #as > 0 then
+    as = hexExtend(as)
+    a = tonumber(as, 16)
+  end
+
+  return r / 255, g / 255, b / 255, a / 255
+end
+
 return common

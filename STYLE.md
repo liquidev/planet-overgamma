@@ -22,6 +22,14 @@ ie. look at the existing code to decide, or ask when contributing code via PRs.
   - exception: one space before function calls with a single string or table
     as a parameter: `require "mod"`, `ItemStorage:new { size = 32 }`
 - always use a single space after a comma
+- use `do..end` blocks whenever immediate mode-style code with `push()..pop()`
+  functions is used. a good example of this is UI:
+  ```lua
+  ui:push("freeform", 800, 600) do
+    -- do stuff
+  end ui:pop()
+  ```
+  this helps better illustrate the structure constructed with push'n'pops.
 
 ## Naming
 

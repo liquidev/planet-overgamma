@@ -27,6 +27,7 @@ function Input:init()
   self.deltaScroll = Vec(0, 0)
 
   -- mouse buttons
+  self.mouseDisabled = 0
   self.mouseButtonsDown = {}
   self.mouseButtonsJustPressed = {}
   self.mouseButtonsJustReleased = {}
@@ -94,19 +95,36 @@ function Input:finishFrame()
   self.keysJustReleased = {}
 end
 
+-- Disables all mouse inputs from being received.
+function Input:disableMouse()
+  self.mouseDisabled = self.mouseDisabled + 1
+end
+
+-- Reenables receiving mouse input. If disableMouse was called n times,
+-- this must also be called n times to reenable input.
+function Input:enableMouse()
+  self.mouseDisabled = math.max(0, self.mouseDisabled - 1)
+end
+
 -- Returns whether a mouse button is being held.
 function Input:mouseDown(button)
-  return self.mouseButtonsDown[button] ~= nil
+  return
+    self.mouseDisabled == 0 and
+    self.mouseButtonsDown[button] ~= nil
 end
 
 -- Returns whether a mouse button has just been pressed.
 function Input:mouseJustPressed(button)
-  return self.mouseButtonsJustPressed[button] ~= nil
+  return
+    self.mouseDisabled == 0 and
+    self.mouseButtonsJustPressed[button] ~= nil
 end
 
 -- Returns whether a mouse button has just been released.
 function Input:mouseJustReleased(button)
-  return self.mouseButtonsJustReleased[button] ~= nil
+  return
+    self.mouseDisabled == 0 and
+    self.mouseButtonsJustReleased[button] ~= nil
 end
 
 -- Returns whether a key is being held.

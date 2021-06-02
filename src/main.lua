@@ -12,6 +12,7 @@ local timer = love.timer
 local game = require "game" -- initialize game resources before anything else
 require "game.functions"
 require "game.load"
+require "ui.controls"
 
 local Mod = require "mod"
 local Scheduler = require "fiber"
@@ -83,7 +84,9 @@ function love.run()
         end
         return a or 0
       else
-        game.input:processEvent { kind = kind, a, b, c, d, e, f }
+        local ev = { kind = kind, a, b, c, d, e, f }
+        game.ui.input:processEvent(ev)
+        game.input:processEvent(ev)
       end
     end
 
@@ -102,6 +105,9 @@ function love.run()
     graphics.clear(0, 0, 0, 1.0, 0)
     state:draw(alpha)
     graphics.present()
+    -- The UI's input is reset every frame, because the UI is redrawn
+    -- every frame, and each UI redraw also handles input.
+    game.ui.input:finishFrame()
 
     -- state switching
     if state._nextState ~= nil then

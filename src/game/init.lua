@@ -7,6 +7,7 @@
 local Atlas = require "atlas"
 local Input = require "input"
 local Registry = require "registry"
+local Ui = require "ui"
 local Vec = require "vec"
 
 ---
@@ -17,6 +18,7 @@ local game = {
   -- globally useful stuff
   input = Input:new(),
   fonts = {}, -- regular, bold
+  ui = Ui:new(),
 
   -- sprites
   playerSprites = {},

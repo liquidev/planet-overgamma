@@ -26,7 +26,7 @@ style.panelFill = { hex "#101010" }
 style.panelOutline = { hex "#ffffff" }
 
 -- Progress bar
-style.progressBackground = { hex "#555555" }
+style.progressBackground = { hex "#333333" }
 style.progressGreen = { hex "#7fec52" }
 style.progressYellow = { hex "#ffc31f" }
 style.progressRed = { hex "#fb4e4e" }

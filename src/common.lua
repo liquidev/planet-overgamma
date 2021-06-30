@@ -186,4 +186,14 @@ function common.hex(color)
   return r / 255, g / 255, b / 255, a / 255
 end
 
+--- Returns the approximate luminance of the given color.
+---
+--- @param r number
+--- @param g number
+--- @param b number
+--- @return number
+function common.luma(r, g, b)
+  return 0.299 * r + 0.587 * g + 0.114 * b
+end
+
 return common

@@ -78,7 +78,7 @@ function Player:init(world)
   self.portAssemblerTier = 1
   self.recipeDetailTimeout = -100
 
-  self.inventory = ItemStorage:new { size = 2560 }
+  self.inventory = ItemStorage:new { size = 160 } -- 2560 }
     -- Remember to update this along self.portAssemblerTier!!!
   function self.inventory.onChanged(id, _, _)
     self.showStacks[id] = timer.getTime() + 3
@@ -573,6 +573,23 @@ local inventoryColumns = 6
 --- @param ui Ui
 function Player:leftPanel(ui)
   if ui:beginAccordionPanel(ui:width(), 320, "Inventory") then
+    local occupied = self.inventory:occupied()
+    local free = self.inventory:free()
+    local size = self.inventory.size
+    local occupiedRatio = occupied / size
+    local freeLabel
+    if self.inventory:free() > 0 then
+      local freePercent = 100 - occupiedRatio * 100
+      freeLabel = tr("player/inventory/spaceFree"):format(freePercent)
+    else
+      freeLabel = tr "player/inventory/full"
+    end
+    ui:progress(occupiedRatio, {
+      color = ui.mapProgressColor(occupiedRatio, 0.7, 0.9),
+      style = "tall",
+      label = ("%d / %d (%s)"):format(occupied / 10, size / 10, freeLabel),
+    })
+    ui:space(4)
     ui:itemStorageView(self.inventory, {
       columns = inventoryColumns,
       height = ui:remHeight(),

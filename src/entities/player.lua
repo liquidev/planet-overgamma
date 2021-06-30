@@ -78,7 +78,7 @@ function Player:init(world)
   self.portAssemblerTier = 1
   self.recipeDetailTimeout = -100
 
-  self.inventory = ItemStorage:new { size = 160 } -- 2560 }
+  self.inventory = ItemStorage:new { size = 2560 }
     -- Remember to update this along self.portAssemblerTier!!!
   function self.inventory.onChanged(id, _, _)
     self.showStacks[id] = timer.getTime() + 3
@@ -207,17 +207,21 @@ function Player:update()
   -- Recipe selection
   --
 
-  if math.abs(input.deltaScroll.y) > 0.1 and #self.recipes > 0 then
-    local d = -common.round(input.deltaScroll.y)
-    self.selectedRecipe = self.selectedRecipe + d
-    self.selectedRecipe = (self.selectedRecipe - 1) % #self.recipes + 1
+  -- Panels use scroll events; we don't want to switch recipes while
+  -- the player's interacting with the UI.
+  if self:canUseLaser() then
+    if math.abs(input.deltaScroll.y) > 0.1 and #self.recipes > 0 then
+      local d = -common.round(input.deltaScroll.y)
+      self.selectedRecipe = self.selectedRecipe + d
+      self.selectedRecipe = (self.selectedRecipe - 1) % #self.recipes + 1
 
-    local recipe = self:recipe()
-    self.showStacks = {}
-    for _, stack in ipairs(recipe.ingredients) do
-      self.showStacks[stack.id] = timer.getTime() + 3
+      local recipe = self:recipe()
+      self.showStacks = {}
+      for _, stack in ipairs(recipe.ingredients) do
+        self.showStacks[stack.id] = timer.getTime() + 3
+      end
+      self.recipeDetailTimeout = timer.getTime() + 3
     end
-    self.recipeDetailTimeout = timer.getTime() + 3
   end
 end
 
@@ -572,9 +576,12 @@ local inventoryColumns = 6
 --- Draws the player's left panel.
 --- @param ui Ui
 function Player:leftPanel(ui)
-  if ui:beginAccordionPanel(ui:width(), 320, "Inventory") then
+  -- inventory panel
+  if ui:beginAccordionPanel(ui:width(), 320, "Inventory",
+                            {expandedByDefault = true})
+  then
+    -- occupied space progress bar
     local occupied = self.inventory:occupied()
-    local free = self.inventory:free()
     local size = self.inventory.size
     local occupiedRatio = occupied / size
     local freeLabel
@@ -587,9 +594,10 @@ function Player:leftPanel(ui)
     ui:progress(occupiedRatio, {
       color = ui.mapProgressColor(occupiedRatio, 0.7, 0.9),
       style = "tall",
-      label = ("%d / %d (%s)"):format(occupied / 10, size / 10, freeLabel),
+      label = ("%.0f / %.0f (%s)"):format(occupied / 10, size / 10, freeLabel),
     })
     ui:space(4)
+    -- item storage view
     ui:itemStorageView(self.inventory, {
       columns = inventoryColumns,
       height = ui:remHeight(),

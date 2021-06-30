@@ -18,6 +18,7 @@ style.accordionPressed = { rgba(255, 255, 255, 32) }
 
 -- Item storage view
 style.itemStorageCellOutline = { hex "#555555" }
+style.itemStorageCellHover = { rgba(255, 255, 255, 32) }
 style.itemStorageOutline = { hex "#333333" }
 style.itemStorageEmptyText = { hex "#777777" }
 
@@ -32,5 +33,8 @@ style.progressYellow = { hex "#ffc31f" }
 style.progressRed = { hex "#fb4e4e" }
 style.progressLightText = { hex"#ffffff" }
 style.progressDarkText = { hex"#0a0724" }
+
+-- Scroll
+style.scrollBar = { rgba(255, 255, 255, 128) }
 
 return style

@@ -31,6 +31,31 @@ local function drawStack(ui, storage, options, stack)
   graphics.print(uqty(stack.amount), game.fonts.regular10, 2, cs - 12)
 end
 
+local function drawInner(ui, storage, options)
+  -- stacks
+  for _, stack in ipairs(storage:sorted("amount", "descending")) do
+    ui:wrap(cellSize)
+    ui:push("freeform", cellSize, cellSize) do
+      if ui:hover() then
+        graphics.setColor(style.itemStorageCellHover)
+        ui:fill()
+        graphics.setColor(white)
+      end
+      ui:draw(drawStack, ui, storage, options, stack)
+    end ui:pop()
+  end
+  -- empty message
+  if options.emptyText ~= nil and storage:occupied() == 0 then
+    graphics.setColor(style.itemStorageEmptyText)
+    ui:text(options.emptyText, "center", "middle")
+    graphics.setColor(white)
+  end
+end
+
+local function getInnerHeight(storage, columns)
+  return math.ceil(storage:stackCount() / columns) * cellSize
+end
+
 --- Draws and processes events for an item storage view.
 ---
 --- options must have the following values:
@@ -49,18 +74,9 @@ function Ui:itemStorageView(storage, options)
     graphics.setColor(style.itemStorageOutline)
     self:outline()
     graphics.setColor(white)
-    -- stacks
-    for _, stack in ipairs(storage:sorted("amount", "descending")) do
-      self:wrap(cellSize)
-      self:push("freeform", cellSize, cellSize) do
-        self:draw(drawStack, self, storage, options, stack)
-      end self:pop()
-    end
-    -- empty message
-    if options.emptyText ~= nil and storage:occupied() == 0 then
-      graphics.setColor(style.itemStorageEmptyText)
-      self:text(options.emptyText, "center", "middle")
-      graphics.setColor(white)
-    end
+    -- inner stuff (stacks or the empty storage message)
+    local innerHeight = getInnerHeight(storage, columns)
+    self:scroll(storage, "vertical", innerHeight,
+                drawInner, self, storage, options)
   end self:pop()
 end

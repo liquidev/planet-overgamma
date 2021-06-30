@@ -6,5 +6,6 @@ require "ui.accordion"
 require "ui.item-storage-view"
 require "ui.panel"
 require "ui.progress"
+require "ui.scroll"
 
 return Ui

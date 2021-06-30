@@ -13,6 +13,11 @@ local Vec = require "vec"
 --- @class Ui: Object
 local Ui = Object:inherit()
 
+
+--
+-- Construction
+--
+
 --- Initializes a new UI instance.
 function Ui:init()
   self.input = Input:new()
@@ -42,6 +47,7 @@ function Ui:begin(layout, width, height)
       layout = layout,
     }
   }
+  self.mouseOffset = Vec(0, 0)
 end
 
 --- Returns the topmost group on the stack.
@@ -291,7 +297,9 @@ local function textHeight(font, text)
   return baseHeight * lineCount + extraHeight * (lineCount - 1)
 end
 
---- Draws text inside the current group, using the current font in love.graphics.
+--- Draws text inside the current group, using the current font in
+--- love.graphics.
+---
 --- This function accepts the following parameters:
 ---  · text, alignh, alignv: string
 ---  · font: Font; text, alignh, alignv: string
@@ -368,19 +376,45 @@ function Ui:gicon(icon, width, height)
   self:pop()
 end
 
+--- Draws a rectangle covering the current group to the stencil buffer.
+--- `action` and `value` are passed directly to love.graphics.stencil.
+---
+--- @param action string
+--- @param value number | nil
+function Ui:stencil(action, value)
+  local x, y, w, h = self:top().rect:xywh()
+  graphics.stencil(function ()
+    graphics.rectangle("fill", x, y, w, h)
+  end, action or "replace", value or 255)
+end
+
+--- Limits rendering to the area covered by the current group, and calls the
+--- function, passing along any extra arguments to it.
+---
+--- @param func function
+--- @vararg  Passed to the given function.
+function Ui:clip(func, ...)
+  self:stencil()
+  graphics.setStencilTest("greater", 0)
+  func(...)
+  graphics.setStencilTest()
+end
+
 
 --
 -- Input
 --
 
 --- Returns whether the mouse cursor is in the current group.
+---
 --- @return boolean
 function Ui:hover()
-  return self:top().rect:hasPoint(self.input.mouse)
+  return self:top().rect:hasPoint(self.input.mouse + self.mouseOffset)
 end
 
 --- Returns whether the cursor is over the current group and the left mouse
 --- button is being held down.
+---
 --- @return boolean
 function Ui:pressed()
   return self:hover() and self.input:mouseDown(Input.mbLeft)
@@ -388,6 +422,7 @@ end
 
 --- Returns whether the cursor is over the current group and
 --- the left mouse button has just been clicked.
+---
 --- @return boolean
 function Ui:clicked()
   return self:hover() and self.input:mouseJustReleased(Input.mbLeft)

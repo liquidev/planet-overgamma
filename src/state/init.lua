@@ -4,6 +4,7 @@ local Object = require "object"
 
 ---
 
+--- @class State: Object
 local State = Object:inherit()
 
 -- Initializes a state's fields.

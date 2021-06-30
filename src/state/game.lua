@@ -12,14 +12,16 @@ local State = require "state"
 local World = require "world"
 
 local input = game.input
+local ui = game.ui
 
 local white = common.white
 
 ---
 
+--- @class GameState: State
 local GameState = State:inherit()
 
--- Initializes the game state.
+--- Initializes the game state.
 function GameState:init()
   self.super.init(self)
 
@@ -44,7 +46,7 @@ function GameState:init()
   if os.getenv("GIVE_ME_ALL_THE_GOOD_STUFF") == "YES" then
     self.player.inventory.size = math.huge
     for id, _ in pairs(game.items) do
-      self.player.inventory:put(id, 10240)
+      self.player.inventory:put(id, 5120)
     end
   end
 
@@ -53,7 +55,7 @@ function GameState:init()
   self.debugMode = true
 end
 
--- Updates the game.
+--- Updates the game.
 function GameState:update()
   self.world:update()
 
@@ -62,15 +64,17 @@ function GameState:update()
   end
 end
 
--- Renders the game.
+--- Renders the game.
+--- @param alpha number  The interpolation coefficient.
 function GameState:draw(alpha)
   self.world:draw(alpha, self.player:camera(alpha))
-  self.player:ui()
 
-  game.ui:begin("freeform")
-  game.ui:pad(16)
-  game.ui:beginPanel("freeform", 100, 100) do
-  end game.ui:endPanel()
+  ui:begin("freeform")
+  ui:pad(16)
+  ui:push("vertical", 232, ui:height()) do
+    self.player:leftPanel(ui)
+  end ui:pop()
+  self.player:rightPanel(ui)
 
   if self.debugMode then
     local w, _ = graphics.getDimensions()

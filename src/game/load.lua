@@ -1,8 +1,11 @@
 -- Game resource loading.
 
+local filesystem = love.filesystem
 local graphics = love.graphics
 local timer = love.timer
+local lovector = require "ext.lovector"
 
+local icons = require "icons"
 local i18n = require "i18n"
 local Mod = require "mod"
 
@@ -15,6 +18,9 @@ local pSprites = "data/sprites"
 
 -- Font data path.
 local pFonts = "data/fonts"
+
+-- Icon data path.
+local pIcons = "data/icons"
 
 -- Loads player sprites and returns a table containing them.
 -- The table contains the following fields:
@@ -34,20 +40,41 @@ local function loadPlayerSprites(color)
 end
 
 -- Loads a font.
-local function loadFont(name)
-  print("game.load: loading font '"..name.."'")
-  return graphics.newFont(pFonts..'/'..name..".ttf", 14)
+local function loadFont(name, size)
+  size = size or 14
+  print("game.load: loading font '"..name.."' @ size "..size)
+  return graphics.newFont(pFonts..'/'..name..".ttf", size)
+end
+
+-- Loads icons.
+local function loadIcons()
+  local iconsDir = filesystem.getDirectoryItems(pIcons)
+  for _, filename in ipairs(iconsDir) do
+    if filename:match("%.svg$") then
+      local filepath = pIcons..'/'..filename
+      local icon = icons.load(filepath)
+      local basename = filename:match("(.-)%.svg")
+      if basename ~= nil then
+        print("game.load: icon '"..basename.."'")
+        game.icons[basename] = icon
+      else
+        print("error loading icon "..filename..": could not extract basename")
+      end
+    end
+  end
 end
 
 -- Loads all game resources.
 function game.load()
   -- fonts
   game.fonts.regular = loadFont "FiraSans-Regular"
+  game.fonts.regular10 = loadFont("FiraSans-Regular", 10)
   game.fonts.bold = loadFont "FiraSans-Bold"
   graphics.setFont(game.fonts.regular)
 
   -- sprites
   game.playerSprites.blue = loadPlayerSprites "blue"
+  loadIcons()
 
   -- mods
   local start = timer.getTime()

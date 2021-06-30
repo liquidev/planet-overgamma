@@ -36,7 +36,7 @@ ie. look at the existing code to decide, or ask when contributing code via PRs.
 - all namespaces, variables, functions, and fields use `camelCase`
 - all objects use `PascalCase`
 - all modules use `kebab-case`
-  - use dots `a.b` over slashes `a/b` in `require`
+  - use dots `a.b` instead of slashes `a/b` in `require`
 - for object fields:
   - if an object field clashes with a method, prefix it with an underscore
     `self._field`
@@ -123,6 +123,9 @@ in a specific module.
 
 - prefer `if x == nil` or `if x ~= nil` over `if x` or `if not x`, as it states
   intent better and is less error-prone with booleans
+  - exception: `assert(x, msg)` where `x` is a value that can be nil is allowed
+    when the return value of the assertion is used. example:
+    `local x = assert(c.x, "x must be provided")`
 
 ## `for` loops
 

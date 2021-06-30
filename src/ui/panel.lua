@@ -4,35 +4,48 @@ local graphics = love.graphics
 
 local common = require "common"
 local style = require "ui.style"
+local Ui = require "ui.base"
 
 local white = common.white
 
 ---
 
-local panel = {}
-
--- Resets panel-related variables.
-function panel._reset(ui)
-  ui.mouseOverPanel = false
+local begin = Ui.begin
+function Ui:begin(...)
+  begin(self, ...)
+  local data = self:data("panel")
+  data.hasMouse = false
 end
 
--- Begins drawing a panel.
-function panel.beginPanel(ui, layout, width, height)
-  ui:push(layout, width, height)
+--- Returns whether the mouse is currently over a panel.
+function Ui:mouseOverPanel()
+  return self:data("panel").hasMouse
+end
+
+--- Begins drawing a panel.
+--- @param layout '"freeform"' | '"horizontal"' | '"vertical"'
+--- @param width number
+--- @param height number
+function Ui:beginPanel(layout, width, height)
+  self:push("freeform", width, height) -- outer container
 
   graphics.setColor(style.panelFill)
-  ui:fill()
+  self:fill()
   graphics.setColor(style.panelOutline)
-  ui:outline()
+  self:outline()
   graphics.setColor(white)
 
-  if ui:hasMouse() then
-    ui.mouseOverPanel = true
+  if self:hover() then
+    self:data("panel").hasMouse = true
   end
+
+  self:push(layout, self:size()) -- inner content
+  self:pad(8)
 end
 
-function panel.endPanel(ui)
-  ui:pop()
+--- Ends drawing a panel.
+function Ui:endPanel()
+  self:pop() -- inner content
+  self:pop() -- outer container
 end
 
-return panel

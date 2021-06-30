@@ -6,17 +6,39 @@ local rgba = love.math.colorFromBytes
 
 local common = {}
 
--- Does nothing.
+--- @alias Color number[]
+
+--- Does nothing.
 function common.noop() end
 
--- Better version of pcall that returns an error with a stack traceback.
---
--- Calls fn in "protected mode" - instead of propagating errors that occur
--- inside fn up the stack, it catches them. If no error occurs, returns true
--- alongside all results the original function returned.
--- If an error occured, returns false alongside an error message string,
--- containing the original error converted to a string, along with a
--- stack traceback.
+--- If x is nil, returns default. Otherwise returns x.
+--- This is needed in the rare case when a value is a boolean and
+--- the `or` operator wouldn't work as intended.
+---
+--- @param x any
+--- @param default any
+--- @return any
+function common.default(x, default)
+  if x == nil then
+    return default
+  else
+    return x
+  end
+end
+
+--- Better version of pcall that returns an error with a stack traceback.
+---
+--- Calls fn in "protected mode" - instead of propagating errors that occur
+--- inside fn up the stack, it catches them. If no error occurs, returns true
+--- alongside all results the original function returned.
+--- If an error occured, returns false alongside an error message string,
+--- containing the original error converted to a string, along with a
+--- stack traceback.
+---
+--- @param fn function  The function to call.
+--- @vararg             Arguments to be passed to the function.
+--- @return boolean ok  Whether the function executed successfully.
+--- @return any ret     The function's return value, or an error string.
 function common.try(fn, ...)
   local args = {...}
   return xpcall(function ()
@@ -26,7 +48,11 @@ function common.try(fn, ...)
   end)
 end
 
--- Prepends `level` amount of spaces to each line in the given string.
+--- Prepends `level` amount of spaces to each line in the given string.
+---
+--- @param str string
+--- @param level number
+--- @return string
 function common.indent(str, level)
   local lines = {}
   for line in str:gmatch("[^\n\r]+") do
@@ -39,8 +65,11 @@ function common.indent(str, level)
   return table.concat(lines)
 end
 
--- Returns a human-friendly representation of the given value.
--- This representation may not be valid Lua.
+--- Returns a human-friendly representation of the given value.
+--- This representation may not be valid Lua.
+---
+--- @param x any
+--- @return string
 function common.repr(x)
   if type(x) == "table" then
     local result = {}
@@ -56,43 +85,68 @@ function common.repr(x)
   end
 end
 
--- Rounds the given number towards zero.
 local floor, ceil = math.floor, math.ceil
+
+--- Rounds the given number towards zero.
+---
+--- @param x number
+--- @return number
 function common.round(x)
   if x >= 0 then return floor(x + 0.5)
   else return ceil(x - 0.5) end
 end
 
--- Linearly interpolates between the two values.
+--- Linearly interpolates between the two values.
+---
+--- @param a number
+--- @param b number
+--- @param t number
+--- @return number
 function common.lerp(a, b, t)
   -- This is an "imprecise" method but hopefully it'll give LuaJIT a chance
   -- to optimize this into a fused multiply-add.
   return a + t * (b - a)
 end
 
--- Clamps x between a and b. a is the lower bound, and b is the upper bound.
--- Note that using a as the upper bound or b as the lower bound will result in
--- undefined behavior.
 local min, max = math.min, math.max
+
+--- Clamps x between a and b. a is the lower bound, and b is the upper bound.
+--- Note that using a as the upper bound or b as the lower bound will result in
+--- undefined behavior.
+---
+--- @param x number
+--- @param a number
+--- @param b number
+--- @return number
 function common.clamp(x, a, b)
   return max(min(x, b), a)
 end
 
 local pi = math.pi
 
--- Converts degrees to radians.
+--- Converts degrees to radians.
+---
+--- @param deg number
+--- @return number
 function common.degToRad(deg)
   return deg / 180 * pi
 end
 
--- Converts radians to degrees.
+--- Converts radians to degrees.
+---
+--- @param rad number
+--- @return number
 function common.radToDeg(rad)
   return rad / pi * 180
 end
 
 -- Commonly used colors.
+
+--- @type Color
 common.white = { rgba(255, 255, 255) }
+--- @type Color
 common.black = { rgba(0, 0, 0) }
+--- @type Color
 common.transparent = { rgba(0, 0, 0, 0) }
 
 -- Helper for common.hex, extends a single-character string to a
@@ -102,7 +156,13 @@ local function hexExtend(hex)
   else return hex end
 end
 
--- Converts an RGB hex color to normalized 0..1 RGBA values.
+--- Converts an RGB hex color to normalized 0..1 RGBA values.
+---
+--- @param color string
+--- @return number r
+--- @return number g
+--- @return number b
+--- @return number a
 function common.hex(color)
   if color:sub(1, 1) == '#' then
     color = color:sub(2)

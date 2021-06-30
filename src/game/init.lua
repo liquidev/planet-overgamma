@@ -7,7 +7,7 @@
 local Atlas = require "atlas"
 local Input = require "input"
 local Registry = require "registry"
-local Ui = require "ui"
+local Ui = require "ui.base"
 local Vec = require "vec"
 
 ---
@@ -17,12 +17,13 @@ local atlasSize = Vec(256, 256)
 local game = {
   -- globally useful stuff
   input = Input:new(),
-  fonts = {}, -- regular, bold
+  fonts = {}, -- regular, regular10, bold
   ui = Ui:new(),
 
   -- sprites
   playerSprites = {},
   terrainAtlas = Atlas:new(atlasSize),
+  icons = {},
 
   -- mods
   mods = {},

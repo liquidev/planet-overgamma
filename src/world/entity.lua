@@ -4,6 +4,7 @@ local Object = require "object"
 
 ---
 
+--- @class Entity: Object
 local Entity = Object:inherit()
 
 -- Marks the entity for deletion.

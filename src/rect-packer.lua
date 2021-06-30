@@ -1,6 +1,7 @@
 -- Wrapper over ext.binpack.
 
 local Binpack = require "ext.binpack"
+
 local Object = require "object"
 local Rect = require "rect"
 

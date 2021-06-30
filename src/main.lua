@@ -9,10 +9,13 @@ local event = love.event
 local graphics = love.graphics
 local timer = love.timer
 
-local game = require "game" -- initialize game resources before anything else
+-- Initialize game resources before everything else.
+local game = require "game"
 require "game.functions"
 require "game.load"
-require "ui.controls"
+
+-- Just in case this isn't explicitly required anywhere else.
+require "ui"
 
 local Mod = require "mod"
 local Scheduler = require "fiber"

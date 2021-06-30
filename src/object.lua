@@ -2,6 +2,7 @@
 -- Stolen from rxi's lite text editor.
 -- https://github.com/rxi/lite
 
+--- @class Object
 local Object = {}
 Object.__index = Object
 

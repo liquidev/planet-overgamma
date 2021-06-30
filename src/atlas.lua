@@ -10,19 +10,22 @@ local Vec = require "vec"
 
 ---
 
+--- @class Atlas: Object
 local Atlas = Object:inherit()
 
--- Initializes a new, empty texture atlas with the given size.
+--- Initializes a new, empty texture atlas with the given size.
+--- @param size Vec
 function Atlas:init(size)
   local imageData = image.newImageData(size.x, size.y)
   self.image = graphics.newImage(imageData)
-  -- for some reason graphics.setDefaultFilter doesn't affect sprite batches
   self.image:setFilter("nearest", "nearest")
   self.packer = RectPacker:new(size)
 end
 
--- Packs a piece of ImageData and returns its rectangle, or
--- returns nil if there is no space left on the image.
+--- Packs a piece of ImageData and returns its rectangle, or
+--- returns nil if there is no space left on the image.
+---
+--- @param imageData ImageData
 function Atlas:pack(imageData)
   local width, height = imageData:getDimensions()
   local rect = self.packer:pack(Vec(width, height))

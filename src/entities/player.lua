@@ -12,13 +12,16 @@ local game = require "game"
 local Item = require "entities.item"
 local items = require "items"
 local ItemStorage = require "item-storage"
+local Object = require "object"
 local recipes = require "recipes"
 local Registry = require "registry"
 local tr = require("i18n").tr
 local Vec = require "vec"
 local World = require "world"
 
+local icons = game.icons
 local input = game.input
+
 local mbLeft, mbRight = input.mbLeft, input.mbRight
 
 local quantity = items.quantity
@@ -29,20 +32,22 @@ local Chunk = World.Chunk
 
 ---
 
+--- @class Player: Entity
 local Player = Entity:inherit()
 
--- The player's walking speed.
+--- The player's walking speed.
 local speed = 0.25
--- The player's deceleration factor.
+--- The player's deceleration factor.
 local decel = 0.8
--- The amount of ticks the player jumps for.
+--- The amount of ticks the player jumps for.
 local jumpTicks = 15
--- The amount of ticks during which the player can start a jump after falling.
+--- The amount of ticks during which the player can start a jump after falling.
 local coyoteTime = 10
--- The speed at which the laser charges up.
+--- The speed at which the laser charges up.
 local laserChargeRate = { destroy = 0.03, construct = 0.075 }
 
--- Initializes the player with the given world.
+--- Initializes the player with the given world.
+--- @param world World
 function Player:init(world)
   assert(world ~= nil)
 
@@ -88,12 +93,14 @@ function Player:init(world)
   self.showStacks = {}
 end
 
--- Returns whether the player is falling.
+--- Returns whether the player is falling.
+--- @return boolean
 function Player:isFalling()
   return self.body.velocity.y > 0.01
 end
 
--- Returns the animation state of the player ("idle" | "walk" | "fall")
+--- Returns the animation state of the player.
+--- @return '"idle"' | '"walk"' | '"fall"'
 function Player:animationState()
   if self.body.velocity.y < -0.01 then
     return "walk"
@@ -106,13 +113,15 @@ function Player:animationState()
   end
 end
 
--- Returns whether the player can jump.
+--- Returns whether the player can jump.
+--- @return boolean
 function Player:canJump()
   return self.body.collidingWith.top or self.coyoteTimer > 0
 end
 
--- Returns the current selected portAssembler recipe, or nil if there aren't
--- enough materials to build anything.
+--- Returns the current selected portAssembler recipe, or nil if there aren't
+--- enough materials to build anything.
+--- @return table
 function Player:recipe()
   if #self.recipes > 0 then
     return self.recipes[self.selectedRecipe]
@@ -121,7 +130,7 @@ function Player:recipe()
   end
 end
 
--- Ticks the player.
+--- Ticks the player.
 function Player:update()
   --
   -- Movement
@@ -212,22 +221,26 @@ function Player:update()
   end
 end
 
--- Ticks the player before physics.
--- This is used to prevent the laser from teleporting weirdly when the player
--- passes across the world seam.
+--- Ticks the player before physics.
+--- This is used to prevent the laser from teleporting weirdly when the player
+--- passes across the world seam.
 function Player:prePhysicsUpdate()
   --
   -- Laser
   --
 
   -- modes
-  self.laserEnabled = false
-  if input:mouseDown(mbLeft) then
-    self.laserMode = "destroy"
-    self.laserEnabled = true
-  elseif input:mouseDown(mbRight) then
-    self.laserMode = "construct"
-    self.laserEnabled = self:recipe() ~= nil
+  if self:canUseLaser() then
+    if input:mouseJustPressed(mbLeft) then
+      self.laserMode = "destroy"
+      self.laserEnabled = true
+    elseif input:mouseJustPressed(mbRight) then
+      self.laserMode = "construct"
+      self.laserEnabled = self:recipe() ~= nil
+    end
+  end
+  if input:mouseJustReleased(mbLeft) or input:mouseJustReleased(mbRight) then
+    self.laserEnabled = false
   end
 
   -- charging
@@ -253,7 +266,7 @@ function Player:prePhysicsUpdate()
 
     -- construction laser
     local recipe = self:recipe()
-    if self.laserMode == "construct" then
+    if recipe ~= nil and self.laserMode == "construct" then
       if self.laserCharge > self.laserMaxCharge - 0.5 then
         local result = recipe.result
         local item = result.item
@@ -276,9 +289,10 @@ function Player:prePhysicsUpdate()
   self.laserCharge = math.max(self.laserCharge, 0)
 end
 
--- Handles collision with another body.
+--- Handles collision with another body.
+--- @param body World.Body
 function Player:collisionWithBody(body)
-  if body.owner == nil or not body.owner:of(Entity) then return end
+  if not Object.of(body.owner, Entity) then return end
 
   local entity = body.owner
   if entity:of(Item) then
@@ -286,14 +300,18 @@ function Player:collisionWithBody(body)
   end
 end
 
--- Attempts to take items from an item stack into the player's inventory,
--- according to the rules in ItemStorage:take.
--- Returns the actual amount of items taken.
+--- Attempts to take items from an item stack into the player's inventory,
+--- according to the rules in ItemStorage:take.
+--- Returns the actual amount of items taken.
+---
+--- @param idOrStack number | table
+--- @param amount number | nil
+--- @return number
 function Player:takeItem(idOrStack, amount)
   return self.inventory:put(idOrStack, amount)
 end
 
--- Updates the list of available portAssembler recipes.
+--- Updates the list of available portAssembler recipes.
 function Player:updateRecipes()
   self.recipes = recipes.filter(self.inventory, unpack(self.recipeTargets))
   if self.selectedRecipe > #self.recipes then
@@ -301,17 +319,27 @@ function Player:updateRecipes()
   end
 end
 
--- Interpolates the position of the player.
+--- Interpolates the position of the player.
+--- @return Vec
 function Player:interpolatePosition(alpha)
   return self.body:interpolatePosition(alpha)
 end
 
--- Returns the unbounded position of the mouse.
+--- Returns the unbounded position of the mouse.
+--- @return Vec
 function Player:mousePosition()
   return self._camera:toWorldSpace(input.mouse)
 end
 
--- Returns the position the player's pointing at with the laser.
+--- Returns whether the player can use the laser.
+--- This is false when the mouse cursor is over any UI elements.
+--- @return boolean
+function Player:canUseLaser()
+  return not game.ui:mouseOverPanel()
+end
+
+--- Returns the position the player's pointing at with the laser.
+--- @return Vec
 function Player:laserPosition()
   -- This clamps the laser position to the maximum range.
   local center = self.body:center()
@@ -320,7 +348,8 @@ function Player:laserPosition()
   return center + direction * len
 end
 
--- Returns the block the laser is targeting.
+--- Returns the block the laser is targeting.
+--- @return Vec
 local unboundedTarget = true -- constant used as an argument to laserTarget
 function Player:laserTarget(unbounded)
   local position
@@ -335,7 +364,7 @@ function Player:laserTarget(unbounded)
   return tile, position
 end
 
--- The colors of the laser core and glows.
+--- The colors of the laser core and glows.
 local laserColors = {
   -- Glow colors
   none      = { rgba(0, 0, 0) },
@@ -345,7 +374,11 @@ local laserColors = {
   core      = { rgba(255, 255, 255) },
 }
 
--- Draws a laser.
+--- Draws a laser.
+--- @param from Vec
+--- @param to Vec
+--- @param thickness number
+--- @param color table
 local function drawLaser(from, to, thickness, color)
   graphics.setLineWidth(thickness)
   graphics.setColor(color)
@@ -355,7 +388,8 @@ local function drawLaser(from, to, thickness, color)
   graphics.setColor(white)
 end
 
--- Renders the player.
+--- Renders the player.
+--- @param alpha number
 function Player:draw(alpha)
   graphics.push("all")
   graphics.setLineStyle("rough")
@@ -375,17 +409,21 @@ function Player:draw(alpha)
   -- laser
   local laserTarget = (self:laserTarget()) * Chunk.tileSize
   local unbLaserTarget = (self:laserTarget(unboundedTarget)) * Chunk.tileSize
-  graphics.rectangle(
-    "line",
-    laserTarget.x, laserTarget.y,
-    Chunk.tileSize, Chunk.tileSize
-  )
-  graphics.setLineWidth(1 / self._camera.scale)
-  graphics.rectangle(
-    "line",
-    unbLaserTarget.x, unbLaserTarget.y,
-    Chunk.tileSize, Chunk.tileSize
-  )
+  if self:canUseLaser() or self.laserEnabled then
+    graphics.rectangle(
+      "line",
+      laserTarget.x, laserTarget.y,
+      Chunk.tileSize, Chunk.tileSize
+    )
+    if self:canUseLaser() then
+      graphics.setLineWidth(1 / self._camera.scale)
+      graphics.rectangle(
+        "line",
+        unbLaserTarget.x, unbLaserTarget.y,
+        Chunk.tileSize, Chunk.tileSize
+      )
+    end
+  end
   if self.laserCharge > 0.01 then
     local color = laserColors[self.laserMode]
     local thickness = self.laserCharge
@@ -398,7 +436,8 @@ function Player:draw(alpha)
   graphics.pop()
 end
 
--- Updates and returns the player's camera.
+--- Updates and returns the player's camera.
+--- @param alpha number
 function Player:camera(alpha)
   self._camera.pan = self:interpolatePosition(alpha) + self.body.size / 2
   self._camera:updateViewport(Vec(graphics.getDimensions()))
@@ -411,7 +450,8 @@ local usageBarColors = {
   red    = { rgba(251, 78, 78) },
 }
 
--- Draws the player's inventory usage HUD.
+--- Draws the player's inventory usage HUD.
+--- @param self Player
 local function inventoryHUD(self)
   local sx, sy = 16, 16
 
@@ -446,7 +486,8 @@ local function inventoryHUD(self)
   end
 end
 
--- Translates a recipe's result.
+--- Translates a recipe's result.
+--- @param recipe table
 local function trRecipe(recipe)
   local result = recipe.result
   if result.block ~= nil then
@@ -459,7 +500,11 @@ local function trRecipe(recipe)
   return recipe.name
 end
 
--- Draws a recipe result at the given position.
+--- Draws a recipe result at the given position.
+--- @param x number
+--- @param y number
+--- @param recipe table
+--- @param scale number
 local function drawRecipe(x, y, recipe, scale)
   -- sprite
   local result = recipe.result
@@ -484,7 +529,8 @@ local function drawRecipe(x, y, recipe, scale)
   end
 end
 
--- Draws the player's portAssembler selection HUD.
+--- Draws the player's portAssembler selection HUD.
+--- @param self Player
 local function portAssemblerHUD(self)
   local w, h = graphics.getDimensions()
   local x = w - 40
@@ -514,9 +560,30 @@ local function portAssemblerHUD(self)
   end
 end
 
--- Draws the player's HUD.
+--- Draws the player's HUD.
 function Player:ui()
   inventoryHUD(self)
+  portAssemblerHUD(self)
+end
+
+--- The amount of columns of inventory items to be shown.
+local inventoryColumns = 6
+
+--- Draws the player's left panel.
+--- @param ui Ui
+function Player:leftPanel(ui)
+  if ui:beginAccordionPanel(ui:width(), 320, "Inventory") then
+    ui:itemStorageView(self.inventory, {
+      columns = inventoryColumns,
+      height = ui:remHeight(),
+      emptyText = tr "player/inventory/empty",
+    })
+  end ui:endPanel()
+end
+
+--- Draws the player's right panel.
+--- @param ui Ui
+function Player:rightPanel(ui)
   portAssemblerHUD(self)
 end
 

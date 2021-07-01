@@ -17,8 +17,7 @@ require "game.load"
 -- Just in case this isn't explicitly required anywhere else.
 require "ui"
 
-local Mod = require "mod"
-local Scheduler = require "fiber"
+local tween = require "tween"
 
 --
 -- Variables
@@ -111,6 +110,7 @@ function love.run()
     -- The UI's input is reset every frame, because the UI is redrawn
     -- every frame, and each UI redraw also handles input.
     game.ui.input:finishFrame()
+    tween.update()
 
     -- state switching
     if state._nextState ~= nil then

@@ -4,6 +4,7 @@ local graphics = love.graphics
 
 local common = require "common"
 local style = require "ui.style"
+local tween = require "tween"
 local Ui = require "ui.base"
 
 local white = common.white
@@ -14,11 +15,13 @@ local white = common.white
 -- Configuration
 --
 
-Ui.scrollSpeed = 12
-Ui.scrollDamping = 0.75
+Ui.scrollIncrement = 48
 
 local scrollbarWidth = 2
 
+local function initData(data)
+  data.scroll = 0
+end
 
 --
 -- Rendering
@@ -52,10 +55,7 @@ function Ui:scroll(id, direction, height, func, ...)
   assert(direction == "horizontal" or direction == "vertical",
          "the scroll direction must be 'horizontal' or 'vertical'")
 
-  local data = self:data("scroll"):get(id)
-  data.scroll = data.scroll or 0
-  data.scrollVelocity = data.scrollVelocity or 0
-
+  local data = self:data("scroll"):get(id, initData)
   local oldmx, oldmy = self.mouseOffset:xy()
   local deltaScroll = self.input.deltaScroll.y
 
@@ -88,17 +88,11 @@ function Ui:scroll(id, direction, height, func, ...)
     graphics.setColor(white)
   end
 
-  -- Dampen the existing scroll velocity.
-  if math.abs(data.scrollVelocity) < 0.1 then
-    data.scrollVelocity = 0
-  end
-  data.scrollVelocity = data.scrollVelocity * Ui.scrollDamping
-  -- Set the scroll velocity to the scroll delta, if scrolled.
+  -- Animate scrolling.
   if deltaScroll ~= 0 then
-    data.scrollVelocity = data.scrollVelocity + deltaScroll * Ui.scrollSpeed
+    tween.finish(data.tween)
+    local to = data.scroll - deltaScroll * Ui.scrollIncrement
+    to = common.clamp(to, 0, maxScroll)
+    data.tween = tween.start(to, 0.3, "quinticOut", tween.field(data, "scroll"))
   end
-  -- Scroll by the current velocity.
-  data.scroll = data.scroll - data.scrollVelocity
-  -- Limit the scroll area.
-  data.scroll = common.clamp(data.scroll, 0, maxScroll)
 end

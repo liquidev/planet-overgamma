@@ -41,6 +41,11 @@ ie. look at the existing code to decide, or ask when contributing code via PRs.
   - if an object field clashes with a method, prefix it with an underscore
     `self._field`
 
+## Globals
+
+Never declare any globals. Using globals from the Lua standard library and
+LÖVE is preferred over `require`.
+
 ## Module layout
 
 Arrange all modules like this:
@@ -113,8 +118,15 @@ in a specific module.
   eg. `lib.func "a"`
 - use the normal function call syntax everywhere else: `lib.func("a")`
 
-## `self`
+## Functions
 
+- put one space before the parameter list in anonymous functions:
+  `print(function (a) end)`
+- don't put any spaces before the parameter list in named functions:
+  `local function abc(x) end`
+- do not declare global functions
+-
+- always prefer `local function abc(x)` over `local abc = function (x)`
 - prefer implicit `self` over explicitly naming the method receiver parameter
 - use function declarations with a `.` if `self` is not used inside the
   function, and use `:` otherwise

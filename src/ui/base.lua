@@ -442,11 +442,20 @@ function ControlData:init()
 end
 
 --- Gets data for a control with the given ID.
+---
+--- If `initFunc` is not nil, it's called with a freshly created data table to
+--- initialize the control data upon its creation.
+---
+---
 --- @param id any
+--- @param initFunc function | nil
 --- @return table
-function ControlData:get(id)
+function ControlData:get(id, initFunc)
   if self.controls[id] == nil then
     self.controls[id] = {}
+    if initFunc ~= nil then
+      initFunc(self.controls[id])
+    end
   end
   return self.controls[id]
 end

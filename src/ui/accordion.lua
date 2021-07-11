@@ -16,6 +16,11 @@ local white = common.white
 
 ---
 
+--- Initializes data for the accordion.
+local function initData(data, options)
+  data.expanded = common.default(options.expandedByDefault, false)
+end
+
 --- Returns the icon for the given accordion data.
 --- @param data table
 --- @return Texture
@@ -34,14 +39,14 @@ end
 --- @return table
 local function getData(ui, title, options)
   local id = options.id or title
-  local data = ui:data("accordion"):get(id)
+  local data = ui:data("accordion"):get(id, initData, options)
   if data.expanded == nil then
     data.expanded = common.default(options.expandedByDefault, false)
   end
   return data
 end
 
---- Begins rendering the body of an accordion.
+--- Renders the body of an accordion.
 --- This returns whether the accordion is expanded.
 --- Usage is as follows:
 ---

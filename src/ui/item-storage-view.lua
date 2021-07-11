@@ -33,18 +33,16 @@ end
 
 local function drawInner(ui, storage, options)
   -- stacks
-  for _ = 1, 50 do
-    for _, stack in ipairs(storage:sorted("amount", "descending")) do
-      ui:wrap(cellSize)
-      ui:push("freeform", cellSize, cellSize) do
-        if ui:hover() then
-          graphics.setColor(style.itemStorageCellHover)
-          ui:fill()
-          graphics.setColor(white)
-        end
-        ui:draw(drawStack, ui, storage, options, stack)
-      end ui:pop()
-    end
+  for _, stack in ipairs(storage:sorted("amount", "descending")) do
+    ui:wrap(cellSize)
+    ui:push("freeform", cellSize, cellSize) do
+      if ui:hover() then
+        graphics.setColor(style.itemStorageCellHover)
+        ui:fill()
+        graphics.setColor(white)
+      end
+      ui:draw(drawStack, ui, storage, options, stack)
+    end ui:pop()
   end
   -- empty message
   if options.emptyText ~= nil and storage:occupied() == 0 then
@@ -55,7 +53,7 @@ local function drawInner(ui, storage, options)
 end
 
 local function getInnerHeight(storage, columns)
-  return math.ceil(storage:stackCount() * 50 / columns) * cellSize
+  return math.ceil(storage:stackCount() / columns) * cellSize
 end
 
 --- Draws and processes events for an item storage view.

@@ -104,7 +104,7 @@ function easings.pbackInOut(c1, c2)
 
   return function (x)
     if x < 0.5 then return ((2 * x)^2 * ((c2 + 1) * 2 * x - c2)) / 2
-    else return ((2 * x - 2)^2 * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+    else return ((2 * x - 2)^2 * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
     end
   end
 end

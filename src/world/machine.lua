@@ -7,18 +7,29 @@ local Object = require "object"
 
 ---
 
+--- @class Machine: Object
 local Machine = Object:inherit()
 
--- The name of a machine.
--- This should be overridden by each individual machine.
--- Note that machines added using the mod API have the namespace prefix added
--- automatically, so this name should not be namespaced manually.
+--- @class Node: Object
+local Node = Object:inherit()
+
+--- The name of a machine.
+--- This should be overridden by each individual machine.
+--- Note that machines added using the mod API have the namespace prefix added
+--- automatically, so this name should not be namespaced manually.
+---
+--- @type string
 Machine.__name = "machine"
 
--- The hardness of a machine. Can be changed if needed.
+--- The hardness of a machine. Can be changed if needed.
+---
+--- @type number
 Machine.hardness = 1.3
 
--- Initializes a new machine.
+--- Initializes a new machine.
+---
+--- @param world World
+--- @param position Vec
 function Machine:init(world, position)
   self.world = world
   self.position = position

@@ -16,17 +16,21 @@ local Vec = require "vec"
 -- Chunk
 --
 
+--- @class Chunk: Object
 local Chunk = Object:inherit()
 
--- The amount of tiles a chunk occupies.
+--- The amount of tiles a chunk occupies.
+--- @type number
 Chunk.size = 8
--- The size of a single tile in units.
+--- The size of a single tile in units.
+--- @type number
 Chunk.tileSize = 8
--- The size of a chunk in units.
+--- The size of a chunk in units.
+--- @type number
 Chunk.unitSize = Chunk.size * Chunk.tileSize
 
--- Initializes a new chunk.
--- All blocks in the chunk will be 0, ie. air.
+--- Initializes a new chunk.
+--- All blocks in the chunk will be 0, ie. air.
 function Chunk:init()
   local tileCount = Chunk.size ^ 2
   self.blocks = tables.fill({}, tileCount, 0)
@@ -49,16 +53,23 @@ local function indexInChunk(vec)
   return 1 + x + y * Chunk.size
 end
 
--- Gets the block ID at the given position. The position must be in
--- the chunk's boundaries, otherwise behavior is undefined for
--- better performance.
-function Chunk:block(position, newBlock)
+--- Gets the block ID at the given position. The position must be in
+--- the chunk's boundaries, otherwise behavior is undefined for
+--- better performance.
+---
+--- @param position Vec
+--- @return number
+function Chunk:block(position)
   return self.blocks[indexInChunk(position)]
 end
 
--- Sets the block ID at the given position. Again, the position must be in
--- the chunk's boundaries, otherwise behavior is undefined.
--- Returns the old block.
+--- Sets the block ID at the given position. Again, the position must be in
+--- the chunk's boundaries, otherwise behavior is undefined.
+--- Returns the old block.
+---
+--- @param position Vec
+--- @param newBlock number
+--- @return number oldID
 function Chunk:setBlock(position, newBlock)
   local i = indexInChunk(position)
   local old = self.blocks[i]
@@ -67,16 +78,26 @@ function Chunk:setBlock(position, newBlock)
   return old
 end
 
--- Returns the ID and amount of ore at the given position.
--- Out of bounds access is undefined behavior.
+--- Returns the ID and amount of ore at the given position.
+--- Out of bounds access is undefined behavior.
+---
+--- @param position Vec
+--- @return number oreID
+--- @return number amount
 function Chunk:ore(position)
   local i = indexInChunk(position)
   return self.ores[i], self.oreAmounts[i]
 end
 
--- Sets the ore ID and amount at the given position.
--- Out of bounds access is undefined behavior.
--- Returns the old ID and amount.
+--- Sets the ore ID and amount at the given position.
+--- Out of bounds access is undefined behavior.
+--- Returns the old ID and amount.
+---
+--- @param position Vec
+--- @param id number
+--- @param amount number
+--- @return number oldID
+--- @return number oldAmount
 function Chunk:setOre(position, id, amount)
   local i = indexInChunk(position)
   local oldID, oldAmount = self.ores[i], self.oreAmounts[i]
@@ -86,9 +107,14 @@ function Chunk:setOre(position, id, amount)
   return oldID, oldAmount
 end
 
--- Adds the given amount of ore with the given ID to the given position.
--- If limit is not nil, it is used to limit how much ore can be present at that
--- tile. By default, the limit is math.huge.
+--- Adds the given amount of ore with the given ID to the given position.
+--- If limit is not nil, it is used to limit how much ore can be present at that
+--- tile. By default, the limit is math.huge.
+---
+--- @param position Vec
+--- @param id number
+--- @param amount number
+--- @param limit number | nil
 function Chunk:addOre(position, id, amount, limit)
   limit = limit or math.huge
   local i = indexInChunk(position)
@@ -102,10 +128,15 @@ function Chunk:addOre(position, id, amount, limit)
   self.dirty = true
 end
 
--- Tries to remove the given amount of ore from the tile at the given position.
--- Returns the ID and actual amount that could be retrieved.
--- If there is no ore left, sets the ID at the given position to no ore (0).
--- Out of bounds access is undefined.
+--- Tries to remove the given amount of ore from the tile at the given position.
+--- Returns the ID and actual amount that could be retrieved.
+--- If there is no ore left, sets the ID at the given position to no ore (0).
+--- Out of bounds access is undefined.
+---
+--- @param position Vec
+--- @param amount number
+--- @return number id
+--- @return number amount
 function Chunk:removeOre(position, amount)
   local i = indexInChunk(position)
   local id, amountInOre = self.ores[i], self.oreAmounts[i]
@@ -118,15 +149,22 @@ function Chunk:removeOre(position, amount)
   return id, amount
 end
 
--- Returns the ID of the machine at the given position.
--- Out of bounds access is undefined.
+--- Returns the ID of the machine at the given position.
+--- Out of bounds access is undefined.
+---
+--- @param position Vec
+--- @return number
 function Chunk:machineID(position)
   return self.machines[indexInChunk(position)]
 end
 
--- Sets the ID of the machine at the given position.
--- Returns the ID of the old machine.
--- Out of bounds access is undefined.
+--- Sets the ID of the machine at the given position.
+--- Returns the ID of the old machine.
+--- Out of bounds access is undefined.
+---
+--- @param position Vec
+--- @param id number
+--- @return number oldID
 function Chunk:setMachineID(position, id)
   -- Placing a machine in a chunk does not mark the chunk as dirty, as machines
   -- are not rendered by the chunk renderer directly.
@@ -145,18 +183,22 @@ end
 -- World
 --
 
+--- @class World: Object
 local World = Object:inherit()
 World.Chunk = Chunk
 
 require("world.physics")(World)
 require("world.interaction")(World)
 
--- The ID of air.
+--- The ID of air.
 World.air = 0
--- The ID of no ore.
+--- The ID of no ore.
 World.noOre = 0
 
--- Initializes a new world with the given width (in tiles).
+--- Initializes a new world with the given width (in tiles).
+---
+--- @param width number  Width, must be divisible by `Chunk.size`.
+--- @param gravity Vec
 function World:init(width, gravity)
   assert(width % Chunk.size == 0,
          "world width must be divisible by "..Chunk.size)
@@ -178,7 +220,10 @@ function World:init(width, gravity)
   self:initPhysics(gravity)
 end
 
--- Packs a chunk position vector into a number.
+--- Packs a chunk position vector into a number.
+---
+--- @param position Vec
+--- @return integer
 local function packChunkPosition(position)
   -- This limits chunk coordinates to 16-bit signed integers, but honestly
   -- I don't think anyone will ever try to generate a world that's 65536 chunks
@@ -187,37 +232,53 @@ local function packChunkPosition(position)
   return bor(shl(band(position.x, 0xFFFF), 16), band(position.y, 0xFFFF))
 end
 
--- Converts the provided vector to a chunk position.
+--- Converts the provided vector to a chunk position.
+---
+--- @param v Vec
+--- @return Vec
 function World.chunkPosition(v)
   return Vec(math.floor(v.x / Chunk.size), math.floor(v.y / Chunk.size))
 end
 
--- Converts the provided vector to a tile position in a chunk.
+--- Converts the provided vector to a tile position in a chunk.
+---
+--- @param v Vec
+--- @return Vec
 function World.positionInChunk(v)
   return Vec(math.floor(v.x % Chunk.size), math.floor(v.y % Chunk.size))
 end
 
--- Converts the provided tile position to a unit position with the specified
--- alignment relative to a tile.
+--- Converts the provided tile position to a unit position with the specified
+--- alignment relative to a tile.
 World.unitPosition = {}
 
+--- @param position Vec
+--- @return Vec
 function World.unitPosition.topLeft(position)
   return position * Chunk.tileSize
 end
 
+--- @param position Vec
+--- @return Vec
 function World.unitPosition.center(position)
   local tileSize = Vec(Chunk.tileSize, Chunk.tileSize)
   return position * tileSize + tileSize / 2
 end
 
--- Wraps the given block position around the world seam.
+--- Wraps the given block position around the world seam.
+---
+--- @param position Vec
+--- @return Vec
 function World:wrapPosition(position)
   return Vec(position.x % self.width, position.y)
 end
 
 local wrapPosition = World.wrapPosition
 
--- Wraps the given chunk position around the world seam.
+--- Wraps the given chunk position around the world seam.
+---
+--- @param position Vec
+--- @return Vec
 function World:wrapChunkPosition(position)
   local widthInChunks = self.width / Chunk.size
   return Vec(math.floor(position.x % widthInChunks), math.floor(position.y))
@@ -225,8 +286,11 @@ end
 
 local wrapChunkPosition = World.wrapChunkPosition
 
--- Returns the chunk with the given position. If the chunk doesn't exist,
--- creates one.
+--- Returns the chunk with the given position. If the chunk doesn't exist,
+--- creates one.
+---
+--- @param position Vec
+--- @return Chunk
 function World:ensureChunk(position)
   position = wrapChunkPosition(self, position)
   local packed = packChunkPosition(position)

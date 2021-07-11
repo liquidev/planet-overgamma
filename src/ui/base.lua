@@ -449,12 +449,13 @@ end
 ---
 --- @param id any
 --- @param initFunc function | nil
+--- @vararg  Passed to initFunc alongside the data table.
 --- @return table
-function ControlData:get(id, initFunc)
+function ControlData:get(id, initFunc, ...)
   if self.controls[id] == nil then
     self.controls[id] = {}
     if initFunc ~= nil then
-      initFunc(self.controls[id])
+      initFunc(self.controls[id], ...)
     end
   end
   return self.controls[id]

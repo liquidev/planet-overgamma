@@ -196,4 +196,19 @@ function common.luma(r, g, b)
   return 0.299 * r + 0.587 * g + 0.114 * b
 end
 
+--- Verifies that str is one of the values provided in the varargs.
+--- If not, errors out with a message like "invalid enum value, expected ...".
+---
+--- @param str string  The enum value to verify.
+--- @vararg string     List of valid enum values.
+function common.enum(str, ...)
+  for i = 1, select('#', ...) do
+    if str == select(i, ...) then
+      return
+    end
+  end
+  error(("invalid enum value %q, expected one of: %s")
+    :format(str, table.concat({...}, " | ")))
+end
+
 return common

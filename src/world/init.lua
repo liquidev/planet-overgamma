@@ -300,16 +300,21 @@ function World:ensureChunk(position)
   return self.chunks[packed]
 end
 
--- Returns the chunk with the given position. If the chunk doesn't exist,
--- returns nil.
+--- Returns the chunk with the given position. If the chunk doesn't exist,
+--- returns nil.
+---
+--- @param position Vec
+--- @return Chunk | nil
 function World:chunk(position)
   position = wrapChunkPosition(self, position)
   local packed = packChunkPosition(position)
   return self.chunks[packed]
 end
 
--- Marks the chunk at the given position as dirty, which causes it to rebuild
--- its sprite batch when it is about to be drawn.
+--- Marks the chunk at the given position as dirty, which causes it to rebuild
+--- its sprite batch when it is about to be drawn.
+---
+--- @param chunkPosition Vec
 function World:markDirty(chunkPosition)
   local chunk = self:chunk(chunkPosition)
   if chunk ~= nil then
@@ -320,7 +325,9 @@ end
 local chunkPosition = World.chunkPosition
 local positionInChunk = World.positionInChunk
 
--- Marks all chunks adjacent to the given position dirty.
+--- Marks all chunks adjacent to the given position dirty.
+---
+--- @param position Vec
 function World:markDirtyChunks(position)
   local chp = chunkPosition(position)
   local pic = positionInChunk(position)
@@ -339,9 +346,12 @@ function World:markDirtyChunks(position)
   end
 end
 
--- Gets the block at the given position.
--- If the position lands outside of any chunks, World.air is returned.
-function World:block(position, newBlock)
+--- Gets the block at the given position.
+--- If the position lands outside of any chunks, `World.air` (0) is returned.
+---
+--- @param position Vec
+--- @return number
+function World:block(position)
   position = wrapPosition(self, position)
 
   local chunk = self:chunk(chunkPosition(position))
@@ -352,8 +362,12 @@ function World:block(position, newBlock)
   end
 end
 
--- Sets the block at the given position, creating a new chunk if necessary.
--- Returns the old block.
+--- Sets the block at the given position, creating a new chunk if necessary.
+--- Returns the old block.
+---
+--- @param position Vec
+--- @param newBlock number
+--- @return number
 function World:setBlock(position, newBlock)
   position = wrapPosition(self, position)
 
@@ -362,8 +376,12 @@ function World:setBlock(position, newBlock)
   return chunk:setBlock(positionInChunk(position), newBlock)
 end
 
--- Returns the ID and amount of ore at the given position.
--- If the position lands outside of any chunks, (World.noOre, 0) is returned.
+--- Returns the ID and amount of ore at the given position.
+--- If the position lands outside of any chunks, `World.noOre, 0` is returned.
+---
+--- @param position Vec
+--- @return number oreID
+--- @return number oreAmount
 function World:ore(position)
   position = wrapPosition(self, position)
 
@@ -379,10 +397,16 @@ local function cannotHaveOre(chunk, position)
   return chunk == nil or chunk:block(positionInChunk(position)) == World.air
 end
 
--- Sets the ID and amount of ore at the given position.
--- Returns the old ID and amount of ore.
--- If the block at the given position is air, no ore is set and
--- (World.noOre, 0) is returned.
+--- Sets the ID and amount of ore at the given position.
+--- Returns the old ID and amount of ore.
+--- If the block at the given position is air, no ore is set and
+--- (World.noOre, 0) is returned.
+---
+--- @param position Vec
+--- @param id number
+--- @param amount number
+--- @return number oldOreID
+--- @return number oldAmount
 function World:setOre(position, id, amount)
   position = wrapPosition(self, position)
   local chunk = self:chunk(chunkPosition(position))
@@ -393,9 +417,14 @@ function World:setOre(position, id, amount)
   return chunk:ore(positionInChunk(position))
 end
 
--- Adds an amount of ore to the tile at the given position.
--- Does not override ores with an ID different than the one provided.
--- If limit is specified, the amount of ore will be clamped to that limit.
+--- Adds an amount of ore to the tile at the given position.
+--- Does not override ores with an ID different than the one provided.
+--- If limit is specified, the amount of ore will be clamped to that limit.
+---
+--- @param position Vec
+--- @param id number
+--- @param amount number
+--- @param limit number
 function World:addOre(position, id, amount, limit)
   position = wrapPosition(self, position)
   local chunk = self:chunk(chunkPosition(position))
@@ -406,8 +435,13 @@ function World:addOre(position, id, amount, limit)
   return chunk:addOre(positionInChunk(position), id, amount, limit)
 end
 
--- Tries to remove the given amount of ore from the tile at the given position.
--- Returns the ID of the ore, and the actual amount removed.
+--- Tries to remove the given amount of ore from the tile at the given position.
+--- Returns the ID of the ore, and the actual amount removed.
+---
+--- @param position Vec
+--- @param amount number
+--- @return number oreID
+--- @return number amountRemoved
 function World:removeOre(position, amount)
   position = wrapPosition(self, position)
   local chunk = self:chunk(chunkPosition(position))
@@ -418,8 +452,12 @@ function World:removeOre(position, amount)
   return chunk:removeOre(positionInChunk(position), amount)
 end
 
--- Returns the machine ID at the given position. Only use this if you know
--- what you're doing.
+--- Returns the machine ID at the given position. Only use this if you know
+--- what you're doing.
+---
+--- @unsafe
+--- @param position Vec
+--- @return number
 function World:machineID(position)
   position = wrapPosition(self, position)
   local chunk = self:chunk(chunkPosition(position))
@@ -429,16 +467,23 @@ function World:machineID(position)
   return 0
 end
 
--- Returns the machine at the given position, or nil if there is no machine
--- there.
+--- Returns the machine at the given position, or nil if there is no machine
+--- there.
+---
+--- @param position Vec
+--- @return Machine | nil
 function World:machine(position)
   return self.machines:get(self:machineID(position))
 end
 
--- Sets the machine at the given position. If machine is nil, removes the
--- machine at the given position.
--- Returns the old machine at the given position, or nil if there was no machine
--- in the first place.
+--- Sets the machine at the given position. If machine is nil, removes the
+--- machine at the given position.
+--- Returns the old machine at the given position, or nil if there was no
+--- machine in the first place.
+---
+--- @param position Vec
+--- @param machine Machine
+--- @return Machine | nil
 function World:setMachine(position, machine)
   position = wrapPosition(self, position)
 
@@ -455,21 +500,45 @@ function World:setMachine(position, machine)
   return oldMachine
 end
 
--- Returns whether the tile at the given position is an empty (air) tile
--- unoccupied by any machines.
+--- Returns whether the tile at the given position is an empty (air) tile
+--- unoccupied by any machines.
+---
+--- @param position Vec
+--- @return boolean
 function World:isEmpty(position)
   return
     self:block(position) == World.air and
     self:machineID(position) == 0
 end
 
--- Spawns the given entity into the world, returns the entity.
+--- Returns the kind of tile at the given position.
+---
+--- Possible kinds include:
+---  · "empty": an empty tile
+---  · "block": a block with no ore
+---  · "block+ore": a block with ore
+---  · "machine": a machine
+---
+--- @param position Vec
+--- @return string
+function World:kind(position)
+  position = wrapPosition(self, position)
+  if self:block(position) ~= 0 then
+    if self:ore(position) ~= 0 then return "block+ore"
+    else return "block" end
+  elseif self:machineID(position) ~= 0 then return "machine"
+  else return "empty" end
+end
+
+--- Spawns the given entity into the world, returns the entity.
+---
+--- @param entity Entity`
 function World:spawn(entity)
   table.insert(self.spawnQueue, entity)
   return entity
 end
 
--- Ticks the world: updates all entities and spawns queued ones.
+--- Ticks the world: updates all entities and spawns queued ones.
 function World:update()
   for i, entity in ipairs(self.spawnQueue) do
     table.insert(self.entities, entity)
@@ -487,7 +556,6 @@ function World:update()
   while i <= count do
     local entity = self.entities[i]
     entity:update()
---     print(i, entity)
     if entity._doDrop then
       self.entities[i] = self.entities[count]
       self.entities[count] = nil

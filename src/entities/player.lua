@@ -9,6 +9,7 @@ local Camera = require "camera"
 local common = require "common"
 local Entity = require "world.entity"
 local game = require "game"
+local ggraphics = require "ggraphics"
 local Item = require "entities.item"
 local items = require "items"
 local ItemStorage = require "item-storage"
@@ -411,21 +412,17 @@ function Player:draw(alpha)
   graphics.draw(self.sprites[self:animationState()], x, y, 0, scale, 1)
 
   -- laser
-  local laserTarget = (self:laserTarget()) * Chunk.tileSize
-  local unbLaserTarget = (self:laserTarget(unboundedTarget)) * Chunk.tileSize
+  local ts = Chunk.tileSize
+  local laserTarget = (self:laserTarget()) * ts
+  local unbLaserTarget = (self:laserTarget(unboundedTarget)) * ts
   if self:canUseLaser() or self.laserEnabled then
-    graphics.rectangle(
-      "line",
-      laserTarget.x, laserTarget.y,
-      Chunk.tileSize, Chunk.tileSize
-    )
-    if self:canUseLaser() then
+    if self.world:kind(self:laserTarget()) == "machine" then
+      graphics.setLineWidth(2 / self._camera.scale)
+      ggraphics.stippledRectangle(laserTarget.x, laserTarget.y, ts, ts, 1.5)
+    else
+      graphics.rectangle("line", laserTarget.x, laserTarget.y, ts, ts)
       graphics.setLineWidth(1 / self._camera.scale)
-      graphics.rectangle(
-        "line",
-        unbLaserTarget.x, unbLaserTarget.y,
-        Chunk.tileSize, Chunk.tileSize
-      )
+      graphics.rectangle("line", unbLaserTarget.x, unbLaserTarget.y, ts, ts)
     end
   end
   if self.laserCharge > 0.01 then

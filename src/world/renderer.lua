@@ -6,7 +6,7 @@ local lmath = love.math
 local common = require "common"
 local game = require "game"
 local Vec = require "vec"
-local World = require "world"
+local World = require "world.base"
 
 local lerp = common.lerp
 

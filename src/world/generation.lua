@@ -6,7 +6,7 @@ local common = require "common"
 local Object = require "object"
 local tables = require "tables"
 local Vec = require "vec"
-local World = require "world"
+local World = require "world.base"
 
 local round = common.round
 

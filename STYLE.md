@@ -74,7 +74,6 @@ LÖVE is preferred over `require`.
 - don't put any spaces before the parameter list in named functions:
   `local function abc(x) end`
 - do not declare global functions
--
 - always prefer `local function abc(x)` over `local abc = function (x)`
 - prefer implicit `self` over explicitly naming the method receiver parameter
 - use function declarations with a `.` if `self` is not used inside the
@@ -202,3 +201,6 @@ do `local graphics = love.graphics` instead.
 
 Exception: explicit `love.` can be used if a LÖVE submodule is only used once
 in a specific module.
+
+Exception: `love.math` should be aliased to `lmath` because `math` is already
+taken by the Lua standard library.

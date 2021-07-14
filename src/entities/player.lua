@@ -363,10 +363,7 @@ function Player:laserTarget(unbounded)
   else
     position = self:laserPosition()
   end
-  local tile = position / Chunk.size
-  tile.x = math.floor(tile.x)
-  tile.y = math.floor(tile.y)
-  return tile, position
+  return (position / Chunk.size):floor(), position
 end
 
 --- The colors of the laser core and glows.

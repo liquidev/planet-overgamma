@@ -43,16 +43,19 @@ function GameState:init()
   self.player = self.world:spawn(Player:new(self.world))
   self.player.body.position.y = -128
 
-  if os.getenv("GIVE_ME_ALL_THE_GOOD_STUFF") == "YES" then
-    self.player.inventory.size = math.huge
-    for id, _ in pairs(game.items) do
-      self.player.inventory:put(id, 5120)
-    end
-  end
-
   self.camera = Camera:new()
 
-  self.debugMode = true
+  self.debugMode = os.getenv("PO_DEBUG") == "1"
+  if self.debugMode then
+    -- I guess this will stay until I add some sort of creative mode.
+    -- Maybe _this_ will be the creative mode? 🤔
+    if os.getenv("GIVE_ME_ALL_THE_GOOD_STUFF") == "YES" then
+      self.player.inventory.size = math.huge
+      for id, _ in pairs(game.items) do
+        self.player.inventory:put(id, 5120)
+      end
+    end
+  end
 end
 
 --- Updates the game.
@@ -80,10 +83,15 @@ function GameState:draw(alpha)
     local w, _ = graphics.getDimensions()
     local position = self.player.body.position
     local x, y = math.floor(position.x), math.floor(position.y)
+    local lx, ly = self.player:laserPosition()
+      :div(World.Chunk.size)
+      :floor()
+      :xy()
     local text =
       "Unit\nX: "..x.."\nY: "..y..
       "\n\nBlock\nX: "..math.floor(x / World.Chunk.size)..
-      "\nY: "..math.floor(y / World.Chunk.size)
+      "\nY: "..math.floor(y / World.Chunk.size)..
+      "\n\nTarget Tile:\nX: "..lx.."\nY: "..ly
     graphics.printf(text, w - 256 - 8, 8, 256, "right")
   end
 end

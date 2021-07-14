@@ -5,20 +5,28 @@ local lmath = love.math
 
 local common = require "common"
 local game = require "game"
-local Rect = require "rect"
 local Vec = require "vec"
+local World = require "world"
 
 local lerp = common.lerp
 
 ---
 
--- Returns whether blockA tiles with blockB. Both arguments must be valid
--- block IDs.
+--- Returns whether blockA tiles with blockB. Both arguments must be valid
+--- block IDs.
+---
+--- @param blockA number
+--- @param blockB number
 local function tilesWith(blockA, blockB)
   return game.blocks[blockA].tilesWith[blockB] ~= nil
 end
 
--- Returns the bitwise tiling index for the tile at the given position.
+--- Returns the bitwise tiling index for the tile at the given position.
+---
+--- @param self World
+--- @param position Vec
+--- @param blockID number
+--- @return number
 local function bitwiseTilingIndex(self, position, blockID)
   local x, y = position:xy()
   local bits = 0
@@ -37,7 +45,11 @@ local function bitwiseTilingIndex(self, position, blockID)
   return bits + 1
 end
 
--- Rebuilds chunk's sprite batch, if necessary.
+--- Rebuilds chunk's sprite batch, if necessary.
+---
+--- @param self World
+--- @param chunkPosition Vec
+--- @param chunk Chunk
 local function rebuildBlockBatch(self, chunkPosition, chunk)
   if not chunk.dirty then return end
   chunkPosition = self:wrapChunkPosition(chunkPosition)
@@ -98,7 +110,12 @@ local function rebuildBlockBatch(self, chunkPosition, chunk)
   chunk.dirty = false
 end
 
--- Draws all blocks and machines in a chunk.
+--- Draws all blocks and machines in a chunk.
+---
+--- @param self World
+--- @param chunkPosition Vec
+--- @param chunk Chunk
+--- @param alpha number       The interpolation coefficient.
 local function drawChunk(self, chunkPosition, chunk, alpha)
   rebuildBlockBatch(self, chunkPosition, chunk)
   local terrain = chunk.terrainBatch
@@ -119,14 +136,21 @@ local function drawChunk(self, chunkPosition, chunk, alpha)
   graphics.pop()
 end
 
--- Draws entities from the given table.
+--- Draws entities from the given table.
+---
+--- @param entities Entity[]
+--- @param alpha number       The interpolation coefficient.
 local function drawEntities(entities, alpha)
   for _, entity in ipairs(entities) do
     entity:draw(alpha)
   end
 end
 
--- Untransformed world rendering.
+--- World rendering before it goes through the camera transform.
+---
+--- @param self World
+--- @param alpha number
+--- @param viewport Rect
 local function render(self, alpha, viewport)
   local Chunk = self.Chunk
 
@@ -163,7 +187,10 @@ local function render(self, alpha, viewport)
   end
 end
 
--- Renders the world. This function is available publicly as World:draw.
-return function (self, alpha, camera)
+--- Renders the world.
+---
+--- @param alpha number   The interpolation coefficient.
+--- @param camera Camera
+function World:draw(alpha, camera)
   camera:transform(render, self, alpha, camera:viewport())
 end

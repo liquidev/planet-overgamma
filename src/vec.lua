@@ -77,12 +77,14 @@ end
 function vecMethods:add(other)
   self.x = self.x + other.x
   self.y = self.y + other.y
+  return self
 end
 
 --- Subtracts a vector from the provided vector in place.
 function vecMethods:sub(other)
   self.x = self.x - other.x
   self.y = self.y - other.y
+  return self
 end
 
 --- Multiplies the vector by a scalar or a vector in place.
@@ -94,6 +96,7 @@ function vecMethods:mul(op)
     self.x = self.x * op.x
     self.y = self.y * op.y
   end
+  return self
 end
 
 --- Divides the vector by a scalar or a vector in place.
@@ -105,24 +108,28 @@ function vecMethods:div(op)
     self.x = self.x / op.x
     self.y = self.y / op.y
   end
+  return self
 end
 
 --- Zeroes the given vector in place.
 function vecMethods:zero()
   self.x = 0
   self.y = 0
+  return self
 end
 
 --- Copies another vector into the vector.
 function vecMethods:copy(other)
   self.x = other.x
   self.y = other.y
+  return self
 end
 
 --- Sets the vector's coordinates in place.
 function vecMethods:set(x, y)
   self.x = x
   self.y = y
+  return self
 end
 
 --- Returns the dot product of this vector and the other vector.
@@ -152,18 +159,39 @@ function vecMethods:normalized()
   end
 end
 
---- Returns a copy of the vector with its components floored.
+--- Floors the vector in place.
 function vecMethods:floor()
+  self.x = math.floor(self.x)
+  self.y = math.floor(self.y)
+  return self
+end
+
+--- Ceils the vector in place.
+function vecMethods:ceil()
+  self.x = math.ceil(self.x)
+  self.y = math.ceil(self.y)
+  return self
+end
+
+--- Rounds the vector in place.
+function vecMethods:round()
+  self.x = common.round(self.x)
+  self.y = common.round(self.y)
+  return self
+end
+
+--- Returns a copy of the vector with its components floored.
+function vecMethods:floored()
   return Vec(math.floor(self.x), math.floor(self.y))
 end
 
 --- Returns a copy of the vector with its components ceil'd.
-function vecMethods:ceil()
+function vecMethods:ceild()
   return Vec(math.ceil(self.x), math.ceil(self.y))
 end
 
 --- Returns a copy of the vector with its components rounded.
-function vecMethods:round()
+function vecMethods:rounded()
   return Vec(common.round(self.x), common.round(self.y))
 end
 

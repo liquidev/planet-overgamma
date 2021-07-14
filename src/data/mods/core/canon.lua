@@ -260,14 +260,13 @@ canon:stages {
         )
         for _, position in ipairs(positions) do
           local angle = s.rng:random() * 2 * pi
-          position = position:round()
           local length = s.rng:random(1, spec.veinLength)
           for step = 1, length do
             -- Fill the ores.
             for ox = -radius, radius - 1 do
               local height = sqrt(radius2 - ox * ox)
               for oy = -height, height - 1 do
-                local origin = position:round()
+                local origin = position:rounded()
                 local point = origin + Vec(ox, oy)
                 if allowOn[world:block(point)] then
                   world:addOre(point, oreID, amount, limit)
